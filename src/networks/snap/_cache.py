@@ -1,0 +1,271 @@
+"""Where downloaded data lives, and how concurrent readers stay out of each
+other's way.
+
+The cache is deliberately *user-level*, not project-level: importing
+``networks`` from ten different virtualenvs, notebooks or checkouts resolves to
+one directory, so any given dataset is fetched from Stanford exactly once per
+machine.
+
+Layout::
+
+    <root>/snap/catalog.json          refreshed catalog, overrides the vendored one
+    <root>/snap/files/<name>/<file>   downloaded artifacts, plus .meta.json sidecars
+
+Override the root with the ``NETWORKS_CACHE_DIR`` environment variable, or at
+runtime with :func:`set_cache_dir`.
+"""
+
+from __future__ import annotations
+
+import errno
+import json
+import os
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+
+from platformdirs import user_cache_dir
+
+__all__ = [
+    "CACHE_ENV_VAR",
+    "CacheInfo",
+    "CachedDataset",
+    "cache_dir",
+    "cache_info",
+    "clear_cache",
+    "set_cache_dir",
+]
+
+CACHE_ENV_VAR = "NETWORKS_CACHE_DIR"
+
+_APP_NAME = "networks"
+_APP_AUTHOR = "mapequation"
+
+# Set by set_cache_dir(); takes precedence over the environment.
+_override: Path | None = None
+
+# A lock older than this is assumed to belong to a process that died mid
+# download. Generous, because some SNAP archives are tens of gigabytes.
+_LOCK_STALE_SECONDS = 6 * 60 * 60
+_LOCK_POLL_SECONDS = 0.25
+
+
+def cache_dir() -> Path:
+    """Return the root cache directory, creating it if necessary."""
+    if _override is not None:
+        root = _override
+    else:
+        env_value = os.environ.get(CACHE_ENV_VAR)
+        root = (
+            Path(env_value).expanduser()
+            if env_value
+            else Path(user_cache_dir(_APP_NAME, _APP_AUTHOR))
+        )
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def set_cache_dir(path: str | os.PathLike[str] | None) -> Path:
+    """Point the cache at *path* for the rest of this process.
+
+    Passing ``None`` restores the default lookup. Returns the directory now
+    in effect.
+    """
+    global _override
+    _override = Path(path).expanduser() if path is not None else None
+    return cache_dir()
+
+
+def snap_dir() -> Path:
+    path = cache_dir() / "snap"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def dataset_dir(name: str) -> Path:
+    """Directory holding the downloaded files for one dataset."""
+    path = snap_dir() / "files" / _safe_name(name)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _safe_name(name: str) -> str:
+    """Make a dataset or file name safe to use as a single path component."""
+    cleaned = "".join(char if char.isalnum() or char in "-_." else "_" for char in name)
+    return cleaned.strip("._") or "unnamed"
+
+
+def sidecar_path(target: Path) -> Path:
+    return target.with_name(target.name + ".meta.json")
+
+
+def read_sidecar(target: Path) -> dict[str, object]:
+    path = sidecar_path(target)
+    try:
+        with path.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def write_sidecar(target: Path, data: dict[str, object]) -> None:
+    write_atomic(sidecar_path(target), json.dumps(data, indent=2).encode("utf-8"))
+
+
+def write_atomic(target: Path, payload: bytes) -> None:
+    """Write *payload* to *target* so readers never observe a partial file."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_bytes(payload)
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+@contextmanager
+def file_lock(target: Path, *, timeout: float | None = None) -> Iterator[None]:
+    """Serialise work on *target* across processes.
+
+    Correctness does not depend on this lock -- every writer publishes its
+    result with an atomic rename regardless. The lock exists so that two
+    processes asked for the same dataset at the same time do not both spend
+    twenty minutes downloading it.
+    """
+    lock_path = target.with_name(f".{target.name}.lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = None if timeout is None else time.monotonic() + timeout
+    handle: int | None = None
+
+    while True:
+        try:
+            handle = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            break
+        except FileExistsError:
+            if _lock_is_stale(lock_path):
+                lock_path.unlink(missing_ok=True)
+                continue
+            if deadline is not None and time.monotonic() > deadline:
+                # Proceed unlocked rather than fail: the atomic rename keeps
+                # the result correct even if we duplicate the work.
+                yield
+                return
+            time.sleep(_LOCK_POLL_SECONDS)
+        except OSError as error:  # pragma: no cover - read-only cache dirs
+            if error.errno in (errno.EACCES, errno.EROFS):
+                yield
+                return
+            raise
+
+    try:
+        os.write(handle, f"{os.getpid()} {time.time()}".encode())
+        os.close(handle)
+        handle = None
+        yield
+    finally:
+        if handle is not None:  # pragma: no cover - defensive
+            os.close(handle)
+        lock_path.unlink(missing_ok=True)
+
+
+def _lock_is_stale(lock_path: Path) -> bool:
+    try:
+        age = time.time() - lock_path.stat().st_mtime
+    except FileNotFoundError:
+        return False
+    return age > _LOCK_STALE_SECONDS
+
+
+@dataclass(frozen=True, slots=True)
+class CachedDataset:
+    """What is on disk for one dataset."""
+
+    name: str
+    files: tuple[str, ...]
+    bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class CacheInfo:
+    """A summary of the local cache."""
+
+    path: Path
+    bytes: int
+    datasets: dict[str, CachedDataset]
+    #: True when a refreshed catalog in the cache is shadowing the bundled one.
+    catalog_refreshed: bool
+
+    def __str__(self) -> str:
+        return f"{len(self.datasets)} dataset(s), {self.bytes / 1e6:.1f} MB in {self.path}"
+
+
+def cache_info() -> CacheInfo:
+    """Summarise what is currently cached on this machine."""
+    root = cache_dir()
+    files_root = root / "snap" / "files"
+    datasets: dict[str, CachedDataset] = {}
+    total = 0
+
+    if files_root.is_dir():
+        for entry in sorted(files_root.iterdir()):
+            if not entry.is_dir():
+                continue
+            names: list[str] = []
+            size = 0
+            for item in sorted(entry.iterdir()):
+                # Sidecars, locks and in-flight parts are bookkeeping, not data.
+                if not item.is_file() or item.name.endswith(".meta.json"):
+                    continue
+                if item.name.startswith(".") or item.name.endswith(".lock"):
+                    continue
+                names.append(item.name)
+                size += item.stat().st_size
+            if names:
+                datasets[entry.name] = CachedDataset(entry.name, tuple(names), size)
+                total += size
+
+    return CacheInfo(
+        path=root,
+        bytes=total,
+        datasets=datasets,
+        catalog_refreshed=(root / "snap" / "catalog.json").is_file(),
+    )
+
+
+def clear_cache(name: str | None = None) -> int:
+    """Delete cached downloads and return the number of bytes reclaimed.
+
+    With *name*, clears just that dataset; otherwise clears every download and
+    any refreshed catalog. The vendored catalog shipped inside the package is
+    never touched.
+    """
+    import shutil
+
+    root = cache_dir() / "snap"
+    targets: list[Path] = []
+
+    if name is None:
+        targets.append(root / "files")
+        refreshed = root / "catalog.json"
+        if refreshed.is_file():
+            targets.append(refreshed)
+    else:
+        targets.append(root / "files" / _safe_name(name))
+
+    reclaimed = 0
+    for target in targets:
+        if not target.exists():
+            continue
+        if target.is_file():
+            reclaimed += target.stat().st_size
+            target.unlink()
+            continue
+        for item in target.rglob("*"):
+            if item.is_file():
+                reclaimed += item.stat().st_size
+        shutil.rmtree(target, ignore_errors=True)
+
+    return reclaimed

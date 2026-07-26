@@ -1,0 +1,289 @@
+"""Typed records describing the SNAP collection.
+
+These objects are pure data: constructing them never touches the network or the
+filesystem. They round-trip through :meth:`to_dict` / :meth:`from_dict` so the
+whole catalog can be vendored as JSON.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+__all__ = ["Category", "DataFile", "Dataset"]
+
+# Fields the SNAP index uses for the node count, in the order we prefer them.
+_NODE_COLUMNS = ("Nodes",)
+# Categories differ in how they count edges; temporal tables have two columns,
+# and the item-oriented tables have none at all.
+_EDGE_COLUMNS = (
+    "Edges",
+    "Static Edges",
+    "Temporal Edges",
+    "Edges/Actions",
+)
+
+
+def _parse_count(raw: str | None) -> int | None:
+    """Turn a SNAP table cell such as ``"1,768,149"`` into an ``int``.
+
+    Returns ``None`` for cells that are blank, a dash, or otherwise not a plain
+    number (several rows carry values like ``"5,000 graphs"``).
+    """
+    if not raw:
+        return None
+    cleaned = raw.replace(",", "").replace(" ", " ").strip()
+    if not cleaned or cleaned in {"-", "--", "n/a", "N/A"}:
+        return None
+    # Keep only a leading integer, so "1,000 graphs" still yields 1000.
+    digits = ""
+    for char in cleaned:
+        if char.isdigit():
+            digits += char
+        else:
+            break
+    return int(digits) if digits else None
+
+
+@dataclass(frozen=True, slots=True)
+class DataFile:
+    """One downloadable artifact listed in a dataset's *Files* table."""
+
+    name: str
+    url: str
+    description: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"name": self.name, "url": self.url, "description": self.description}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DataFile:
+        return cls(
+            name=data["name"],
+            url=data["url"],
+            description=data.get("description", ""),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Dataset:
+    """Metadata for a single SNAP dataset.
+
+    Everything here is available offline, so you can inspect a dataset's size
+    and shape before deciding to download it.
+    """
+
+    name: str
+    #: Every category SNAP files this dataset under, in page order. Most
+    #: datasets have one, but the site genuinely cross-lists some: wiki-Vote
+    #: sits in both *Social networks* and *Wikipedia networks*, and
+    #: soc-RedditHyperlinks in three sections.
+    categories: tuple[str, ...] = ()
+    category_names: tuple[str, ...] = ()
+    description: str = ""
+    type: str | None = None
+    url: str = ""
+    #: The dataset's row in the SNAP index tables, keyed by those tables' own
+    #: column headers. Categories use different columns, so this preserves what
+    #: the page actually said rather than forcing a common schema. For a
+    #: cross-listed dataset the columns from each section are merged, which is
+    #: how a temporal network keeps both *Static Edges* and *Temporal Edges*.
+    columns: dict[str, str] = field(default_factory=dict)
+    #: The "Dataset statistics" table from the dataset's detail page.
+    statistics: dict[str, str] = field(default_factory=dict)
+    files: tuple[DataFile, ...] = ()
+    #: Citation lines from the detail page's "Source (citation)" section.
+    citations: tuple[str, ...] = ()
+
+    @property
+    def category(self) -> str:
+        """The first category SNAP files this dataset under."""
+        return self.categories[0] if self.categories else ""
+
+    @property
+    def category_name(self) -> str:
+        """The heading of the first category SNAP files this dataset under."""
+        return self.category_names[0] if self.category_names else ""
+
+    @property
+    def nodes(self) -> int | None:
+        """Node count from the index table, or ``None`` if not reported."""
+        for column in _NODE_COLUMNS:
+            value = _parse_count(self.columns.get(column))
+            if value is not None:
+                return value
+        return _parse_count(self.statistics.get("Nodes"))
+
+    @property
+    def edges(self) -> int | None:
+        """Edge count from the index table, or ``None`` if not reported.
+
+        Temporal categories report both static and temporal edges; this returns
+        the static count. Use :attr:`columns` for the full picture.
+        """
+        for column in _EDGE_COLUMNS:
+            value = _parse_count(self.columns.get(column))
+            if value is not None:
+                return value
+        return _parse_count(self.statistics.get("Edges"))
+
+    @property
+    def directed(self) -> bool | None:
+        """``True`` for directed networks, ``False`` for undirected.
+
+        ``None`` when SNAP does not state a direction, which happens for the
+        item-oriented categories such as *Online reviews*.
+        """
+        if not self.type:
+            return None
+        lowered = self.type.lower()
+        if "undirected" in lowered:
+            return False
+        if "directed" in lowered:
+            return True
+        return None
+
+    @property
+    def primary_file(self) -> DataFile | None:
+        """The file :func:`networks.snap.load` downloads by default.
+
+        Prefers a plain edge list named after the dataset, then any gzipped
+        text file, then the first non-readme artifact.
+        """
+        if not self.files:
+            return None
+
+        def is_readme(item: DataFile) -> bool:
+            return "readme" in item.name.lower()
+
+        candidates = [item for item in self.files if not is_readme(item)] or list(self.files)
+
+        stem = self.name.lower()
+        for item in candidates:
+            if item.name.lower().startswith(stem) and item.name.lower().endswith(".txt.gz"):
+                return item
+        for item in candidates:
+            if item.name.lower().endswith(".txt.gz"):
+                return item
+        for item in candidates:
+            if item.name.lower().endswith((".csv.gz", ".txt", ".csv")):
+                return item
+        return candidates[0]
+
+    @property
+    def community_files(self) -> tuple[DataFile, ...]:
+        """Ground-truth community files, if SNAP publishes any.
+
+        Only the *Networks with ground-truth communities* datasets have these.
+        They are what makes a dataset usable for scoring a community-detection
+        run against a reference partition.
+        """
+        return tuple(item for item in self.files if "cmty" in item.name.lower())
+
+    @property
+    def has_ground_truth(self) -> bool:
+        return bool(self.community_files)
+
+    def community_file(self, variant: str = "all") -> DataFile:
+        """Pick a ground-truth file.
+
+        SNAP ships two per dataset: ``all`` (every community) and ``top5000``
+        (the 5000 highest-quality ones, the usual choice for benchmarking).
+        """
+        candidates = self.community_files
+        if not candidates:
+            raise LookupError(f"{self.name!r} has no ground-truth community files.")
+        for item in candidates:
+            if variant.lower() in item.name.lower():
+                return item
+        available = ", ".join(item.name for item in candidates)
+        raise KeyError(f"No {variant!r} community file for {self.name!r}. Available: {available}")
+
+    def file(self, name: str) -> DataFile:
+        """Look up one of this dataset's files by name."""
+        for item in self.files:
+            if item.name == name:
+                return item
+        available = ", ".join(item.name for item in self.files) or "none"
+        raise KeyError(f"{self.name!r} has no file {name!r}. Available: {available}")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "categories": list(self.categories),
+            "category_names": list(self.category_names),
+            "description": self.description,
+            "type": self.type,
+            "url": self.url,
+            "columns": self.columns,
+            "statistics": self.statistics,
+            "files": [item.to_dict() for item in self.files],
+            "citations": list(self.citations),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Dataset:
+        return cls(
+            name=data["name"],
+            categories=tuple(data.get("categories", ())),
+            category_names=tuple(data.get("category_names", ())),
+            description=data.get("description", ""),
+            type=data.get("type"),
+            url=data.get("url", ""),
+            columns=dict(data.get("columns", {})),
+            statistics=dict(data.get("statistics", {})),
+            files=tuple(DataFile.from_dict(item) for item in data.get("files", [])),
+            citations=tuple(data.get("citations", ())),
+        )
+
+    def __str__(self) -> str:
+        parts = [self.name]
+        if self.type:
+            parts.append(f"({self.type.lower()})")
+        shape = []
+        if self.nodes is not None:
+            shape.append(f"{self.nodes:,} nodes")
+        if self.edges is not None:
+            shape.append(f"{self.edges:,} edges")
+        if shape:
+            parts.append(f"[{', '.join(shape)}]")
+        return " ".join(parts)
+
+
+@dataclass(frozen=True, slots=True)
+class Category:
+    """One of the section headings on the SNAP index page."""
+
+    #: The page anchor, e.g. ``"socnets"``. Stable across SNAP edits.
+    id: str
+    #: The section heading as rendered, e.g. ``"Social networks"``.
+    name: str
+    #: The one-line gloss from the index page's table of contents.
+    description: str = ""
+    #: The label used in the table of contents, which occasionally differs from
+    #: the section heading (``"Amazon networks"`` vs ``"Product co-purchasing
+    #: networks"``).
+    toc_name: str = ""
+    dataset_names: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "toc_name": self.toc_name,
+            "dataset_names": list(self.dataset_names),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Category:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            description=data.get("description", ""),
+            toc_name=data.get("toc_name", ""),
+            dataset_names=tuple(data.get("dataset_names", ())),
+        )
+
+    def __str__(self) -> str:
+        return f"{self.name} ({len(self.dataset_names)} datasets)"

@@ -1,0 +1,5056 @@
+{
+ "schema": 1,
+ "source": "https://snap.stanford.edu/data/index.html",
+ "retrieved": "2026-07-26T08:33:54Z",
+ "categories": [
+  {
+   "id": "socnets",
+   "name": "Social networks",
+   "description": "online social networks, edges represent interactions between people",
+   "toc_name": "Social networks",
+   "dataset_names": [
+    "ego-Facebook",
+    "ego-Gplus",
+    "ego-Twitter",
+    "soc-Epinions1",
+    "soc-LiveJournal1",
+    "soc-Pokec",
+    "soc-Slashdot0811",
+    "soc-Slashdot0922",
+    "wiki-Vote",
+    "wiki-RfA",
+    "gemsec-Deezer",
+    "gemsec-Facebook",
+    "soc-RedditHyperlinks",
+    "soc-sign-bitcoin-otc",
+    "soc-sign-bitcoin-alpha",
+    "comm-f2f-Resistance",
+    "musae-twitch",
+    "musae-facebook",
+    "act-mooc",
+    "musae-github",
+    "feather-deezer-social",
+    "feather-lastfm-social",
+    "twitch-gamers",
+    "congress-Twitter"
+   ]
+  },
+  {
+   "id": "communities",
+   "name": "Networks with ground-truth communities",
+   "description": "ground-truth network communities in social and information networks",
+   "toc_name": "Networks with ground-truth communities",
+   "dataset_names": [
+    "com-LiveJournal",
+    "com-Friendster",
+    "com-Orkut",
+    "com-Youtube",
+    "com-DBLP",
+    "com-Amazon",
+    "email-Eu-core",
+    "wiki-topcats",
+    "cisco-secure-workload"
+   ]
+  },
+  {
+   "id": "email",
+   "name": "Communication networks",
+   "description": "email communication networks with edges representing communication",
+   "toc_name": "Communication networks",
+   "dataset_names": [
+    "email-EuAll",
+    "email-Enron",
+    "wiki-Talk",
+    "comm-f2f-Resistance"
+   ]
+  },
+  {
+   "id": "citnets",
+   "name": "Citation networks",
+   "description": "nodes represent papers, edges represent citations",
+   "toc_name": "Citation networks",
+   "dataset_names": [
+    "cit-HepPh",
+    "cit-HepTh",
+    "cit-Patents"
+   ]
+  },
+  {
+   "id": "canets",
+   "name": "Collaboration networks",
+   "description": "nodes represent scientists, edges represent collaborations (co-authoring a paper)",
+   "toc_name": "Collaboration networks",
+   "dataset_names": [
+    "ca-AstroPh",
+    "ca-CondMat",
+    "ca-GrQc",
+    "ca-HepPh",
+    "ca-HepTh"
+   ]
+  },
+  {
+   "id": "web",
+   "name": "Web graphs",
+   "description": "nodes represent webpages and edges are hyperlinks",
+   "toc_name": "Web graphs",
+   "dataset_names": [
+    "web-BerkStan",
+    "web-Google",
+    "web-NotreDame",
+    "web-Stanford"
+   ]
+  },
+  {
+   "id": "amazon",
+   "name": "Product co-purchasing networks",
+   "description": "nodes represent products and edges link commonly co-purchased products",
+   "toc_name": "Amazon networks",
+   "dataset_names": [
+    "amazon0302",
+    "amazon0312",
+    "amazon0505",
+    "amazon0601",
+    "amazon-meta"
+   ]
+  },
+  {
+   "id": "p2p",
+   "name": "Internet peer-to-peer networks",
+   "description": "nodes represent computers and edges communication",
+   "toc_name": "Internet networks",
+   "dataset_names": [
+    "p2p-Gnutella04",
+    "p2p-Gnutella05",
+    "p2p-Gnutella06",
+    "p2p-Gnutella08",
+    "p2p-Gnutella09",
+    "p2p-Gnutella24",
+    "p2p-Gnutella25",
+    "p2p-Gnutella30",
+    "p2p-Gnutella31"
+   ]
+  },
+  {
+   "id": "road",
+   "name": "Road networks",
+   "description": "nodes represent intersections and edges roads connecting the intersections",
+   "toc_name": "Road networks",
+   "dataset_names": [
+    "roadNet-CA",
+    "roadNet-PA",
+    "roadNet-TX"
+   ]
+  },
+  {
+   "id": "as",
+   "name": "Autonomous systems graphs",
+   "description": "graphs of the internet",
+   "toc_name": "Autonomous systems",
+   "dataset_names": [
+    "as-733",
+    "as-Skitter",
+    "as-Caida",
+    "Oregon-1",
+    "Oregon-2"
+   ]
+  },
+  {
+   "id": "signnets",
+   "name": "Signed networks",
+   "description": "networks with positive and negative edges (friend/foe, trust/distrust)",
+   "toc_name": "Signed networks",
+   "dataset_names": [
+    "soc-RedditHyperlinks",
+    "soc-sign-bitcoin-otc",
+    "soc-sign-bitcoin-alpha",
+    "soc-sign-epinions",
+    "wiki-Elec",
+    "wiki-RfA",
+    "soc-sign-Slashdot081106",
+    "soc-sign-Slashdot090216",
+    "soc-sign-Slashdot090221"
+   ]
+  },
+  {
+   "id": "locnet",
+   "name": "Location-based online social networks",
+   "description": "social networks with geographic check-ins",
+   "toc_name": "Location-based online social networks",
+   "dataset_names": [
+    "loc-Gowalla",
+    "loc-Brightkite"
+   ]
+  },
+  {
+   "id": "wikipedia",
+   "name": "Wikipedia networks, articles, and metadata",
+   "description": "talk, editing, voting, and article data from Wikipedia",
+   "toc_name": "Wikipedia networks, articles, and metadata",
+   "dataset_names": [
+    "wikispeedia",
+    "wiki-Vote",
+    "wiki-Talk",
+    "wiki-Elec",
+    "wiki-RfA",
+    "wiki-meta",
+    "wiki-hoaxes",
+    "musae-wiki"
+   ]
+  },
+  {
+   "id": "temporal",
+   "name": "Temporal networks",
+   "description": "networks where edges have timestamps",
+   "toc_name": "Temporal networks",
+   "dataset_names": [
+    "soc-RedditHyperlinks",
+    "sx-stackoverflow",
+    "sx-mathoverflow",
+    "sx-superuser",
+    "sx-askubuntu",
+    "wiki-talk-temporal",
+    "email-Eu-core-temporal",
+    "CollegeMsg",
+    "soc-sign-bitcoin-otc",
+    "soc-sign-bitcoin-alpha",
+    "act-mooc",
+    "comm-f2f-Resistance"
+   ]
+  },
+  {
+   "id": "actions",
+   "name": "User actions",
+   "description": "actions of users on social platforms.",
+   "toc_name": "User actions",
+   "dataset_names": [
+    "act-mooc"
+   ]
+  },
+  {
+   "id": "twitter",
+   "name": "Memetracker and Twitter",
+   "description": "memetracker phrases, links and 467 million Tweets",
+   "toc_name": "Twitter and Memetracker",
+   "dataset_names": [
+    "twitter7",
+    "memetracker9",
+    "ksc-time-series",
+    "higgs-twitter"
+   ]
+  },
+  {
+   "id": "onlinecoms",
+   "name": "Online communities",
+   "description": "data from online communities such as Reddit and Flickr",
+   "toc_name": "Online communities",
+   "dataset_names": [
+    "soc-RedditHyperlinks",
+    "web-RedditEmbeddings",
+    "web-RedditPizzaRequests",
+    "web-Reddit",
+    "web-flickr"
+   ]
+  },
+  {
+   "id": "reviews",
+   "name": "Online reviews",
+   "description": "data from online review systems such as BeerAdvocate and Amazon",
+   "toc_name": "Online reviews",
+   "dataset_names": [
+    "web-BeerAdvocate",
+    "web-RateBeer",
+    "web-CellarTracker",
+    "web-Amazon",
+    "web-FineFoods",
+    "web-Movies"
+   ]
+  },
+  {
+   "id": "face2face",
+   "name": "Face-to-face communication networks",
+   "description": "networks of face-to-face (non-online) interactions",
+   "toc_name": "Face-to-face communication networks",
+   "dataset_names": [
+    "comm-f2f-Resistance"
+   ]
+  },
+  {
+   "id": "disjointgraphs",
+   "name": "Graph classification datasets",
+   "description": "disjoint graphs from different classes",
+   "toc_name": "Graph classification datasets",
+   "dataset_names": [
+    "Deezer Ego-nets",
+    "GitHub Stargazers",
+    "Reddit Threads",
+    "Ego-Nets"
+   ]
+  },
+  {
+   "id": "ccn",
+   "name": "Computer communication networks",
+   "description": "communications among computers running distributed applications",
+   "toc_name": "Computer communication networks",
+   "dataset_names": [
+    "cisco-secure-workload"
+   ]
+  },
+  {
+   "id": "cct",
+   "name": "Cryptocurrency transactions",
+   "description": "transactions covering several cryptocurrencies and exchanges",
+   "toc_name": "Cryptocurrency transactions",
+   "dataset_names": [
+    "ERC20-stablecoins",
+    "ethereum-exchanges"
+   ]
+  },
+  {
+   "id": "tcn",
+   "name": "Telecom networks",
+   "description": "relationships between users, packages, apps, and cells in a telecom network",
+   "toc_name": "Telecom networks",
+   "dataset_names": [
+    "telecom-graph"
+   ]
+  }
+ ],
+ "datasets": [
+  {
+   "name": "ego-Facebook",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social circles from Facebook (anonymized)",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ego-Facebook.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "4,039",
+    "Edges": "88,234",
+    "Description": "Social circles from Facebook (anonymized)"
+   },
+   "statistics": {
+    "Nodes": "4039",
+    "Edges": "88234",
+    "Nodes in largest WCC": "4039 (1.000)",
+    "Edges in largest WCC": "88234 (1.000)",
+    "Nodes in largest SCC": "4039 (1.000)",
+    "Edges in largest SCC": "88234 (1.000)",
+    "Average clustering coefficient": "0.6055",
+    "Number of triangles": "1612010",
+    "Fraction of closed triangles": "0.2647",
+    "Diameter (longest shortest path)": "8",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "facebook.tar.gz",
+     "url": "https://snap.stanford.edu/data/facebook.tar.gz",
+     "description": "Facebook data (10 networks, anonymized)"
+    },
+    {
+     "name": "facebook_combined.txt.gz",
+     "url": "https://snap.stanford.edu/data/facebook_combined.txt.gz",
+     "description": "Edges from all egonets combined"
+    },
+    {
+     "name": "readme-Ego.txt",
+     "url": "https://snap.stanford.edu/data/readme-Ego.txt",
+     "description": "Description of files"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. Learning to Discover Social Circles in Ego Networks. NIPS, 2012."
+   ]
+  },
+  {
+   "name": "ego-Gplus",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social circles from Google+",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/ego-Gplus.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "107,614",
+    "Edges": "13,673,453",
+    "Description": "Social circles from Google+"
+   },
+   "statistics": {
+    "Nodes": "107614",
+    "Edges": "13673453",
+    "Nodes in largest WCC": "107614 (1.000)",
+    "Edges in largest WCC": "13673453 (1.000)",
+    "Nodes in largest SCC": "69501 (0.646)",
+    "Edges in largest SCC": "9168660 (0.671)",
+    "Average clustering coefficient": "0.4901",
+    "Number of triangles": "1073677742",
+    "Fraction of closed triangles": "0.6552",
+    "Diameter (longest shortest path)": "6",
+    "90-percentile effective diameter": "3"
+   },
+   "files": [
+    {
+     "name": "gplus.tar.gz",
+     "url": "https://snap.stanford.edu/data/gplus.tar.gz",
+     "description": "Google+ (132 networks)"
+    },
+    {
+     "name": "gplus_combined.txt.gz",
+     "url": "https://snap.stanford.edu/data/gplus_combined.txt.gz",
+     "description": "Edges from all egonets combined"
+    },
+    {
+     "name": "readme-Ego.txt",
+     "url": "https://snap.stanford.edu/data/readme-Ego.txt",
+     "description": "Description of files"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. Learning to Discover Social Circles in Ego Networks. NIPS, 2012."
+   ]
+  },
+  {
+   "name": "ego-Twitter",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social circles from Twitter",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/ego-Twitter.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "81,306",
+    "Edges": "1,768,149",
+    "Description": "Social circles from Twitter"
+   },
+   "statistics": {
+    "Nodes": "81306",
+    "Edges": "1768149",
+    "Nodes in largest WCC": "81306 (1.000)",
+    "Edges in largest WCC": "1768149 (1.000)",
+    "Nodes in largest SCC": "68413 (0.841)",
+    "Edges in largest SCC": "1685163 (0.953)",
+    "Average clustering coefficient": "0.5653",
+    "Number of triangles": "13082506",
+    "Fraction of closed triangles": "0.06415",
+    "Diameter (longest shortest path)": "7",
+    "90-percentile effective diameter": "4.5"
+   },
+   "files": [
+    {
+     "name": "twitter.tar.gz",
+     "url": "https://snap.stanford.edu/data/twitter.tar.gz",
+     "description": "Twitter data (973 networks)"
+    },
+    {
+     "name": "twitter_combined.txt.gz",
+     "url": "https://snap.stanford.edu/data/twitter_combined.txt.gz",
+     "description": "Edges from all egonets combined"
+    },
+    {
+     "name": "readme-Ego.txt",
+     "url": "https://snap.stanford.edu/data/readme-Ego.txt",
+     "description": "Description of files"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. Learning to Discover Social Circles in Ego Networks. NIPS, 2012."
+   ]
+  },
+  {
+   "name": "soc-Epinions1",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Who-trusts-whom network of Epinions.com",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-Epinions1.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "75,879",
+    "Edges": "508,837",
+    "Description": "Who-trusts-whom network of Epinions.com"
+   },
+   "statistics": {
+    "Nodes": "75879",
+    "Edges": "508837",
+    "Nodes in largest WCC": "75877 (1.000)",
+    "Edges in largest WCC": "508836 (1.000)",
+    "Nodes in largest SCC": "32223 (0.425)",
+    "Edges in largest SCC": "443506 (0.872)",
+    "Average clustering coefficient": "0.1378",
+    "Number of triangles": "1624481",
+    "Fraction of closed triangles": "0.0229",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "5"
+   },
+   "files": [
+    {
+     "name": "soc-Epinions1.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-Epinions1.txt.gz",
+     "description": "Directed Epinions social network"
+    }
+   ],
+   "citations": [
+    "M. Richardson and R. Agrawal and P. Domingos. Trust Management for the Semantic Web. ISWC, 2003."
+   ]
+  },
+  {
+   "name": "soc-LiveJournal1",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "LiveJournal online social network",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-LiveJournal1.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "4,847,571",
+    "Edges": "68,993,773",
+    "Description": "LiveJournal online social network"
+   },
+   "statistics": {
+    "Nodes": "4847571",
+    "Edges": "68993773",
+    "Nodes in largest WCC": "4843953 (0.999)",
+    "Edges in largest WCC": "68983820 (1.000)",
+    "Nodes in largest SCC": "3828682 (0.790)",
+    "Edges in largest SCC": "65825429 (0.954)",
+    "Average clustering coefficient": "0.2742",
+    "Number of triangles": "285730264",
+    "Fraction of closed triangles": "0.04266",
+    "Diameter (longest shortest path)": "16",
+    "90-percentile effective diameter": "6.5"
+   },
+   "files": [
+    {
+     "name": "soc-LiveJournal1.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-LiveJournal1.txt.gz",
+     "description": "Directed LiveJournal friednship social network"
+    }
+   ],
+   "citations": [
+    "L. Backstrom, D. Huttenlocher, J. Kleinberg, X. Lan. Group Formation in Large Social Networks: Membership, Growth, and Evolution. KDD, 2006.",
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "soc-Pokec",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Pokec online social network",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-Pokec.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "1,632,803",
+    "Edges": "30,622,564",
+    "Description": "Pokec online social network"
+   },
+   "statistics": {
+    "Nodes": "1632803",
+    "Edges": "30622564",
+    "Nodes in largest WCC": "1632803 (1.000)",
+    "Edges in largest WCC": "30622564 (1.000)",
+    "Nodes in largest SCC": "1304537 (0.799)",
+    "Edges in largest SCC": "29183655 (0.953)",
+    "Average clustering coefficient": "0.1094",
+    "Number of triangles": "32557458",
+    "Fraction of closed triangles": "0.01611",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "5.2"
+   },
+   "files": [
+    {
+     "name": "soc-pokec-relationships.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz",
+     "description": "User relationship data"
+    },
+    {
+     "name": "soc-pokec-profiles.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-pokec-profiles.txt.gz",
+     "description": "User profile data"
+    },
+    {
+     "name": "soc-pokec-readme.txt",
+     "url": "https://snap.stanford.edu/data/soc-pokec-readme.txt",
+     "description": "Description of files"
+    }
+   ],
+   "citations": [
+    "L. Takac, M. Zabovsky. Data Analysis in Public Social Networks, International Scientific Conference & International Workshop Present Day Trends of Innovations, May 2012 Lomza, Poland."
+   ]
+  },
+  {
+   "name": "soc-Slashdot0811",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Slashdot social network from November 2008",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-Slashdot0811.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "77,360",
+    "Edges": "905,468",
+    "Description": "Slashdot social network from November 2008"
+   },
+   "statistics": {
+    "Nodes": "77360",
+    "Edges": "905468",
+    "Nodes in largest WCC": "77360 (1.000)",
+    "Edges in largest WCC": "905468 (1.000)",
+    "Nodes in largest SCC": "70355 (0.909)",
+    "Edges in largest SCC": "888662 (0.981)",
+    "Average clustering coefficient": "0.0555",
+    "Number of triangles": "551724",
+    "Fraction of closed triangles": "0.008184",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "Slashdot0811.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-Slashdot0811.txt.gz",
+     "description": "Slashdot Zoo social network from Noveber 6 2008"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "soc-Slashdot0922",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Slashdot social network from February 2009",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-Slashdot0902.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "82,168",
+    "Edges": "948,464",
+    "Description": "Slashdot social network from February 2009"
+   },
+   "statistics": {
+    "Nodes": "82168",
+    "Edges": "948464",
+    "Nodes in largest WCC": "82168 (1.000)",
+    "Edges in largest WCC": "948464 (1.000)",
+    "Nodes in largest SCC": "71307 (0.868)",
+    "Edges in largest SCC": "912381 (0.962)",
+    "Average clustering coefficient": "0.0603",
+    "Number of triangles": "602592",
+    "Fraction of closed triangles": "0.008168",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "Slashdot0902.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-Slashdot0902.txt.gz",
+     "description": "Slashdot Zoo social network from February 0 2009"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "wiki-Vote",
+   "categories": [
+    "socnets",
+    "wikipedia"
+   ],
+   "category_names": [
+    "Social networks",
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Wikipedia who-votes-on-whom network",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/wiki-Vote.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "7,115",
+    "Edges": "103,689",
+    "Description": "Wikipedia who-votes-on-whom network"
+   },
+   "statistics": {
+    "Nodes": "7115",
+    "Edges": "103689",
+    "Nodes in largest WCC": "7066 (0.993)",
+    "Edges in largest WCC": "103663 (1.000)",
+    "Nodes in largest SCC": "1300 (0.183)",
+    "Edges in largest SCC": "39456 (0.381)",
+    "Average clustering coefficient": "0.1409",
+    "Number of triangles": "608389",
+    "Fraction of closed triangles": "0.04564",
+    "Diameter (longest shortest path)": "7",
+    "90-percentile effective diameter": "3.8"
+   },
+   "files": [
+    {
+     "name": "Wiki-Vote.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-Vote.txt.gz",
+     "description": "Wikipedia adminship vote network till January 2008"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Signed Networks in Social Media. CHI 2010.",
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Predicting Positive and Negative Links in Online Social Networks. WWW 2010."
+   ]
+  },
+  {
+   "name": "wiki-RfA",
+   "categories": [
+    "socnets",
+    "signnets",
+    "wikipedia"
+   ],
+   "category_names": [
+    "Social networks",
+    "Signed networks",
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Wikipedia Requests for Adminship (with text)",
+   "type": "Directed, Signed",
+   "url": "https://snap.stanford.edu/data/wiki-RfA.html",
+   "columns": {
+    "Type": "Directed, Signed",
+    "Nodes": "10,835",
+    "Edges": "159,388",
+    "Description": "Wikipedia Requests for Adminship (with text)"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "wiki-RfA.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-RfA.txt.gz",
+     "description": "Wikipedia Requests for Adminship (RfA) 2003\u20132013"
+    }
+   ],
+   "citations": [
+    "Robert West, Hristo S. Paskov, Jure Leskovec, and Christopher Potts: Exploiting Social Network Structure for Person-to-Person Sentiment Analysis. Transactions of the Association for Computational Linguistics, 2(Oct):297\u2013310, 2014. Files Data format SRC:Guettarda TGT:Lord Roem VOT:1 RES:1 YEA:2013 DAT:19:53, 25 January 2013 TXT:'''Support''' per [[WP:DEAL]]: clueful, and unlikely to break Wikipedia. where entries are separated by a single empty line and"
+   ]
+  },
+  {
+   "name": "gemsec-Deezer",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Gemsec Deezer dataset",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/gemsec-Deezer.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "143,884",
+    "Edges": "846,915",
+    "Description": "Gemsec Deezer dataset"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "gemsec_deezer_dataset.tar.gz",
+     "url": "https://snap.stanford.edu/data/gemsec_deezer_dataset.tar.gz",
+     "description": "Deezer data from February 13 2018"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, R. Davies, R. Sarkar and C. Sutton. GEMSEC: Graph Embedding with Self Clustering. 2018."
+   ]
+  },
+  {
+   "name": "gemsec-Facebook",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Gemsec Facebook dataset",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/gemsec-Facebook.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "134,833",
+    "Edges": "1,380,293",
+    "Description": "Gemsec Facebook dataset"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "gemsec_facebook_dataset.tar.gz",
+     "url": "https://snap.stanford.edu/data/gemsec_facebook_dataset.tar.gz",
+     "description": "Facebook data from February 13 2018"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, R. Davies, R. Sarkar and C. Sutton. GEMSEC: Graph Embedding with Self Clustering. 2018."
+   ]
+  },
+  {
+   "name": "soc-RedditHyperlinks",
+   "categories": [
+    "socnets",
+    "signnets",
+    "temporal",
+    "onlinecoms"
+   ],
+   "category_names": [
+    "Social networks",
+    "Signed networks",
+    "Temporal networks",
+    "Online communities"
+   ],
+   "description": "Hyperlinks between subreddits on Reddit",
+   "type": "Directed, Signed, Temporal, Attributed",
+   "url": "https://snap.stanford.edu/data/soc-RedditHyperlinks.html",
+   "columns": {
+    "Type": "Directed, Signed, Temporal, Attributed",
+    "Number of items": "858,490 links between 55,863 subreddits",
+    "Description": "Hyperlinks between subreddits on Reddit",
+    "Nodes": "55,863",
+    "Temporal Edges": "858,490",
+    "Static Edges": "858,490",
+    "Edges": "858,490"
+   },
+   "statistics": {
+    "Number of nodes (subreddits)": "55,863",
+    "Number of edges (hyperlink between subreddits)": "858,490",
+    "Edge weights (label of hyperlink)": "-1 or +1",
+    "Edge attributes": "Text property vectors",
+    "Timespan": "Jan 2014 - April 2017"
+   },
+   "files": [
+    {
+     "name": "soc-redditHyperlinks-body.tsv",
+     "url": "https://snap.stanford.edu/data/soc-redditHyperlinks-body.tsv",
+     "description": "Network of subreddit-to-subreddit hyperlinks extracted from hyperlinks in the body of the post."
+    },
+    {
+     "name": "soc-redditHyperlinks-title.tsv",
+     "url": "https://snap.stanford.edu/data/soc-redditHyperlinks-title.tsv",
+     "description": "Network of subreddit-to-subreddit hyperlinks extracted from hyperlinks in the title of the post."
+    }
+   ],
+   "citations": [
+    "S. Kumar, W.L. Hamilton, J. Leskovec, D. Jurafsky. Community Interaction and Conflict on the Web. World Wide Web Conference, 2018."
+   ]
+  },
+  {
+   "name": "soc-sign-bitcoin-otc",
+   "categories": [
+    "socnets",
+    "signnets",
+    "temporal"
+   ],
+   "category_names": [
+    "Social networks",
+    "Signed networks",
+    "Temporal networks"
+   ],
+   "description": "Bitcoin OTC web of trust network",
+   "type": "Weighted, Signed, Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/soc-sign-bitcoin-otc.html",
+   "columns": {
+    "Type": "Weighted, Signed, Directed, Temporal",
+    "Nodes": "5,881",
+    "Temporal Edges": "35,592",
+    "Static Edges": "",
+    "Description": "Bitcoin OTC web of trust network",
+    "Edges": "35,592"
+   },
+   "statistics": {
+    "Nodes": "5,881",
+    "Edges": "35,592",
+    "Range of edge weight": "-10 to +10",
+    "Percentage of positive edges": "89%"
+   },
+   "files": [
+    {
+     "name": "soc-sign-bitcoinotc.csv.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-bitcoinotc.csv.gz",
+     "description": "Weighted Signed Directed Bitcoin OTC web of trust network"
+    }
+   ],
+   "citations": [
+    "S. Kumar, F. Spezzano, V.S. Subrahmanian, C. Faloutsos. Edge Weight Prediction in Weighted Signed Networks. IEEE International Conference on Data Mining (ICDM), 2016.",
+    "S. Kumar, B. Hooi, D. Makhija, M. Kumar, V.S. Subrahmanian, C. Faloutsos. REV2: Fraudulent User Prediction in Rating Platforms. 11th ACM International Conference on Web Searchand Data Mining (WSDM), 2018."
+   ]
+  },
+  {
+   "name": "soc-sign-bitcoin-alpha",
+   "categories": [
+    "socnets",
+    "signnets",
+    "temporal"
+   ],
+   "category_names": [
+    "Social networks",
+    "Signed networks",
+    "Temporal networks"
+   ],
+   "description": "Bitcoin Alpha web of trust network",
+   "type": "Weighted, Signed, Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/soc-sign-bitcoin-alpha.html",
+   "columns": {
+    "Type": "Weighted, Signed, Directed, Temporal",
+    "Nodes": "3,783",
+    "Temporal Edges": "24,186",
+    "Static Edges": "",
+    "Description": "Bitcoin Alpha web of trust network",
+    "Edges": "24,186"
+   },
+   "statistics": {
+    "Nodes": "3,783",
+    "Edges": "24,186",
+    "Range of edge weight": "-10 to +10",
+    "Percentage of positive edges": "93%"
+   },
+   "files": [
+    {
+     "name": "soc-sign-bitcoinalpha.csv.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-bitcoinalpha.csv.gz",
+     "description": "Weighted Signed Directed Bitcoin Alpha web of trust network"
+    }
+   ],
+   "citations": [
+    "S. Kumar, F. Spezzano, V.S. Subrahmanian, C. Faloutsos. Edge Weight Prediction in Weighted Signed Networks. IEEE International Conference on Data Mining (ICDM), 2016.",
+    "S. Kumar, B. Hooi, D. Makhija, M. Kumar, V.S. Subrahmanian, C. Faloutsos. REV2: Fraudulent User Prediction in Rating Platforms. 11th ACM International Conference on Web Searchand Data Mining (WSDM), 2018."
+   ]
+  },
+  {
+   "name": "comm-f2f-Resistance",
+   "categories": [
+    "socnets",
+    "email",
+    "temporal",
+    "face2face"
+   ],
+   "category_names": [
+    "Social networks",
+    "Communication networks",
+    "Temporal networks",
+    "Face-to-face communication networks"
+   ],
+   "description": "Dynamic face-to-face interaction network between group of people",
+   "type": "Weighted, Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/comm-f2f-Resistance.html",
+   "columns": {
+    "Type": "Weighted, Directed, Temporal",
+    "Nodes": "451",
+    "Edges": "3,126,993",
+    "Description": "Dynamic face-to-face interaction network between group of people",
+    "Temporal Edges": "3,126,993",
+    "Static Edges": ""
+   },
+   "statistics": {
+    "Number of networks": "62",
+    "Number of nodes": "451",
+    "Number of edges": "3,126,993",
+    "Average number of edges per network": "50,435",
+    "Total temporal length": "142,005 seconds",
+    "Average temporal length per network": "2,290 seconds"
+   },
+   "files": [
+    {
+     "name": "Download",
+     "url": "https://snap.stanford.edu/data/comm-f2f-Resistance-network.tar.gz",
+     "description": ""
+    }
+   ],
+   "citations": [
+    "S. Kumar, C.Bai, V.S. Subrahmanian, J. Leskovec. Deception Detection in Group Video Conversations using Dynamic Interaction Networks. 15th International AAAI Conference on Web and Social Media (ICWSM), 2021.",
+    "C.Bai, S. Kumar, J. Leskovec, M. Metzger, J.F. Nunamaker, V.S. Subrahmanian. Predicting Visual Focus of Attention in Multi-person Discussion Videos. International Joint Conference on Artificial Intelligence (IJCAI), 2019."
+   ]
+  },
+  {
+   "name": "musae-twitch",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social networks of Twitch users.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/twitch-social-networks.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "34,118",
+    "Edges": "429,113",
+    "Description": "Social networks of Twitch users."
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "twitch.zip",
+     "url": "https://snap.stanford.edu/data/twitch.zip",
+     "description": "Twitch Social Networks"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, C. Allen and R. Sarkar. Multi-scale Attributed Node Embedding. 2019."
+   ]
+  },
+  {
+   "name": "musae-facebook",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Facebook page-page network with page names.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/facebook-large-page-page-network.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "22,470",
+    "Edges": "171,002",
+    "Description": "Facebook page-page network with page names."
+   },
+   "statistics": {
+    "Directed": "No.",
+    "Node features": "Yes.",
+    "Edge features": "No.",
+    "Node labels": "Yes. Binary-labeled.",
+    "Temporal": "No.",
+    "Nodes": "22,470",
+    "Edges": "171,002",
+    "Density": "0.001",
+    "Transitvity": "0.232"
+   },
+   "files": [],
+   "citations": [
+    "B. Rozemberczki, C. Allen and R. Sarkar. Multi-scale Attributed Node Embedding. 2019."
+   ]
+  },
+  {
+   "name": "act-mooc",
+   "categories": [
+    "socnets",
+    "temporal",
+    "actions"
+   ],
+   "category_names": [
+    "Social networks",
+    "Temporal networks",
+    "User actions"
+   ],
+   "description": "Student actions on a MOOC platform, with student drop-out binary labels.",
+   "type": "Bipartite, Directed, Attributed, Temporal",
+   "url": "https://snap.stanford.edu/data/act-mooc.html",
+   "columns": {
+    "Type": "Bipartite, Directed, Attributed, Temporal",
+    "Nodes": "7,143",
+    "Edges/Actions": "411,749",
+    "Description": "Student actions on a MOOC platform, with student drop-out binary labels.",
+    "Temporal Edges": "411,749",
+    "Static Edges": "",
+    "Edges": "411,749"
+   },
+   "statistics": {
+    "Number of users": "7,047",
+    "Number of targets": "97",
+    "Number of actions": "411,749",
+    "Number of positive action labels": "4,066",
+    "Timestamp": "seconds"
+   },
+   "files": [
+    {
+     "name": "act-mooc.tar.gz",
+     "url": "https://snap.stanford.edu/data/act-mooc.tar.gz",
+     "description": ""
+    }
+   ],
+   "citations": [
+    "S. Kumar, X. Zhang, and J. Leskovec. Predicting Dynamic Embedding Trajectory in Temporal Interaction Networks. ACM SIGKDD, 2019."
+   ]
+  },
+  {
+   "name": "musae-github",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social network of Github developers.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/github-social.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "37,700",
+    "Edges": "289,003",
+    "Description": "Social network of Github developers."
+   },
+   "statistics": {
+    "Directed": "No.",
+    "Node features": "Yes.",
+    "Edge features": "No.",
+    "Node labels": "Yes. Binary-labeled.",
+    "Temporal": "No.",
+    "Nodes": "37,700",
+    "Edges": "289,003",
+    "Density": "0.001",
+    "Transitvity": "0.013"
+   },
+   "files": [
+    {
+     "name": "git_web_ml.zip",
+     "url": "https://snap.stanford.edu/data/git_web_ml.zip",
+     "description": "GitHub Social Network"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, C. Allen and R. Sarkar. Multi-scale Attributed Node Embedding. 2019."
+   ]
+  },
+  {
+   "name": "feather-deezer-social",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social network of Deezer users from Europe.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/feather-deezer-social.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "28,281",
+    "Edges": "92,752",
+    "Description": "Social network of Deezer users from Europe."
+   },
+   "statistics": {
+    "Directed": "No.",
+    "Node features": "Yes.",
+    "Edge features": "No.",
+    "Node labels": "Yes. Binary class.",
+    "Temporal": "No.",
+    "Nodes": "28,281",
+    "Edges": "92,752",
+    "Density": "0.0002",
+    "Transitvity": "0.0959"
+   },
+   "files": [
+    {
+     "name": "deezer_europe.zip",
+     "url": "https://snap.stanford.edu/data/deezer_europe.zip",
+     "description": "Deezer Europe Social Network"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki and R. Sarkar. Characteristic Functions on Graphs: Birds of a Feather, from Statistical Descriptors to Parametric Models. 2020."
+   ]
+  },
+  {
+   "name": "feather-lastfm-social",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social network of LastFM users from Asia.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/feather-lastfm-social.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "7,624",
+    "Edges": "27,806",
+    "Description": "Social network of LastFM users from Asia."
+   },
+   "statistics": {
+    "Directed": "No.",
+    "Node features": "Yes.",
+    "Edge features": "No.",
+    "Node labels": "Yes. Multi class.",
+    "Temporal": "No.",
+    "Nodes": "7,624",
+    "Edges": "27,806",
+    "Density": "0.001",
+    "Transitvity": "0.179"
+   },
+   "files": [
+    {
+     "name": "lastfm_asia.zip",
+     "url": "https://snap.stanford.edu/data/lastfm_asia.zip",
+     "description": "LastFM Asia Social Network"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki and R. Sarkar. Characteristic Functions on Graphs: Birds of a Feather, from Statistical Descriptors to Parametric Models. 2020."
+   ]
+  },
+  {
+   "name": "twitch-gamers",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Social network of Twitch users.",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/twitch_gamers.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "168,114",
+    "Edges": "6,797,557",
+    "Description": "Social network of Twitch users."
+   },
+   "statistics": {
+    "Directed": "No.",
+    "Node features": "No.",
+    "Edge features": "No.",
+    "Node labels": "Yes.",
+    "Temporal": "No.",
+    "Nodes": "168,114",
+    "Edges": "6,797,557",
+    "Density": "0.0005",
+    "Transitvity": "0.0184"
+   },
+   "files": [
+    {
+     "name": "twitch_gamers.zip",
+     "url": "https://snap.stanford.edu/data/twitch_gamers.zip",
+     "description": "Twitch Gamers Social Network"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki and R. Sarkar. Twitch Gamers: a Dataset for Evaluating Proximity Preserving and Structural Role-based Node Embeddings. 2021."
+   ]
+  },
+  {
+   "name": "congress-Twitter",
+   "categories": [
+    "socnets"
+   ],
+   "category_names": [
+    "Social networks"
+   ],
+   "description": "Twitter interaction network for the US Congress",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/congress-twitter.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "475",
+    "Edges": "13,289",
+    "Description": "Twitter interaction network for the US Congress"
+   },
+   "statistics": {
+    "Directed": "Yes.",
+    "Node features": "No.",
+    "Edge features": "Yes.",
+    "Nodes": "475",
+    "Edges": "13,289"
+   },
+   "files": [
+    {
+     "name": "congress_network.zip",
+     "url": "https://snap.stanford.edu/data/congress_network.zip",
+     "description": "Twitter Interaction Network for the US Congress"
+    }
+   ],
+   "citations": [
+    "C.G. Fink, K. Fullin, G. Gutierrez, N. Omodt, S. Zinnecker, G. Sprint, and S. McCulloch: A centrality measure for quantifying spread on weighted, directed networks. Physica A, 2023."
+   ]
+  },
+  {
+   "name": "com-LiveJournal",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "LiveJournal online social network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-LiveJournal.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "3,997,962",
+    "Edges": "34,681,189",
+    "Communities": "287,512",
+    "Description": "LiveJournal online social network"
+   },
+   "statistics": {
+    "Nodes": "3997962",
+    "Edges": "34681189",
+    "Nodes in largest WCC": "3997962 (1.000)",
+    "Edges in largest WCC": "34681189 (1.000)",
+    "Nodes in largest SCC": "3997962 (1.000)",
+    "Edges in largest SCC": "34681189 (1.000)",
+    "Average clustering coefficient": "0.2843",
+    "Number of triangles": "177820130",
+    "Fraction of closed triangles": "0.04559",
+    "Diameter (longest shortest path)": "17",
+    "90-percentile effective diameter": "6.5"
+   },
+   "files": [
+    {
+     "name": "com-lj.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-lj.ungraph.txt.gz",
+     "description": "Undirected LiveJournal network"
+    },
+    {
+     "name": "com-lj.all.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-lj.all.cmty.txt.gz",
+     "description": "LiveJournal communities"
+    },
+    {
+     "name": "com-lj.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-lj.top5000.cmty.txt.gz",
+     "description": "LiveJournal communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "com-Friendster",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "Friendster online social network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-Friendster.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "65,608,366",
+    "Edges": "1,806,067,135",
+    "Communities": "957,154",
+    "Description": "Friendster online social network"
+   },
+   "statistics": {
+    "Nodes": "65608366",
+    "Edges": "1806067135",
+    "Nodes in largest WCC": "65608366 (1.000)",
+    "Edges in largest WCC": "1806067135 (1.000)",
+    "Nodes in largest SCC": "65608366 (1.000)",
+    "Edges in largest SCC": "1806067135 (1.000)",
+    "Average clustering coefficient": "0.1623",
+    "Number of triangles": "4173724142",
+    "Fraction of closed triangles": "0.005859",
+    "Diameter (longest shortest path)": "32",
+    "90-percentile effective diameter": "5.8"
+   },
+   "files": [
+    {
+     "name": "com-friendster.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz",
+     "description": "Undirected Friendster network"
+    },
+    {
+     "name": "com-friendster.all.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-friendster.all.cmty.txt.gz",
+     "description": "Friendster communities"
+    },
+    {
+     "name": "com-friendster.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-friendster.top5000.cmty.txt.gz",
+     "description": "Friendster communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "com-Orkut",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "Orkut online social network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-Orkut.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "3,072,441",
+    "Edges": "117,185,083",
+    "Communities": "6,288,363",
+    "Description": "Orkut online social network"
+   },
+   "statistics": {
+    "Nodes": "3072441",
+    "Edges": "117185083",
+    "Nodes in largest WCC": "3072441 (1.000)",
+    "Edges in largest WCC": "117185083 (1.000)",
+    "Nodes in largest SCC": "3072441 (1.000)",
+    "Edges in largest SCC": "117185083 (1.000)",
+    "Average clustering coefficient": "0.1666",
+    "Number of triangles": "627584181",
+    "Fraction of closed triangles": "0.01414",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "4.8"
+   },
+   "files": [
+    {
+     "name": "com-orkut.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz",
+     "description": "Undirected Orkut network"
+    },
+    {
+     "name": "com-orkut.all.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-orkut.all.cmty.txt.gz",
+     "description": "Orkut communities"
+    },
+    {
+     "name": "com-orkut.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-orkut.top5000.cmty.txt.gz",
+     "description": "Orkut communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "com-Youtube",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "Youtube online social network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-Youtube.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "1,134,890",
+    "Edges": "2,987,624",
+    "Communities": "8,385",
+    "Description": "Youtube online social network"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "com-youtube.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-youtube.ungraph.txt.gz",
+     "description": "Undirected Youtube network"
+    },
+    {
+     "name": "com-youtube.all.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-youtube.all.cmty.txt.gz",
+     "description": "Youtube communities"
+    },
+    {
+     "name": "com-youtube.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-youtube.top5000.cmty.txt.gz",
+     "description": "Youtube communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "com-DBLP",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "DBLP collaboration network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-DBLP.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "317,080",
+    "Edges": "1,049,866",
+    "Communities": "13,477",
+    "Description": "DBLP collaboration network"
+   },
+   "statistics": {
+    "Nodes": "317080",
+    "Edges": "1049866",
+    "Nodes in largest WCC": "317080 (1.000)",
+    "Edges in largest WCC": "1049866 (1.000)",
+    "Nodes in largest SCC": "317080 (1.000)",
+    "Edges in largest SCC": "1049866 (1.000)",
+    "Average clustering coefficient": "0.6324",
+    "Number of triangles": "2224385",
+    "Fraction of closed triangles": "0.1283",
+    "Diameter (longest shortest path)": "21",
+    "90-percentile effective diameter": "8"
+   },
+   "files": [
+    {
+     "name": "com-dblp.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz",
+     "description": "Undirected DBLP co-authorship network"
+    },
+    {
+     "name": "com-dblp.all.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.all.cmty.txt.gz",
+     "description": "DBLP communities"
+    },
+    {
+     "name": "com-dblp.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-dblp.top5000.cmty.txt.gz",
+     "description": "DBLP communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "com-Amazon",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "Amazon product network",
+   "type": "Undirected, Communities",
+   "url": "https://snap.stanford.edu/data/com-Amazon.html",
+   "columns": {
+    "Type": "Undirected, Communities",
+    "Nodes": "334,863",
+    "Edges": "925,872",
+    "Communities": "75,149",
+    "Description": "Amazon product network"
+   },
+   "statistics": {
+    "Nodes": "334863",
+    "Edges": "925872",
+    "Nodes in largest WCC": "334863 (1.000)",
+    "Edges in largest WCC": "925872 (1.000)",
+    "Nodes in largest SCC": "334863 (1.000)",
+    "Edges in largest SCC": "925872 (1.000)",
+    "Average clustering coefficient": "0.3967",
+    "Number of triangles": "667129",
+    "Fraction of closed triangles": "0.07925",
+    "Diameter (longest shortest path)": "44",
+    "90-percentile effective diameter": "15"
+   },
+   "files": [
+    {
+     "name": "com-amazon.ungraph.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-amazon.ungraph.txt.gz",
+     "description": "Undirected Amazon product co-purchasing network"
+    },
+    {
+     "name": "com-amazon.all.dedup.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-amazon.all.dedup.cmty.txt.gz",
+     "description": "Amazon communities"
+    },
+    {
+     "name": "com-amazon.top5000.cmty.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/communities/com-amazon.top5000.cmty.txt.gz",
+     "description": "Amazon communities (Top 5,000)"
+    }
+   ],
+   "citations": [
+    "J. Yang and J. Leskovec. Defining and Evaluating Network Communities based on Ground-truth. ICDM, 2012."
+   ]
+  },
+  {
+   "name": "email-Eu-core",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "E-mail network",
+   "type": "Directed, Communities",
+   "url": "https://snap.stanford.edu/data/email-Eu-core.html",
+   "columns": {
+    "Type": "Directed, Communities",
+    "Nodes": "1,005",
+    "Edges": "25,571",
+    "Communities": "42",
+    "Description": "E-mail network"
+   },
+   "statistics": {
+    "Nodes": "1005",
+    "Edges": "25571",
+    "Nodes in largest WCC": "986 (0.981)",
+    "Edges in largest WCC": "25552 (0.999)",
+    "Nodes in largest SCC": "803 (0.799)",
+    "Edges in largest SCC": "24729 (0.967)",
+    "Average clustering coefficient": "0.3994",
+    "Number of triangles": "105461",
+    "Fraction of closed triangles": "0.1085",
+    "Diameter (longest shortest path)": "7",
+    "90-percentile effective diameter": "2.9"
+   },
+   "files": [
+    {
+     "name": "email-Eu-core.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core.txt.gz",
+     "description": "Email communication links between members of the institution"
+    },
+    {
+     "name": "email-Eu-core-department-labels.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-department-labels.txt.gz",
+     "description": "Department membership labels"
+    }
+   ],
+   "citations": [
+    "Hao Yin, Austin R. Benson, Jure Leskovec, and David F. Gleich. \"Local Higher-order Graph Clustering.\" In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. 2017.",
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "wiki-topcats",
+   "categories": [
+    "communities"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities"
+   ],
+   "description": "Wikipedia hyperlinks",
+   "type": "Directed, Communities",
+   "url": "https://snap.stanford.edu/data/wiki-topcats.html",
+   "columns": {
+    "Type": "Directed, Communities",
+    "Nodes": "1,791,489",
+    "Edges": "28,511,807",
+    "Communities": "17,364",
+    "Description": "Wikipedia hyperlinks"
+   },
+   "statistics": {
+    "Nodes": "1791489",
+    "Edges": "28511807",
+    "Nodes in largest WCC": "1791489 (1.000)",
+    "Edges in largest WCC": "28511807 (1.000)",
+    "Nodes in largest SCC": "1791489 (1.000)",
+    "Edges in largest SCC": "28511807 (1.000)",
+    "Average clustering coefficient": "0.2746",
+    "Number of triangles": "52106893",
+    "Fraction of closed triangles": "0.00165",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "3.8"
+   },
+   "files": [
+    {
+     "name": "wiki-topcats.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-topcats.txt.gz",
+     "description": "Hyperlink network of Wikipedia"
+    },
+    {
+     "name": "wiki-topcats-categories.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-topcats-categories.txt.gz",
+     "description": "Which articles are in which of the top categories"
+    },
+    {
+     "name": "wiki-topcats-page-names.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-topcats-page-names.txt.gz",
+     "description": "Names of the articles"
+    }
+   ],
+   "citations": [
+    "Hao Yin, Austin R. Benson, Jure Leskovec, and David F. Gleich. \"Local Higher-order Graph Clustering.\" In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining. 2017.",
+    "Christine Klymko, David F. Gleich, and Tamara G. Kolda. \"Using triangles to improve community detection in directed networks.\" In Proceedings of the ASE BigData Conference. 2014."
+   ]
+  },
+  {
+   "name": "cisco-secure-workload",
+   "categories": [
+    "communities",
+    "ccn"
+   ],
+   "category_names": [
+    "Networks with ground-truth communities",
+    "Computer communication networks"
+   ],
+   "description": "22 graphs of communications between computers, 2 have ground truth groupings",
+   "type": "Directed, Communities, Attributed",
+   "url": "https://snap.stanford.edu/data/cisco-networks.html",
+   "columns": {
+    "Type": "Directed, Communities, Attributed",
+    "Number of graphs": "22",
+    "Description": "22 graphs of communications between computers, 2 have ground truth groupings",
+    "Nodes": "between 86 and 278,739",
+    "Edges": "between 155 and 2,158,346",
+    "Communities": "10 and 23"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "CiscoSecureWorkload_22_networks.zip",
+     "url": "https://snap.stanford.edu/data/CiscoSecureWorkload_22_networks.zip",
+     "description": "Cisco networks"
+    }
+   ],
+   "citations": [
+    "O. Madani, S.A. Averineni, S. Gandham: A Dataset of Networks of Computing Hosts, IWSPA 2022."
+   ]
+  },
+  {
+   "name": "email-EuAll",
+   "categories": [
+    "email"
+   ],
+   "category_names": [
+    "Communication networks"
+   ],
+   "description": "Email network from a EU research institution",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/email-EuAll.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "265,214",
+    "Edges": "420,045",
+    "Description": "Email network from a EU research institution"
+   },
+   "statistics": {
+    "Nodes": "265214",
+    "Edges": "420045",
+    "Nodes in largest WCC": "224832 (0.848)",
+    "Edges in largest WCC": "395270 (0.941)",
+    "Nodes in largest SCC": "34203 (0.129)",
+    "Edges in largest SCC": "151930 (0.362)",
+    "Average clustering coefficient": "0.0671",
+    "Number of triangles": "267313",
+    "Fraction of closed triangles": "0.001373",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "4.5"
+   },
+   "files": [
+    {
+     "name": "email-EuAll.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-EuAll.txt.gz",
+     "description": "Email network of a large European Research Institution"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "email-Enron",
+   "categories": [
+    "email"
+   ],
+   "category_names": [
+    "Communication networks"
+   ],
+   "description": "Email communication network from Enron",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/email-Enron.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "36,692",
+    "Edges": "183,831",
+    "Description": "Email communication network from Enron"
+   },
+   "statistics": {
+    "Nodes": "36692",
+    "Edges": "183831",
+    "Nodes in largest WCC": "33696 (0.918)",
+    "Edges in largest WCC": "180811 (0.984)",
+    "Nodes in largest SCC": "33696 (0.918)",
+    "Edges in largest SCC": "180811 (0.984)",
+    "Average clustering coefficient": "0.4970",
+    "Number of triangles": "727044",
+    "Fraction of closed triangles": "0.03015",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "4.8"
+   },
+   "files": [
+    {
+     "name": "email-Enron.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Enron.txt.gz",
+     "description": "Enron email network"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009.",
+    "B. Klimmt, Y. Yang. Introducing the Enron corpus. CEAS conference, 2004."
+   ]
+  },
+  {
+   "name": "wiki-Talk",
+   "categories": [
+    "email",
+    "wikipedia"
+   ],
+   "category_names": [
+    "Communication networks",
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Wikipedia talk (communication) network",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/wiki-Talk.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "2,394,385",
+    "Edges": "5,021,410",
+    "Description": "Wikipedia talk (communication) network"
+   },
+   "statistics": {
+    "Nodes": "2394385",
+    "Edges": "5021410",
+    "Nodes in largest WCC": "2388953 (0.998)",
+    "Edges in largest WCC": "5018445 (0.999)",
+    "Nodes in largest SCC": "111881 (0.047)",
+    "Edges in largest SCC": "1477893 (0.294)",
+    "Average clustering coefficient": "0.0526",
+    "Number of triangles": "9203519",
+    "Fraction of closed triangles": "0.001112",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "4"
+   },
+   "files": [
+    {
+     "name": "Wiki-Talk.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-Talk.txt.gz",
+     "description": "Wikipedia talk graph till January 2008"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Signed Networks in Social Media. CHI 2010.",
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Predicting Positive and Negative Links in Online Social Networks. WWW 2010."
+   ]
+  },
+  {
+   "name": "cit-HepPh",
+   "categories": [
+    "citnets"
+   ],
+   "category_names": [
+    "Citation networks"
+   ],
+   "description": "Arxiv High Energy Physics paper citation network",
+   "type": "Directed, Temporal, Labeled",
+   "url": "https://snap.stanford.edu/data/cit-HepPh.html",
+   "columns": {
+    "Type": "Directed, Temporal, Labeled",
+    "Nodes": "34,546",
+    "Edges": "421,578",
+    "Description": "Arxiv High Energy Physics paper citation network"
+   },
+   "statistics": {
+    "Nodes": "34546",
+    "Edges": "421578",
+    "Nodes in largest WCC": "34401 (0.996)",
+    "Edges in largest WCC": "421485 (1.000)",
+    "Nodes in largest SCC": "12711 (0.368)",
+    "Edges in largest SCC": "139981 (0.332)",
+    "Average clustering coefficient": "0.2848",
+    "Number of triangles": "1276868",
+    "Fraction of closed triangles": "0.05377",
+    "Diameter (longest shortest path)": "12",
+    "90-percentile effective diameter": "5"
+   },
+   "files": [
+    {
+     "name": "cit-HepPh.txt.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepPh.txt.gz",
+     "description": "Paper citation network of Arxiv High Energy Physics category"
+    },
+    {
+     "name": "cit-HepPh-dates.txt.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepPh-dates.txt.gz",
+     "description": "Time of nodes (paper submission time to Arxiv)"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005.",
+    "J. Gehrke, P. Ginsparg, J. M. Kleinberg. Overview of the 2003 KDD Cup. SIGKDD Explorations 5(2): 149-151, 2003."
+   ]
+  },
+  {
+   "name": "cit-HepTh",
+   "categories": [
+    "citnets"
+   ],
+   "category_names": [
+    "Citation networks"
+   ],
+   "description": "Arxiv High Energy Physics paper citation network",
+   "type": "Directed, Temporal, Labeled",
+   "url": "https://snap.stanford.edu/data/cit-HepTh.html",
+   "columns": {
+    "Type": "Directed, Temporal, Labeled",
+    "Nodes": "27,770",
+    "Edges": "352,807",
+    "Description": "Arxiv High Energy Physics paper citation network"
+   },
+   "statistics": {
+    "Nodes": "27770",
+    "Edges": "352807",
+    "Nodes in largest WCC": "27400 (0.987)",
+    "Edges in largest WCC": "352542 (0.999)",
+    "Nodes in largest SCC": "7464 (0.269)",
+    "Edges in largest SCC": "116268 (0.330)",
+    "Average clustering coefficient": "0.3120",
+    "Number of triangles": "1478735",
+    "Fraction of closed triangles": "0.04331",
+    "Diameter (longest shortest path)": "13",
+    "90-percentile effective diameter": "5.3"
+   },
+   "files": [
+    {
+     "name": "cit-HepTh.txt.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepTh.txt.gz",
+     "description": "Paper citation network of Arxiv High Energy Physics Theory category"
+    },
+    {
+     "name": "cit-HepTh-dates.txt.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepTh-dates.txt.gz",
+     "description": "Time of nodes (paper submission time to Arxiv)"
+    },
+    {
+     "name": "cit-HepTh-abstracts.tar.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepTh-abstracts.tar.gz",
+     "description": "Paper meta information (see below)"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005.",
+    "J. Gehrke, P. Ginsparg, J. M. Kleinberg. Overview of the 2003 KDD Cup. SIGKDD Explorations 5(2): 149-151, 2003."
+   ]
+  },
+  {
+   "name": "cit-Patents",
+   "categories": [
+    "citnets"
+   ],
+   "category_names": [
+    "Citation networks"
+   ],
+   "description": "Citation network among US Patents",
+   "type": "Directed, Temporal, Labeled",
+   "url": "https://snap.stanford.edu/data/cit-Patents.html",
+   "columns": {
+    "Type": "Directed, Temporal, Labeled",
+    "Nodes": "3,774,768",
+    "Edges": "16,518,948",
+    "Description": "Citation network among US Patents"
+   },
+   "statistics": {
+    "Nodes": "3774768",
+    "Edges": "16518948",
+    "Nodes in largest WCC": "3764117 (0.997)",
+    "Edges in largest WCC": "16511741 (1.000)",
+    "Nodes in largest SCC": "1 (0.000)",
+    "Edges in largest SCC": "0 (0.000)",
+    "Average clustering coefficient": "0.0757",
+    "Number of triangles": "7515023",
+    "Fraction of closed triangles": "0.02343",
+    "Diameter (longest shortest path)": "22",
+    "90-percentile effective diameter": "9.4"
+   },
+   "files": [
+    {
+     "name": "cit-Patents.txt.gz",
+     "url": "https://snap.stanford.edu/data/cit-Patents.txt.gz",
+     "description": "US Patent citation network 1975-1999"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "ca-AstroPh",
+   "categories": [
+    "canets"
+   ],
+   "category_names": [
+    "Collaboration networks"
+   ],
+   "description": "Collaboration network of Arxiv Astro Physics",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ca-AstroPh.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "18,772",
+    "Edges": "198,110",
+    "Description": "Collaboration network of Arxiv Astro Physics"
+   },
+   "statistics": {
+    "Nodes": "18772",
+    "Edges": "198110",
+    "Nodes in largest WCC": "17903 (0.954)",
+    "Edges in largest WCC": "197031 (0.995)",
+    "Nodes in largest SCC": "17903 (0.954)",
+    "Edges in largest SCC": "197031 (0.995)",
+    "Average clustering coefficient": "0.6306",
+    "Number of triangles": "1351441",
+    "Fraction of closed triangles": "0.1345",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "5"
+   },
+   "files": [
+    {
+     "name": "ca-AstroPh.txt.gz",
+     "url": "https://snap.stanford.edu/data/ca-AstroPh.txt.gz",
+     "description": "Collaboration network of Arxiv Astro Physics category"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "ca-CondMat",
+   "categories": [
+    "canets"
+   ],
+   "category_names": [
+    "Collaboration networks"
+   ],
+   "description": "Collaboration network of Arxiv Condensed Matter",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ca-CondMat.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "23,133",
+    "Edges": "93,497",
+    "Description": "Collaboration network of Arxiv Condensed Matter"
+   },
+   "statistics": {
+    "Nodes": "23133",
+    "Edges": "93497",
+    "Nodes in largest WCC": "21363 (0.923)",
+    "Edges in largest WCC": "91342 (0.977)",
+    "Nodes in largest SCC": "21363 (0.923)",
+    "Edges in largest SCC": "91342 (0.977)",
+    "Average clustering coefficient": "0.6334",
+    "Number of triangles": "173361",
+    "Fraction of closed triangles": "0.107",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "6.5"
+   },
+   "files": [
+    {
+     "name": "ca-CondMat.txt.gz",
+     "url": "https://snap.stanford.edu/data/ca-CondMat.txt.gz",
+     "description": "Collaboration network of Arxiv Condensed Matter category"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "ca-GrQc",
+   "categories": [
+    "canets"
+   ],
+   "category_names": [
+    "Collaboration networks"
+   ],
+   "description": "Collaboration network of Arxiv General Relativity",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ca-GrQc.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "5,242",
+    "Edges": "14,496",
+    "Description": "Collaboration network of Arxiv General Relativity"
+   },
+   "statistics": {
+    "Nodes": "5242",
+    "Edges": "14496",
+    "Nodes in largest WCC": "4158 (0.793)",
+    "Edges in largest WCC": "13428 (0.926)",
+    "Nodes in largest SCC": "4158 (0.793)",
+    "Edges in largest SCC": "13428 (0.926)",
+    "Average clustering coefficient": "0.5296",
+    "Number of triangles": "48260",
+    "Fraction of closed triangles": "0.3619",
+    "Diameter (longest shortest path)": "17",
+    "90-percentile effective diameter": "7.6"
+   },
+   "files": [
+    {
+     "name": "ca-GrQc.txt.gz",
+     "url": "https://snap.stanford.edu/data/ca-GrQc.txt.gz",
+     "description": "Collaboration network of Arxiv General Relativity category"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "ca-HepPh",
+   "categories": [
+    "canets"
+   ],
+   "category_names": [
+    "Collaboration networks"
+   ],
+   "description": "Collaboration network of Arxiv High Energy Physics",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ca-HepPh.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "12,008",
+    "Edges": "118,521",
+    "Description": "Collaboration network of Arxiv High Energy Physics"
+   },
+   "statistics": {
+    "Nodes": "12008",
+    "Edges": "118521",
+    "Nodes in largest WCC": "11204 (0.933)",
+    "Edges in largest WCC": "117649 (0.993)",
+    "Nodes in largest SCC": "11204 (0.933)",
+    "Edges in largest SCC": "117649 (0.993)",
+    "Average clustering coefficient": "0.6115",
+    "Number of triangles": "3358499",
+    "Fraction of closed triangles": "0.3923",
+    "Diameter (longest shortest path)": "13",
+    "90-percentile effective diameter": "5.8"
+   },
+   "files": [
+    {
+     "name": "ca-HepPh.txt.gz",
+     "url": "https://snap.stanford.edu/data/ca-HepPh.txt.gz",
+     "description": "Collaboration network of Arxiv High Energy Physics category"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "ca-HepTh",
+   "categories": [
+    "canets"
+   ],
+   "category_names": [
+    "Collaboration networks"
+   ],
+   "description": "Collaboration network of Arxiv High Energy Physics Theory",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/ca-HepTh.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "9,877",
+    "Edges": "25,998",
+    "Description": "Collaboration network of Arxiv High Energy Physics Theory"
+   },
+   "statistics": {
+    "Nodes": "9877",
+    "Edges": "25998",
+    "Nodes in largest WCC": "8638 (0.875)",
+    "Edges in largest WCC": "24827 (0.955)",
+    "Nodes in largest SCC": "8638 (0.875)",
+    "Edges in largest SCC": "24827 (0.955)",
+    "Average clustering coefficient": "0.4714",
+    "Number of triangles": "28339",
+    "Fraction of closed triangles": "0.1168",
+    "Diameter (longest shortest path)": "17",
+    "90-percentile effective diameter": "7.4"
+   },
+   "files": [
+    {
+     "name": "ca-HepTh.txt.gz",
+     "url": "https://snap.stanford.edu/data/ca-HepTh.txt.gz",
+     "description": "Collaboration network of Arxiv High Energy Physics Theory category"
+    },
+    {
+     "name": "cit-HepTh-abstracts.tar.gz",
+     "url": "https://snap.stanford.edu/data/cit-HepTh-abstracts.tar.gz",
+     "description": "Paper meta information (see below)"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "web-BerkStan",
+   "categories": [
+    "web"
+   ],
+   "category_names": [
+    "Web graphs"
+   ],
+   "description": "Web graph of Berkeley and Stanford",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/web-BerkStan.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "685,230",
+    "Edges": "7,600,595",
+    "Description": "Web graph of Berkeley and Stanford"
+   },
+   "statistics": {
+    "Nodes": "685230",
+    "Edges": "7600595",
+    "Nodes in largest WCC": "654782 (0.956)",
+    "Edges in largest WCC": "7499425 (0.987)",
+    "Nodes in largest SCC": "334857 (0.489)",
+    "Edges in largest SCC": "4523232 (0.595)",
+    "Average clustering coefficient": "0.5967",
+    "Number of triangles": "64690980",
+    "Fraction of closed triangles": "0.002746",
+    "Diameter (longest shortest path)": "514",
+    "90-percentile effective diameter": "9.9"
+   },
+   "files": [
+    {
+     "name": "web-BerkStan.txt.gz",
+     "url": "https://snap.stanford.edu/data/web-BerkStan.txt.gz",
+     "description": "Berkely-Stanford web graph from 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "web-Google",
+   "categories": [
+    "web"
+   ],
+   "category_names": [
+    "Web graphs"
+   ],
+   "description": "Web graph from Google",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/web-Google.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "875,713",
+    "Edges": "5,105,039",
+    "Description": "Web graph from Google"
+   },
+   "statistics": {
+    "Nodes": "875713",
+    "Edges": "5105039",
+    "Nodes in largest WCC": "855802 (0.977)",
+    "Edges in largest WCC": "5066842 (0.993)",
+    "Nodes in largest SCC": "434818 (0.497)",
+    "Edges in largest SCC": "3419124 (0.670)",
+    "Average clustering coefficient": "0.5143",
+    "Number of triangles": "13391903",
+    "Fraction of closed triangles": "0.01911",
+    "Diameter (longest shortest path)": "21",
+    "90-percentile effective diameter": "8.1"
+   },
+   "files": [
+    {
+     "name": "web-Google.txt.gz",
+     "url": "https://snap.stanford.edu/data/web-Google.txt.gz",
+     "description": "Webgraph from the Google programming contest, 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009.",
+    "Google programming contest, 2002"
+   ]
+  },
+  {
+   "name": "web-NotreDame",
+   "categories": [
+    "web"
+   ],
+   "category_names": [
+    "Web graphs"
+   ],
+   "description": "Web graph of Notre Dame",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/web-NotreDame.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "325,729",
+    "Edges": "1,497,134",
+    "Description": "Web graph of Notre Dame"
+   },
+   "statistics": {
+    "Nodes": "325729",
+    "Edges": "1497134",
+    "Nodes in largest WCC": "325729 (1.000)",
+    "Edges in largest WCC": "1497134 (1.000)",
+    "Nodes in largest SCC": "53968 (0.166)",
+    "Edges in largest SCC": "304685 (0.204)",
+    "Average clustering coefficient": "0.2346",
+    "Number of triangles": "8910005",
+    "Fraction of closed triangles": "0.03104",
+    "Diameter (longest shortest path)": "46",
+    "90-percentile effective diameter": "9.4"
+   },
+   "files": [
+    {
+     "name": "web-NotreDame.txt.gz",
+     "url": "https://snap.stanford.edu/data/web-NotreDame.txt.gz",
+     "description": "University of Notre Dame web graph from 1999"
+    }
+   ],
+   "citations": [
+    "R. Albert, H. Jeong, A.-L. Barabasi. Diameter of the World-Wide Web. Nature, 1999."
+   ]
+  },
+  {
+   "name": "web-Stanford",
+   "categories": [
+    "web"
+   ],
+   "category_names": [
+    "Web graphs"
+   ],
+   "description": "Web graph of Stanford.edu",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/web-Stanford.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "281,903",
+    "Edges": "2,312,497",
+    "Description": "Web graph of Stanford.edu"
+   },
+   "statistics": {
+    "Nodes": "281903",
+    "Edges": "2312497",
+    "Nodes in largest WCC": "255265 (0.906)",
+    "Edges in largest WCC": "2234572 (0.966)",
+    "Nodes in largest SCC": "150532 (0.534)",
+    "Edges in largest SCC": "1576314 (0.682)",
+    "Average clustering coefficient": "0.5976",
+    "Number of triangles": "11329473",
+    "Fraction of closed triangles": "0.002889",
+    "Diameter (longest shortest path)": "674",
+    "90-percentile effective diameter": "9.7"
+   },
+   "files": [
+    {
+     "name": "web-Stanford.txt.gz",
+     "url": "https://snap.stanford.edu/data/web-Stanford.txt.gz",
+     "description": "Stanford web graph from 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "amazon0302",
+   "categories": [
+    "amazon"
+   ],
+   "category_names": [
+    "Product co-purchasing networks"
+   ],
+   "description": "Amazon product co-purchasing network from March 2 2003",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/amazon0302.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "262,111",
+    "Edges": "1,234,877",
+    "Description": "Amazon product co-purchasing network from March 2 2003"
+   },
+   "statistics": {
+    "Nodes": "262111",
+    "Edges": "1234877",
+    "Nodes in largest WCC": "262111 (1.000)",
+    "Edges in largest WCC": "1234877 (1.000)",
+    "Nodes in largest SCC": "241761 (0.922)",
+    "Edges in largest SCC": "1131217 (0.916)",
+    "Average clustering coefficient": "0.4198",
+    "Number of triangles": "717719",
+    "Fraction of closed triangles": "0.09339",
+    "Diameter (longest shortest path)": "32",
+    "90-percentile effective diameter": "11"
+   },
+   "files": [
+    {
+     "name": "amazon0302.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon0302.txt.gz",
+     "description": "Amazon product co-purchaisng network from March 02 2003"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Adamic and B. Adamic. The Dynamics of Viral Marketing. ACM Transactions on the Web (ACM TWEB), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "amazon0312",
+   "categories": [
+    "amazon"
+   ],
+   "category_names": [
+    "Product co-purchasing networks"
+   ],
+   "description": "Amazon product co-purchasing network from March 12 2003",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/amazon0312.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "400,727",
+    "Edges": "3,200,440",
+    "Description": "Amazon product co-purchasing network from March 12 2003"
+   },
+   "statistics": {
+    "Nodes": "400727",
+    "Edges": "3200440",
+    "Nodes in largest WCC": "400727 (1.000)",
+    "Edges in largest WCC": "3200440 (1.000)",
+    "Nodes in largest SCC": "380167 (0.949)",
+    "Edges in largest SCC": "3069889 (0.959)",
+    "Average clustering coefficient": "0.4022",
+    "Number of triangles": "3686467",
+    "Fraction of closed triangles": "0.05991",
+    "Diameter (longest shortest path)": "18",
+    "90-percentile effective diameter": "7.6"
+   },
+   "files": [
+    {
+     "name": "amazon0312.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon0312.txt.gz",
+     "description": "Amazon product co-purchaisng network from March 12 2003"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Adamic and B. Adamic. The Dynamics of Viral Marketing. ACM Transactions on the Web (ACM TWEB), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "amazon0505",
+   "categories": [
+    "amazon"
+   ],
+   "category_names": [
+    "Product co-purchasing networks"
+   ],
+   "description": "Amazon product co-purchasing network from May 5 2003",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/amazon0505.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "410,236",
+    "Edges": "3,356,824",
+    "Description": "Amazon product co-purchasing network from May 5 2003"
+   },
+   "statistics": {
+    "Nodes": "410236",
+    "Edges": "3356824",
+    "Nodes in largest WCC": "410236 (1.000)",
+    "Edges in largest WCC": "3356824 (1.000)",
+    "Nodes in largest SCC": "390304 (0.951)",
+    "Edges in largest SCC": "3255816 (0.970)",
+    "Average clustering coefficient": "0.4064",
+    "Number of triangles": "3951063",
+    "Fraction of closed triangles": "0.06068",
+    "Diameter (longest shortest path)": "20",
+    "90-percentile effective diameter": "7.6"
+   },
+   "files": [
+    {
+     "name": "amazon0505.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon0505.txt.gz",
+     "description": "Amazon product co-purchaisng network from May 05 2003"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Adamic and B. Adamic. The Dynamics of Viral Marketing. ACM Transactions on the Web (ACM TWEB), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "amazon0601",
+   "categories": [
+    "amazon"
+   ],
+   "category_names": [
+    "Product co-purchasing networks"
+   ],
+   "description": "Amazon product co-purchasing network from June 1 2003",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/amazon0601.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "403,394",
+    "Edges": "3,387,388",
+    "Description": "Amazon product co-purchasing network from June 1 2003"
+   },
+   "statistics": {
+    "Nodes": "403394",
+    "Edges": "3387388",
+    "Nodes in largest WCC": "403364 (1.000)",
+    "Edges in largest WCC": "3387224 (1.000)",
+    "Nodes in largest SCC": "395234 (0.980)",
+    "Edges in largest SCC": "3301092 (0.975)",
+    "Average clustering coefficient": "0.4177",
+    "Number of triangles": "3986507",
+    "Fraction of closed triangles": "0.06206",
+    "Diameter (longest shortest path)": "21",
+    "90-percentile effective diameter": "7.6"
+   },
+   "files": [
+    {
+     "name": "amazon0601.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon0601.txt.gz",
+     "description": "Amazon product co-purchaisng network from June 01 2003"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Adamic and B. Adamic. The Dynamics of Viral Marketing. ACM Transactions on the Web (ACM TWEB), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "amazon-meta",
+   "categories": [
+    "amazon"
+   ],
+   "category_names": [
+    "Product co-purchasing networks"
+   ],
+   "description": "Amazon product metadata: product info and all reviews on around 548,552 products.",
+   "type": "Metadata",
+   "url": "https://snap.stanford.edu/data/amazon-meta.html",
+   "columns": {
+    "Type": "Metadata",
+    "Nodes": "548,552",
+    "Edges": "1,788,725",
+    "Description": "Amazon product metadata: product info and all reviews on around 548,552 products."
+   },
+   "statistics": {
+    "Products": "548,552",
+    "Product-Project Edges": "1,788,725",
+    "Reviews": "7,781,990",
+    "Product category memberships": "2,509,699",
+    "Books": "393561",
+    "DVDs": "19828",
+    "Music CDs": "103144",
+    "Videos": "26132"
+   },
+   "files": [
+    {
+     "name": "amazon-meta.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/amazon/amazon-meta.txt.gz",
+     "description": "Amazon product metadata and reviews from summer 2006"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Adamic and B. Adamic. The Dynamics of Viral Marketing. ACM Transactions on the Web (ACM TWEB), 1(1), 2007."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella04",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 4 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella04.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "10,876",
+    "Edges": "39,994",
+    "Description": "Gnutella peer to peer network from August 4 2002"
+   },
+   "statistics": {
+    "Nodes": "10876",
+    "Edges": "39994",
+    "Nodes in largest WCC": "10876 (1.000)",
+    "Edges in largest WCC": "39994 (1.000)",
+    "Nodes in largest SCC": "4317 (0.397)",
+    "Edges in largest SCC": "18742 (0.469)",
+    "Average clustering coefficient": "0.0062",
+    "Number of triangles": "934",
+    "Fraction of closed triangles": "0.001807",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "5.4"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella04.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella04.txt.gz",
+     "description": "Directed Gnutella P2P network from August 4 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella05",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 5 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella05.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "8,846",
+    "Edges": "31,839",
+    "Description": "Gnutella peer to peer network from August 5 2002"
+   },
+   "statistics": {
+    "Nodes": "8846",
+    "Edges": "31839",
+    "Nodes in largest WCC": "8842 (1.000)",
+    "Edges in largest WCC": "31837 (1.000)",
+    "Nodes in largest SCC": "3234 (0.366)",
+    "Edges in largest SCC": "13453 (0.423)",
+    "Average clustering coefficient": "0.0072",
+    "Number of triangles": "1112",
+    "Fraction of closed triangles": "0.002546",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "5.3"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella05.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella05.txt.gz",
+     "description": "Directed Gnutella P2P network from August 5 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella06",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 6 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella06.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "8,717",
+    "Edges": "31,525",
+    "Description": "Gnutella peer to peer network from August 6 2002"
+   },
+   "statistics": {
+    "Nodes": "8717",
+    "Edges": "31525",
+    "Nodes in largest WCC": "8717 (1.000)",
+    "Edges in largest WCC": "31525 (1.000)",
+    "Nodes in largest SCC": "3226 (0.370)",
+    "Edges in largest SCC": "13589 (0.431)",
+    "Average clustering coefficient": "0.0067",
+    "Number of triangles": "1142",
+    "Fraction of closed triangles": "0.002717",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "5.3"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella06.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella06.txt.gz",
+     "description": "Directed Gnutella P2P network from August 6 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella08",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 8 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella08.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "6,301",
+    "Edges": "20,777",
+    "Description": "Gnutella peer to peer network from August 8 2002"
+   },
+   "statistics": {
+    "Nodes": "6301",
+    "Edges": "20777",
+    "Nodes in largest WCC": "6299 (1.000)",
+    "Edges in largest WCC": "20776 (1.000)",
+    "Nodes in largest SCC": "2068 (0.328)",
+    "Edges in largest SCC": "9313 (0.448)",
+    "Average clustering coefficient": "0.0109",
+    "Number of triangles": "2383",
+    "Fraction of closed triangles": "0.006983",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "5.5"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella08.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella08.txt.gz",
+     "description": "Directed Gnutella P2P network from August 8 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella09",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 9 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella09.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "8,114",
+    "Edges": "26,013",
+    "Description": "Gnutella peer to peer network from August 9 2002"
+   },
+   "statistics": {
+    "Nodes": "8114",
+    "Edges": "26013",
+    "Nodes in largest WCC": "8104 (0.999)",
+    "Edges in largest WCC": "26008 (1.000)",
+    "Nodes in largest SCC": "2624 (0.323)",
+    "Edges in largest SCC": "10776 (0.414)",
+    "Average clustering coefficient": "0.0095",
+    "Number of triangles": "2354",
+    "Fraction of closed triangles": "0.005789",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "5.6"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella09.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella09.txt.gz",
+     "description": "Directed Gnutella P2P network from August 9 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella24",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 24 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella24.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "26,518",
+    "Edges": "65,369",
+    "Description": "Gnutella peer to peer network from August 24 2002"
+   },
+   "statistics": {
+    "Nodes": "26518",
+    "Edges": "65369",
+    "Nodes in largest WCC": "26498 (0.999)",
+    "Edges in largest WCC": "65359 (1.000)",
+    "Nodes in largest SCC": "6352 (0.240)",
+    "Edges in largest SCC": "22928 (0.351)",
+    "Average clustering coefficient": "0.0055",
+    "Number of triangles": "986",
+    "Fraction of closed triangles": "0.001371",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "6.1"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella24.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella24.txt.gz",
+     "description": "Directed Gnutella P2P network from August 24 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella25",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 25 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella25.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "22,687",
+    "Edges": "54,705",
+    "Description": "Gnutella peer to peer network from August 25 2002"
+   },
+   "statistics": {
+    "Nodes": "22687",
+    "Edges": "54705",
+    "Nodes in largest WCC": "22663 (0.999)",
+    "Edges in largest WCC": "54693 (1.000)",
+    "Nodes in largest SCC": "5153 (0.227)",
+    "Edges in largest SCC": "17695 (0.323)",
+    "Average clustering coefficient": "0.0053",
+    "Number of triangles": "806",
+    "Fraction of closed triangles": "0.001516",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "6.3"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella25.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella25.txt.gz",
+     "description": "Directed Gnutella P2P network from August 25 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella30",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 30 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella30.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "36,682",
+    "Edges": "88,328",
+    "Description": "Gnutella peer to peer network from August 30 2002"
+   },
+   "statistics": {
+    "Nodes": "36682",
+    "Edges": "88328",
+    "Nodes in largest WCC": "36646 (0.999)",
+    "Edges in largest WCC": "88303 (1.000)",
+    "Nodes in largest SCC": "8490 (0.231)",
+    "Edges in largest SCC": "31706 (0.359)",
+    "Average clustering coefficient": "0.0063",
+    "Number of triangles": "1590",
+    "Fraction of closed triangles": "0.001727",
+    "Diameter (longest shortest path)": "10",
+    "90-percentile effective diameter": "6.6"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella30.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella30.txt.gz",
+     "description": "Directed Gnutella P2P network from August 30 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "p2p-Gnutella31",
+   "categories": [
+    "p2p"
+   ],
+   "category_names": [
+    "Internet peer-to-peer networks"
+   ],
+   "description": "Gnutella peer to peer network from August 31 2002",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/p2p-Gnutella31.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "62,586",
+    "Edges": "147,892",
+    "Description": "Gnutella peer to peer network from August 31 2002"
+   },
+   "statistics": {
+    "Nodes": "62586",
+    "Edges": "147892",
+    "Nodes in largest WCC": "62561 (1.000)",
+    "Edges in largest WCC": "147878 (1.000)",
+    "Nodes in largest SCC": "14149 (0.226)",
+    "Edges in largest SCC": "50916 (0.344)",
+    "Average clustering coefficient": "0.0055",
+    "Number of triangles": "2024",
+    "Fraction of closed triangles": "0.001294",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "6.7"
+   },
+   "files": [
+    {
+     "name": "p2p-Gnutella31.txt.gz",
+     "url": "https://snap.stanford.edu/data/p2p-Gnutella31.txt.gz",
+     "description": "Directed Gnutella P2P network from August 31 2002"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graph Evolution: Densification and Shrinking Diameters. ACM Transactions on Knowledge Discovery from Data (ACM TKDD), 1(1), 2007.",
+    "M. Ripeanu and I. Foster and A. Iamnitchi. Mapping the Gnutella Network: Properties of Large-Scale Peer-to-Peer Systems and Implications for System Design. IEEE Internet Computing Journal, 2002."
+   ]
+  },
+  {
+   "name": "roadNet-CA",
+   "categories": [
+    "road"
+   ],
+   "category_names": [
+    "Road networks"
+   ],
+   "description": "Road network of California",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/roadNet-CA.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "1,965,206",
+    "Edges": "2,766,607",
+    "Description": "Road network of California"
+   },
+   "statistics": {
+    "Nodes": "1965206",
+    "Edges": "2766607",
+    "Nodes in largest WCC": "1957027 (0.996)",
+    "Edges in largest WCC": "2760388 (0.998)",
+    "Nodes in largest SCC": "1957027 (0.996)",
+    "Edges in largest SCC": "2760388 (0.998)",
+    "Average clustering coefficient": "0.0464",
+    "Number of triangles": "120676",
+    "Fraction of closed triangles": "0.02097",
+    "Diameter (longest shortest path)": "849",
+    "90-percentile effective diameter": "5e+02"
+   },
+   "files": [
+    {
+     "name": "roadNet-CA.txt.gz",
+     "url": "https://snap.stanford.edu/data/roadNet-CA.txt.gz",
+     "description": "California road network"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "roadNet-PA",
+   "categories": [
+    "road"
+   ],
+   "category_names": [
+    "Road networks"
+   ],
+   "description": "Road network of Pennsylvania",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/roadNet-PA.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "1,088,092",
+    "Edges": "1,541,898",
+    "Description": "Road network of Pennsylvania"
+   },
+   "statistics": {
+    "Nodes": "1088092",
+    "Edges": "1541898",
+    "Nodes in largest WCC": "1087562 (1.000)",
+    "Edges in largest WCC": "1541514 (1.000)",
+    "Nodes in largest SCC": "1087562 (1.000)",
+    "Edges in largest SCC": "1541514 (1.000)",
+    "Average clustering coefficient": "0.0465",
+    "Number of triangles": "67150",
+    "Fraction of closed triangles": "0.02062",
+    "Diameter (longest shortest path)": "786",
+    "90-percentile effective diameter": "5.3e+02"
+   },
+   "files": [
+    {
+     "name": "roadNet-PA.txt.gz",
+     "url": "https://snap.stanford.edu/data/roadNet-PA.txt.gz",
+     "description": "Pennsylvania road network"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "roadNet-TX",
+   "categories": [
+    "road"
+   ],
+   "category_names": [
+    "Road networks"
+   ],
+   "description": "Road network of Texas",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/roadNet-TX.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "1,379,917",
+    "Edges": "1,921,660",
+    "Description": "Road network of Texas"
+   },
+   "statistics": {
+    "Nodes": "1379917",
+    "Edges": "1921660",
+    "Nodes in largest WCC": "1351137 (0.979)",
+    "Edges in largest WCC": "1879201 (0.978)",
+    "Nodes in largest SCC": "1351137 (0.979)",
+    "Edges in largest SCC": "1879201 (0.978)",
+    "Average clustering coefficient": "0.0470",
+    "Number of triangles": "82869",
+    "Fraction of closed triangles": "0.02091",
+    "Diameter (longest shortest path)": "1054",
+    "90-percentile effective diameter": "6.7e+02"
+   },
+   "files": [
+    {
+     "name": "roadNet-TX.txt.gz",
+     "url": "https://snap.stanford.edu/data/roadNet-TX.txt.gz",
+     "description": "Texas road network"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, K. Lang, A. Dasgupta, M. Mahoney. Community Structure in Large Networks: Natural Cluster Sizes and the Absence of Large Well-Defined Clusters. Internet Mathematics 6(1) 29--123, 2009."
+   ]
+  },
+  {
+   "name": "as-733",
+   "categories": [
+    "as"
+   ],
+   "category_names": [
+    "Autonomous systems graphs"
+   ],
+   "description": "733 daily instances(graphs) from November 8 1997 to January 2 2000",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/as-733.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "103-6,474",
+    "Edges": "243-13,233",
+    "Description": "733 daily instances(graphs) from November 8 1997 to January 2 2000"
+   },
+   "statistics": {
+    "Nodes": "6474",
+    "Edges": "13895",
+    "Nodes in largest WCC": "6474 (1.000)",
+    "Edges in largest WCC": "13895 (1.000)",
+    "Nodes in largest SCC": "6474 (1.000)",
+    "Edges in largest SCC": "13895 (1.000)",
+    "Average clustering coefficient": "0.2522",
+    "Number of triangles": "6584",
+    "Fraction of closed triangles": "0.003218",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "4.6"
+   },
+   "files": [
+    {
+     "name": "as20000102.txt.gz",
+     "url": "https://snap.stanford.edu/data/as20000102.txt.gz",
+     "description": "Autonomous Systems graph from January 02 2000"
+    },
+    {
+     "name": "as-733.tar.gz",
+     "url": "https://snap.stanford.edu/data/as-733.tar.gz",
+     "description": "733 Autonomous Systems graphs from November 8 1997 to January 02 2000"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "as-Skitter",
+   "categories": [
+    "as"
+   ],
+   "category_names": [
+    "Autonomous systems graphs"
+   ],
+   "description": "Internet topology graph, from traceroutes run daily in 2005",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/as-Skitter.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "1,696,415",
+    "Edges": "11,095,298",
+    "Description": "Internet topology graph, from traceroutes run daily in 2005"
+   },
+   "statistics": {
+    "Nodes": "1696415",
+    "Edges": "11095298",
+    "Nodes in largest WCC": "1694616 (0.999)",
+    "Edges in largest WCC": "11094209 (1.000)",
+    "Nodes in largest SCC": "1694616 (0.999)",
+    "Edges in largest SCC": "11094209 (1.000)",
+    "Average clustering coefficient": "0.2581",
+    "Number of triangles": "28769868",
+    "Fraction of closed triangles": "0.001802",
+    "Diameter (longest shortest path)": "25",
+    "90-percentile effective diameter": "6"
+   },
+   "files": [
+    {
+     "name": "as-skitter.txt.gz",
+     "url": "https://snap.stanford.edu/data/as-skitter.txt.gz",
+     "description": "AS from traceroutes run daily in 2005 by skitter"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "as-Caida",
+   "categories": [
+    "as"
+   ],
+   "category_names": [
+    "Autonomous systems graphs"
+   ],
+   "description": "The CAIDA AS Relationships Datasets, from January 2004 to November 2007",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/as-Caida.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "8,020-26,475",
+    "Edges": "36,406-106,762",
+    "Description": "The CAIDA AS Relationships Datasets, from January 2004 to November 2007"
+   },
+   "statistics": {
+    "Nodes": "26475",
+    "Edges": "106762",
+    "Nodes in largest WCC": "26475 (1.000)",
+    "Edges in largest WCC": "106762 (1.000)",
+    "Nodes in largest SCC": "26475 (1.000)",
+    "Edges in largest SCC": "106762 (1.000)",
+    "Average clustering coefficient": "0.2082",
+    "Number of triangles": "36365",
+    "Fraction of closed triangles": "0.002452",
+    "Diameter (longest shortest path)": "17",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "as-caida20071105.txt.gz",
+     "url": "https://snap.stanford.edu/data/as-caida20071105.txt.gz",
+     "description": "CAIDA AS graph from November 5 2007"
+    },
+    {
+     "name": "as-caida.tar.gz",
+     "url": "https://snap.stanford.edu/data/as-caida.tar.gz",
+     "description": "122 CAIDA AS graphs from January 2004 to November 2007"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "Oregon-1",
+   "categories": [
+    "as"
+   ],
+   "category_names": [
+    "Autonomous systems graphs"
+   ],
+   "description": "AS peering information inferred from Oregon route-views between March 31 and May 26 2001",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/Oregon-1.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "10,670-11,174",
+    "Edges": "22,002-23,409",
+    "Description": "AS peering information inferred from Oregon route-views between March 31 and May 26 2001"
+   },
+   "statistics": {
+    "Nodes": "11051",
+    "Edges": "22724",
+    "Nodes in largest WCC": "11051 (1.000)",
+    "Edges in largest WCC": "22724 (1.000)",
+    "Nodes in largest SCC": "11051 (1.000)",
+    "Edges in largest SCC": "22724 (1.000)",
+    "Average clustering coefficient": "0.2921",
+    "Number of triangles": "17677",
+    "Fraction of closed triangles": "0.002932",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "4.5"
+   },
+   "files": [
+    {
+     "name": "oregon1_010331.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010331.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from March 31 2001"
+    },
+    {
+     "name": "oregon1_010407.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010407.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from April 7 2001"
+    },
+    {
+     "name": "oregon1_010414.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010414.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from April 14 2001"
+    },
+    {
+     "name": "oregon1_010421.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010421.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from April 21 2001"
+    },
+    {
+     "name": "oregon1_010428.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010428.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from April 28 2001"
+    },
+    {
+     "name": "oregon1_010505.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010505.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from May 05 2001"
+    },
+    {
+     "name": "oregon1_010512.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010512.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from May 12 2001"
+    },
+    {
+     "name": "oregon1_010519.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010519.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from May 19 2001"
+    },
+    {
+     "name": "oregon1_010526.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon1_010526.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views from May 26 2001"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "Oregon-2",
+   "categories": [
+    "as"
+   ],
+   "category_names": [
+    "Autonomous systems graphs"
+   ],
+   "description": "AS peering information inferred from Oregon route-views between March 31 and May 26 2001",
+   "type": "Undirected",
+   "url": "https://snap.stanford.edu/data/Oregon-2.html",
+   "columns": {
+    "Type": "Undirected",
+    "Nodes": "10,900-11,461",
+    "Edges": "31,180-32,730",
+    "Description": "AS peering information inferred from Oregon route-views between March 31 and May 26 2001"
+   },
+   "statistics": {
+    "Nodes": "11375",
+    "Edges": "32287",
+    "Nodes in largest WCC": "11375 (1.000)",
+    "Edges in largest WCC": "32287 (1.000)",
+    "Nodes in largest SCC": "11375 (1.000)",
+    "Edges in largest SCC": "32287 (1.000)",
+    "Average clustering coefficient": "0.3484",
+    "Number of triangles": "83709",
+    "Fraction of closed triangles": "0.01206",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "4.3"
+   },
+   "files": [
+    {
+     "name": "oregon2_010331.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010331.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from March 31 2001"
+    },
+    {
+     "name": "oregon2_010407.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010407.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from April 7 2001"
+    },
+    {
+     "name": "oregon2_010414.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010414.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from April 14 2001"
+    },
+    {
+     "name": "oregon2_010421.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010421.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from April 21 2001"
+    },
+    {
+     "name": "oregon2_010428.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010428.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from April 28 2001"
+    },
+    {
+     "name": "oregon2_010505.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010505.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from May 05 2001"
+    },
+    {
+     "name": "oregon2_010512.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010512.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from May 12 2001"
+    },
+    {
+     "name": "oregon2_010519.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010519.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from May 19 2001"
+    },
+    {
+     "name": "oregon2_010526.txt.gz",
+     "url": "https://snap.stanford.edu/data/oregon2_010526.txt.gz",
+     "description": "AS peering information inferred from Oregon route-views, Looking glass data, and Routing registry, from May 26 2001"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, J. Kleinberg and C. Faloutsos. Graphs over Time: Densification Laws, Shrinking Diameters and Possible Explanations. ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2005."
+   ]
+  },
+  {
+   "name": "soc-sign-epinions",
+   "categories": [
+    "signnets"
+   ],
+   "category_names": [
+    "Signed networks"
+   ],
+   "description": "Epinions signed social network",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-sign-epinions.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "131,828",
+    "Edges": "841,372",
+    "Description": "Epinions signed social network"
+   },
+   "statistics": {
+    "Nodes": "131828",
+    "Edges": "841372",
+    "Nodes in largest WCC": "119130 (0.904)",
+    "Edges in largest WCC": "833695 (0.991)",
+    "Nodes in largest SCC": "41441 (0.314)",
+    "Edges in largest SCC": "693737 (0.825)",
+    "Average clustering coefficient": "0.1279",
+    "Number of triangles": "4910076",
+    "Fraction of closed triangles": "0.02849",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "4.9"
+   },
+   "files": [
+    {
+     "name": "soc-sign-epinions.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-epinions.txt.gz",
+     "description": "Directed Epinions signed social network"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg: Signed Networks in Social Media. 28th ACM Conference on Human Factors in Computing Systems (CHI), 2010."
+   ]
+  },
+  {
+   "name": "wiki-Elec",
+   "categories": [
+    "signnets",
+    "wikipedia"
+   ],
+   "category_names": [
+    "Signed networks",
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Wikipedia adminship election data",
+   "type": "Directed, Bipartite",
+   "url": "https://snap.stanford.edu/data/wiki-Elec.html",
+   "columns": {
+    "Type": "Directed, Bipartite",
+    "Nodes": "~7,000",
+    "Edges": "~100,000",
+    "Description": "Wikipedia adminship election data"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "wikiElec.ElecBs3.txt.gz",
+     "url": "https://snap.stanford.edu/data/wikiElec.ElecBs3.txt.gz",
+     "description": "Wikipedia adminship elections untill January 2008"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Signed Networks in Social Media. CHI 2010.",
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Predicting Positive and Negative Links in Online Social Networks. WWW 2010."
+   ]
+  },
+  {
+   "name": "soc-sign-Slashdot081106",
+   "categories": [
+    "signnets"
+   ],
+   "category_names": [
+    "Signed networks"
+   ],
+   "description": "Slashdot Zoo signed social network from November 6 2008",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-sign-Slashdot081106.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "77,357",
+    "Edges": "516,575",
+    "Description": "Slashdot Zoo signed social network from November 6 2008"
+   },
+   "statistics": {
+    "Nodes": "77350",
+    "Edges": "516575",
+    "Nodes in largest WCC": "77350 (1.000)",
+    "Edges in largest WCC": "516575 (1.000)",
+    "Nodes in largest SCC": "26996 (0.349)",
+    "Edges in largest SCC": "337351 (0.653)",
+    "Average clustering coefficient": "0.0549",
+    "Number of triangles": "548054",
+    "Fraction of closed triangles": "0.008153",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "soc-sign-Slashdot081106.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-Slashdot081106.txt.gz",
+     "description": "Slashdot Zoo signed social network from November 6 2008"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg: Signed Networks in Social Media. 28th ACM Conference on Human Factors in Computing Systems (CHI), 2010."
+   ]
+  },
+  {
+   "name": "soc-sign-Slashdot090216",
+   "categories": [
+    "signnets"
+   ],
+   "category_names": [
+    "Signed networks"
+   ],
+   "description": "Slashdot Zoo signed social network from February 16 2009",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-sign-Slashdot090216.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "81,871",
+    "Edges": "545,671",
+    "Description": "Slashdot Zoo signed social network from February 16 2009"
+   },
+   "statistics": {
+    "Nodes": "81867",
+    "Edges": "545671",
+    "Nodes in largest WCC": "81867 (1.000)",
+    "Edges in largest WCC": "545671 (1.000)",
+    "Nodes in largest SCC": "27222 (0.333)",
+    "Edges in largest SCC": "342747 (0.628)",
+    "Average clustering coefficient": "0.0585",
+    "Number of triangles": "570569",
+    "Fraction of closed triangles": "0.007961",
+    "Diameter (longest shortest path)": "11",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "soc-sign-Slashdot090216.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-Slashdot090216.txt.gz",
+     "description": "Slashdot Zoo signed social network from February 16 2009"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg: Signed Networks in Social Media. 28th ACM Conference on Human Factors in Computing Systems (CHI), 2010."
+   ]
+  },
+  {
+   "name": "soc-sign-Slashdot090221",
+   "categories": [
+    "signnets"
+   ],
+   "category_names": [
+    "Signed networks"
+   ],
+   "description": "Slashdot Zoo signed social network from February 21 2009",
+   "type": "Directed",
+   "url": "https://snap.stanford.edu/data/soc-sign-Slashdot090221.html",
+   "columns": {
+    "Type": "Directed",
+    "Nodes": "82,144",
+    "Edges": "549,202",
+    "Description": "Slashdot Zoo signed social network from February 21 2009"
+   },
+   "statistics": {
+    "Nodes": "82140",
+    "Edges": "549202",
+    "Nodes in largest WCC": "82140 (1.000)",
+    "Edges in largest WCC": "549202 (1.000)",
+    "Nodes in largest SCC": "27382 (0.333)",
+    "Edges in largest SCC": "346652 (0.631)",
+    "Average clustering coefficient": "0.0588",
+    "Number of triangles": "579565",
+    "Fraction of closed triangles": "0.007998",
+    "Diameter (longest shortest path)": "12",
+    "90-percentile effective diameter": "4.7"
+   },
+   "files": [
+    {
+     "name": "soc-sign-Slashdot090221.txt.gz",
+     "url": "https://snap.stanford.edu/data/soc-sign-Slashdot090221.txt.gz",
+     "description": "Slashdot Zoo signed social network from February 21 2009"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg: Signed Networks in Social Media. 28th ACM Conference on Human Factors in Computing Systems (CHI), 2010."
+   ]
+  },
+  {
+   "name": "loc-Gowalla",
+   "categories": [
+    "locnet"
+   ],
+   "category_names": [
+    "Location-based online social networks"
+   ],
+   "description": "Gowalla location based online social network",
+   "type": "Undirected, Geo-Location",
+   "url": "https://snap.stanford.edu/data/loc-Gowalla.html",
+   "columns": {
+    "Type": "Undirected, Geo-Location",
+    "Nodes": "196,591",
+    "Edges": "950,327",
+    "Description": "Gowalla location based online social network"
+   },
+   "statistics": {
+    "Nodes": "196591",
+    "Edges": "950327",
+    "Nodes in largest WCC": "196591 (1.000)",
+    "Edges in largest WCC": "950327 (1.000)",
+    "Nodes in largest SCC": "196591 (1.000)",
+    "Edges in largest SCC": "950327 (1.000)",
+    "Average clustering coefficient": "0.2367",
+    "Number of triangles": "2273138",
+    "Fraction of closed triangles": "0.007952",
+    "Diameter (longest shortest path)": "14",
+    "90-percentile effective diameter": "5.7",
+    "Check-ins": "6,442,890"
+   },
+   "files": [
+    {
+     "name": "loc-gowalla_edges.txt.gz",
+     "url": "https://snap.stanford.edu/data/loc-gowalla_edges.txt.gz",
+     "description": "Friendship network of Gowalla users"
+    },
+    {
+     "name": "loc-gowalla_totalCheckins.txt.gz",
+     "url": "https://snap.stanford.edu/data/loc-gowalla_totalCheckins.txt.gz",
+     "description": "Time and location information of check-ins made by users"
+    }
+   ],
+   "citations": [
+    "E. Cho, S. A. Myers, J. Leskovec. Friendship and Mobility: Friendship and Mobility: User Movement in Location-Based Social Networks ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2011."
+   ]
+  },
+  {
+   "name": "loc-Brightkite",
+   "categories": [
+    "locnet"
+   ],
+   "category_names": [
+    "Location-based online social networks"
+   ],
+   "description": "Brightkite location based online social network",
+   "type": "Unirected, Geo-Location",
+   "url": "https://snap.stanford.edu/data/loc-Brightkite.html",
+   "columns": {
+    "Type": "Unirected, Geo-Location",
+    "Nodes": "58,228",
+    "Edges": "214,078",
+    "Description": "Brightkite location based online social network"
+   },
+   "statistics": {
+    "Nodes": "58228",
+    "Edges": "214078",
+    "Nodes in largest WCC": "56739 (0.974)",
+    "Edges in largest WCC": "212945 (0.995)",
+    "Nodes in largest SCC": "56739 (0.974)",
+    "Edges in largest SCC": "212945 (0.995)",
+    "Average clustering coefficient": "0.1723",
+    "Number of triangles": "494728",
+    "Fraction of closed triangles": "0.03979",
+    "Diameter (longest shortest path)": "16",
+    "90-percentile effective diameter": "6",
+    "Checkins": "4,491,143"
+   },
+   "files": [
+    {
+     "name": "loc-brightkite_edges.txt.gz",
+     "url": "https://snap.stanford.edu/data/loc-brightkite_edges.txt.gz",
+     "description": "Friendship network of Brightkite users"
+    },
+    {
+     "name": "loc-brightkite_totalCheckins.txt.gz",
+     "url": "https://snap.stanford.edu/data/loc-brightkite_totalCheckins.txt.gz",
+     "description": "Time and location information of check-ins made by users"
+    }
+   ],
+   "citations": [
+    "E. Cho, S. A. Myers, J. Leskovec. Friendship and Mobility: Friendship and Mobility: User Movement in Location-Based Social Networks ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2011."
+   ]
+  },
+  {
+   "name": "wikispeedia",
+   "categories": [
+    "wikipedia"
+   ],
+   "category_names": [
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Navigation paths on the Wikipedia hyperlink network, collected by the human-computation game Wikispeedia",
+   "type": "Navigation paths",
+   "url": "https://snap.stanford.edu/data/wikispeedia.html",
+   "columns": {
+    "Type": "Navigation paths",
+    "Nodes": "4,604",
+    "Edges": "119,882",
+    "Description": "Navigation paths on the Wikipedia hyperlink network, collected by the human-computation game Wikispeedia"
+   },
+   "statistics": {
+    "Finished paths": "51,318",
+    "Unfinished paths": "24,875",
+    "Articles": "4,604",
+    "Links": "119,882"
+   },
+   "files": [
+    {
+     "name": "wikispeedia_paths-and-graph.tar.gz",
+     "url": "https://snap.stanford.edu/data/wikispeedia/wikispeedia_paths-and-graph.tar.gz",
+     "description": "Navigation paths and Wikipedia hyperlink graph (without article content)"
+    },
+    {
+     "name": "wikispeedia_articles_plaintext.tar.gz",
+     "url": "https://snap.stanford.edu/data/wikispeedia/wikispeedia_articles_plaintext.tar.gz",
+     "description": "Plaintext content of the Wikipedia articles"
+    },
+    {
+     "name": "wikispeedia_articles_html.tar.gz",
+     "url": "https://snap.stanford.edu/data/wikispeedia/wikispeedia_articles_html.tar.gz",
+     "description": "Full HTML package of the Wikipedia version used by Wikispeedia"
+    }
+   ],
+   "citations": [
+    "Robert West and Jure Leskovec: Human Wayfinding in Information Networks. 21st International World Wide Web Conference (WWW), 2012.",
+    "Robert West, Joelle Pineau, and Doina Precup: Wikispeedia: An Online Game for Inferring Semantic Distances between Concepts. 21st International Joint Conference on Artificial Intelligence (IJCAI), 2009. Files Data format Each file in wikispeedia_paths-and-graph.tar.gz contains the row format as a header. var gaJsHost = ((\"https:\" == document.location.protocol) ? \"https://ssl.\" : \"http://www.\"); document.write(unescape(\"%3Cscript src='\" + gaJsHost + \"google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E\")); try { var pageTracker = _gat._getTracker(\"UA-342639-4\"); pageTracker._trackPageview(); } catch(err) {}"
+   ]
+  },
+  {
+   "name": "wiki-meta",
+   "categories": [
+    "wikipedia"
+   ],
+   "category_names": [
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Complete Wikipedia edit history (who edited what page)",
+   "type": "Edits",
+   "url": "https://snap.stanford.edu/data/wiki-meta.html",
+   "columns": {
+    "Type": "Edits",
+    "Nodes": "2.3M users, 3.5M pages",
+    "Edges": "250M edits",
+    "Description": "Complete Wikipedia edit history (who edited what page)"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "enwiki-20080103.main.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.main.bz2",
+     "description": "Revisions in the main namespace (the Wikipedia articles) (8GB!)"
+    },
+    {
+     "name": "enwiki-20080103.talk.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.talk.bz2",
+     "description": "Talk namespace -- edits of discussion pages attached to each Wikipedia article) (<1GB)"
+    },
+    {
+     "name": "enwiki-20080103.user.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.user.bz2",
+     "description": "Revisions of user personal pages (<1GB)"
+    },
+    {
+     "name": "enwiki-20080103.user_talk.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.user_talk.bz2",
+     "description": "Revisions of user talk pages (<1GB)"
+    },
+    {
+     "name": "enwiki-20080103.wikipedia.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.wikipedia.bz2",
+     "description": "Wikipedia Wiki namespace (administrative procedures and pages) (3GB)"
+    },
+    {
+     "name": "enwiki-20080103.wikipedia_talk.bz2",
+     "url": "https://snap.stanford.edu/data/bigdata/wikipedia08/enwiki-20080103.wikipedia_talk.bz2",
+     "description": "Wikipedia Wiki namespace talk pages (<1GB)"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, D. Huttenlocher, J. Kleinberg. Governance in Social Media: A case study of the Wikipedia promotion process. AAAI International Conference on Weblogs and Social Media (ICWSM '10), 2010.",
+    "G. Kossinets. Processed Wikipedia Edit History. Stanford large network dataset collection."
+   ]
+  },
+  {
+   "name": "wiki-hoaxes",
+   "categories": [
+    "wikipedia"
+   ],
+   "category_names": [
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Public Wikipedia hoaxes",
+   "type": "Wiki markup",
+   "url": "https://snap.stanford.edu/data/wiki-hoaxes.html",
+   "columns": {
+    "Type": "Wiki markup",
+    "Nodes": "64",
+    "Edges": "",
+    "Description": "Public Wikipedia hoaxes"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "wiki-hoaxes.zip",
+     "url": "https://snap.stanford.edu/data/wiki-hoaxes.zip",
+     "description": "Content of hoax and non-hoax articles"
+    }
+   ],
+   "citations": [
+    "Srijan Kumar, Robert West, and Jure Leskovec: Disinformation on the Web: Impact, Characteristics, and Detection of Wikipedia Hoaxes. Proceedings of the International Conference on the World Wide Web, 2016. Files The dataset contains four folders:"
+   ]
+  },
+  {
+   "name": "musae-wiki",
+   "categories": [
+    "wikipedia"
+   ],
+   "category_names": [
+    "Wikipedia networks, articles, and metadata"
+   ],
+   "description": "Wikipedia page network with traffic information.",
+   "type": "undirected",
+   "url": "https://snap.stanford.edu/data/wikipedia-article-networks.html",
+   "columns": {
+    "Type": "undirected",
+    "Nodes": "19,109",
+    "Edges": "400,832",
+    "Description": "Wikipedia page network with traffic information."
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "wikipedia.zip",
+     "url": "https://snap.stanford.edu/data/wikipedia.zip",
+     "description": "Wikipedia Article Networks"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, C. Allen and R. Sarkar. Multi-scale Attributed Node Embedding. 2019."
+   ]
+  },
+  {
+   "name": "sx-stackoverflow",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Comments, questions, and answers on Stack Overflow",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/sx-stackoverflow.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "2,601,977",
+    "Temporal Edges": "63,497,050",
+    "Static Edges": "36,233,450",
+    "Description": "Comments, questions, and answers on Stack Overflow"
+   },
+   "statistics": {
+    "Nodes": "1646338",
+    "Temporal Edges": "25405374",
+    "Edges in static graph": "11370342",
+    "Time span": "2773 days"
+   },
+   "files": [
+    {
+     "name": "sx-stackoverflow.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-stackoverflow.txt.gz",
+     "description": "All interactions"
+    },
+    {
+     "name": "sx-stackoverflow-a2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-stackoverflow-a2q.txt.gz",
+     "description": "Answers to questions"
+    },
+    {
+     "name": "sx-stackoverflow-c2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-stackoverflow-c2q.txt.gz",
+     "description": "Comments to questions"
+    },
+    {
+     "name": "sx-stackoverflow-c2a.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-stackoverflow-c2a.txt.gz",
+     "description": "Comments to answers"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017."
+   ]
+  },
+  {
+   "name": "sx-mathoverflow",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Comments, questions, and answers on Math Overflow",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/sx-mathoverflow.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "24,818",
+    "Temporal Edges": "506,550",
+    "Static Edges": "239,978",
+    "Description": "Comments, questions, and answers on Math Overflow"
+   },
+   "statistics": {
+    "Nodes": "13840",
+    "Temporal Edges": "195330",
+    "Edges in static graph": "81121",
+    "Time span": "2350 days"
+   },
+   "files": [
+    {
+     "name": "sx-mathoverflow.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-mathoverflow.txt.gz",
+     "description": "All interactions"
+    },
+    {
+     "name": "sx-mathoverflow-a2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-mathoverflow-a2q.txt.gz",
+     "description": "Answers to questions"
+    },
+    {
+     "name": "sx-mathoverflow-c2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-mathoverflow-c2q.txt.gz",
+     "description": "Comments to questions"
+    },
+    {
+     "name": "sx-mathoverflow-c2a.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-mathoverflow-c2a.txt.gz",
+     "description": "Comments to answers"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017."
+   ]
+  },
+  {
+   "name": "sx-superuser",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Comments, questions, and answers on Super User",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/sx-superuser.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "194,085",
+    "Temporal Edges": "1,443,339",
+    "Static Edges": "924,886",
+    "Description": "Comments, questions, and answers on Super User"
+   },
+   "statistics": {
+    "Nodes": "101052",
+    "Temporal Edges": "534239",
+    "Edges in static graph": "289487",
+    "Time span": "2735 days"
+   },
+   "files": [
+    {
+     "name": "sx-superuser.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-superuser.txt.gz",
+     "description": "All interactions"
+    },
+    {
+     "name": "sx-superuser-a2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-superuser-a2q.txt.gz",
+     "description": "Answers to questions"
+    },
+    {
+     "name": "sx-superuser-c2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-superuser-c2q.txt.gz",
+     "description": "Comments to questions"
+    },
+    {
+     "name": "sx-superuser-c2a.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-superuser-c2a.txt.gz",
+     "description": "Comments to answers"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017."
+   ]
+  },
+  {
+   "name": "sx-askubuntu",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Comments, questions, and answers on Ask Ubuntu",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/sx-askubuntu.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "159,316",
+    "Temporal Edges": "964,437",
+    "Static Edges": "596,933",
+    "Description": "Comments, questions, and answers on Ask Ubuntu"
+   },
+   "statistics": {
+    "Nodes": "75555",
+    "Temporal Edges": "356822",
+    "Edges in static graph": "178210",
+    "Time span": "2418 days"
+   },
+   "files": [
+    {
+     "name": "sx-askubuntu.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-askubuntu.txt.gz",
+     "description": "All interactions"
+    },
+    {
+     "name": "sx-askubuntu-a2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-askubuntu-a2q.txt.gz",
+     "description": "Answers to questions"
+    },
+    {
+     "name": "sx-askubuntu-c2q.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-askubuntu-c2q.txt.gz",
+     "description": "Comments to questions"
+    },
+    {
+     "name": "sx-askubuntu-c2a.txt.gz",
+     "url": "https://snap.stanford.edu/data/sx-askubuntu-c2a.txt.gz",
+     "description": "Comments to answers"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017."
+   ]
+  },
+  {
+   "name": "wiki-talk-temporal",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Users editing talk pages on Wikipedia",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/wiki-talk-temporal.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "1,140,149",
+    "Temporal Edges": "7,833,140",
+    "Static Edges": "3,309,592",
+    "Description": "Users editing talk pages on Wikipedia"
+   },
+   "statistics": {
+    "Nodes": "1140149",
+    "Temporal Edges": "7833140",
+    "Edges in static graph": "3309592",
+    "Time span": "2320 days"
+   },
+   "files": [
+    {
+     "name": "wiki-talk-temporal.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-talk-temporal.txt.gz",
+     "description": "talk page edits temporal network"
+    },
+    {
+     "name": "wiki-talk-temporal-usernames.txt.gz",
+     "url": "https://snap.stanford.edu/data/wiki-talk-temporal-usernames.txt.gz",
+     "description": "usernames corresponding to nodes"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017.",
+    "Jure Leskovec, Daniel P. Huttenlocher, and Jon M. Kleinberg. \"Governance in social media: A case study of the wikipedia promotion process.\" ICWSM. 2010."
+   ]
+  },
+  {
+   "name": "email-Eu-core-temporal",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "E-mails between users at a research institution",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/email-Eu-core-temporal.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "986",
+    "Temporal Edges": "332,334",
+    "Static Edges": "24,929",
+    "Description": "E-mails between users at a research institution"
+   },
+   "statistics": {
+    "Nodes": "142",
+    "Temporal Edges": "48141",
+    "Edges in static graph": "1375",
+    "Time span": "803 days"
+   },
+   "files": [
+    {
+     "name": "email-Eu-core-temporal.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-temporal.txt.gz",
+     "description": "All e-mails between members of the institution"
+    },
+    {
+     "name": "email-Eu-core-temporal-Dept1.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-temporal-Dept1.txt.gz",
+     "description": "All e-mails between members of Department 1 at the institution"
+    },
+    {
+     "name": "email-Eu-core-temporal-Dept2.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-temporal-Dept2.txt.gz",
+     "description": "All e-mails between members of Department 2 at the institution"
+    },
+    {
+     "name": "email-Eu-core-temporal-Dept3.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-temporal-Dept3.txt.gz",
+     "description": "All e-mails between members of Department 3 at the institution"
+    },
+    {
+     "name": "email-Eu-core-temporal-Dept4.txt.gz",
+     "url": "https://snap.stanford.edu/data/email-Eu-core-temporal-Dept4.txt.gz",
+     "description": "All e-mails between members of Department 4 at the institution"
+    }
+   ],
+   "citations": [
+    "Ashwin Paranjape, Austin R. Benson, and Jure Leskovec. \"Motifs in Temporal Networks.\" In Proceedings of the Tenth ACM International Conference on Web Search and Data Mining, 2017."
+   ]
+  },
+  {
+   "name": "CollegeMsg",
+   "categories": [
+    "temporal"
+   ],
+   "category_names": [
+    "Temporal networks"
+   ],
+   "description": "Messages on a Facebook-like platform at UC-Irvine",
+   "type": "Directed, Temporal",
+   "url": "https://snap.stanford.edu/data/CollegeMsg.html",
+   "columns": {
+    "Type": "Directed, Temporal",
+    "Nodes": "1,899",
+    "Temporal Edges": "20,296",
+    "Static Edges": "59,835",
+    "Description": "Messages on a Facebook-like platform at UC-Irvine"
+   },
+   "statistics": {
+    "Nodes": "1899",
+    "Temporal Edges": "59835",
+    "Edges in static graph": "20296",
+    "Time span": "193 days"
+   },
+   "files": [
+    {
+     "name": "CollegeMsg.txt.gz",
+     "url": "https://snap.stanford.edu/data/CollegeMsg.txt.gz",
+     "description": "college messaging temporal network"
+    }
+   ],
+   "citations": [
+    "Pietro Panzarasa, Tore Opsahl, and Kathleen M. Carley. \"Patterns and dynamics of users' behavior and interaction: Network analysis of an online community.\" Journal of the American Society for Information Science and Technology 60.5 (2009): 911-932."
+   ]
+  },
+  {
+   "name": "twitter7",
+   "categories": [
+    "twitter"
+   ],
+   "category_names": [
+    "Memetracker and Twitter"
+   ],
+   "description": "A collection of 476 million tweets collected between June-Dec 2009",
+   "type": "Tweets",
+   "url": "https://snap.stanford.edu/data/twitter7.html",
+   "columns": {
+    "Type": "Tweets",
+    "Nodes": "17,069,982 users",
+    "Edges": "476,553,560 tweets",
+    "Description": "A collection of 476 million tweets collected between June-Dec 2009"
+   },
+   "statistics": {
+    "Number of users": "17,069,982",
+    "Number of tweets": "476,553,560",
+    "Number of URLs": "181,611,080",
+    "Number of Hashtags": "49,293,684",
+    "Number of re-tweets": "71,835,017"
+   },
+   "files": [],
+   "citations": [
+    "J. Yang, J. Leskovec. Temporal Variation in Online Media. ACM International Conference on Web Search and Data Mining (WSDM '11), 2011."
+   ]
+  },
+  {
+   "name": "memetracker9",
+   "categories": [
+    "twitter"
+   ],
+   "category_names": [
+    "Memetracker and Twitter"
+   ],
+   "description": "Memetracker phrases and hyperlinks between 96 million blog posts from Aug 2008 to Apr 2009",
+   "type": "Memes",
+   "url": "https://snap.stanford.edu/data/memetracker9.html",
+   "columns": {
+    "Type": "Memes",
+    "Nodes": "96 million",
+    "Edges": "418 million links",
+    "Description": "Memetracker phrases and hyperlinks between 96 million blog posts from Aug 2008 to Apr 2009"
+   },
+   "statistics": {
+    "Number of documents": "96,608,034",
+    "Number of memes": "210,999,824",
+    "Number of links": "418,237,269"
+   },
+   "files": [
+    {
+     "name": "quotes_2008-08.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2008-08.txt.gz",
+     "description": "Memes and links from Aug 2008"
+    },
+    {
+     "name": "quotes_2008-09.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2008-09.txt.gz",
+     "description": "Memes and links from Sep 2008"
+    },
+    {
+     "name": "quotes_2008-10.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2008-10.txt.gz",
+     "description": "Memes and links from Oct 2008"
+    },
+    {
+     "name": "quotes_2008-11.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2008-11.txt.gz",
+     "description": "Memes and links from Nov 2008"
+    },
+    {
+     "name": "quotes_2008-12.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2008-12.txt.gz",
+     "description": "Memes and links from Dec 2008"
+    },
+    {
+     "name": "quotes_2009-01.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2009-01.txt.gz",
+     "description": "Memes and links from Jan 2009"
+    },
+    {
+     "name": "quotes_2009-02.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2009-02.txt.gz",
+     "description": "Memes and links from Feb 2009"
+    },
+    {
+     "name": "quotes_2009-03.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2009-03.txt.gz",
+     "description": "Memes and links from Mar 2009"
+    },
+    {
+     "name": "quotes_2009-04.txt.gz",
+     "url": "https://snap.stanford.edu/data/bigdata/memetracker9/quotes_2009-04.txt.gz",
+     "description": "Memes and links from Apr 2009"
+    }
+   ],
+   "citations": [
+    "J. Leskovec, L. Backstrom, J. Kleinberg. Meme-tracking and the Dynamics of the News Cycle. ACM SIGKDD Intl. Conf. on Knowledge Discovery and Data Mining, 2009."
+   ]
+  },
+  {
+   "name": "ksc-time-series",
+   "categories": [
+    "twitter"
+   ],
+   "category_names": [
+    "Memetracker and Twitter"
+   ],
+   "description": "Time series of volume of 1,000 most popular Memetracker phrases and 1,000 most popular Twitter hashtags",
+   "type": "Time Series",
+   "url": "https://snap.stanford.edu/data/ksc-time-series.html",
+   "columns": {
+    "Type": "Time Series",
+    "Nodes": "2,000",
+    "Edges": "",
+    "Description": "Time series of volume of 1,000 most popular Memetracker phrases and 1,000 most popular Twitter hashtags"
+   },
+   "statistics": {
+    "Number of time series": "1,000",
+    "Length of time series": "128",
+    "Time unit": "1 hour"
+   },
+   "files": [
+    {
+     "name": "MemePhr.txt",
+     "url": "https://snap.stanford.edu/data/MemePhr.txt",
+     "description": "Memetracker phrases"
+    },
+    {
+     "name": "TwtHtag.txt",
+     "url": "https://snap.stanford.edu/data/TwtHtag.txt",
+     "description": "Twitter hashtags"
+    }
+   ],
+   "citations": [
+    "J. Yang, J. Leskovec. Temporal Variation in Online Media. ACM International Conference on Web Search and Data Mining (WSDM '11), 2011."
+   ]
+  },
+  {
+   "name": "higgs-twitter",
+   "categories": [
+    "twitter"
+   ],
+   "category_names": [
+    "Memetracker and Twitter"
+   ],
+   "description": "Spreading processes of the announcement of the discovery of a new particle with the features of the Higgs boson on 4th July 2012.",
+   "type": "Tweets",
+   "url": "https://snap.stanford.edu/data/higgs-twitter.html",
+   "columns": {
+    "Type": "Tweets",
+    "Nodes": "456,631",
+    "Edges": "14,855,875",
+    "Description": "Spreading processes of the announcement of the discovery of a new particle with the features of the Higgs boson on 4th July 2012."
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "social_network.edgelist.gz",
+     "url": "https://snap.stanford.edu/data/higgs-social_network.edgelist.gz",
+     "description": "Friends/follower graph (directed)"
+    },
+    {
+     "name": "retweet_network.edgelist.gz",
+     "url": "https://snap.stanford.edu/data/higgs-retweet_network.edgelist.gz",
+     "description": "Graph of who retweets whom (directed and weighted)"
+    },
+    {
+     "name": "reply_network.edgelist.gz",
+     "url": "https://snap.stanford.edu/data/higgs-reply_network.edgelist.gz",
+     "description": "Graph of who replies to who (directed and weighted)"
+    },
+    {
+     "name": "mention_network.edgelist.gz",
+     "url": "https://snap.stanford.edu/data/higgs-mention_network.edgelist.gz",
+     "description": "Graph of who mentions whom (directed and weighted)"
+    },
+    {
+     "name": "higgs-activity_time.txt.gz",
+     "url": "https://snap.stanford.edu/data/higgs-activity_time.txt.gz",
+     "description": "The dataset provides information about activity on Twitter during the discovery of Higgs boson"
+    }
+   ],
+   "citations": [
+    "M. De Domenico, A. Lima, P. Mougel and M. Musolesi. The Anatomy of a Scientific Rumor. (Nature Open Access) Scientific Reports 3, 2980 (2013)."
+   ]
+  },
+  {
+   "name": "web-RedditEmbeddings",
+   "categories": [
+    "onlinecoms"
+   ],
+   "category_names": [
+    "Online communities"
+   ],
+   "description": "Embeddings of users and subreddits",
+   "type": "Reddit Embeddings",
+   "url": "https://snap.stanford.edu/data/web-RedditEmbeddings.html",
+   "columns": {
+    "Type": "Reddit Embeddings",
+    "Number of items": "118,381 users and 51,278 subreddits",
+    "Description": "Embeddings of users and subreddits"
+   },
+   "statistics": {
+    "Number of users": "118,381",
+    "Number of subreddits": "51,278",
+    "Embedding length": "300",
+    "Timespan of data": "Jan 2014 - April 2017"
+   },
+   "files": [
+    {
+     "name": "web-redditEmbeddings-users.csv",
+     "url": "https://snap.stanford.edu/data/web-redditEmbeddings-users.csv",
+     "description": "Embedding vectors of users on Reddit."
+    },
+    {
+     "name": "web-redditEmbeddings-subreddits.csv",
+     "url": "https://snap.stanford.edu/data/web-redditEmbeddings-subreddits.csv",
+     "description": "Embedding vectors of subreddits (communities on Reddit)."
+    }
+   ],
+   "citations": [
+    "S. Kumar, X. Zhang, J. Leskovec. Predicting Dynamic Embedding Trajectory in Temporal Interaction Networks. ACM SIGKDD 2019.",
+    "S. Kumar, W.L. Hamilton, J. Leskovec, D. Jurafsky. Community Interaction and Conflict on the Web. World Wide Web Conference 2018."
+   ]
+  },
+  {
+   "name": "web-RedditPizzaRequests",
+   "categories": [
+    "onlinecoms"
+   ],
+   "category_names": [
+    "Online communities"
+   ],
+   "description": "Textual requests for pizza with outcome labels",
+   "type": "Reddit requests",
+   "url": "https://snap.stanford.edu/data/web-RedditPizzaRequests.html",
+   "columns": {
+    "Type": "Reddit requests",
+    "Number of items": "5,671 submissions",
+    "Description": "Textual requests for pizza with outcome labels"
+   },
+   "statistics": {
+    "Number of requests": "5,671",
+    "Timespan": "December 8, 2010 - September 29, 2013",
+    "Average success rate": "24.6%"
+   },
+   "files": [
+    {
+     "name": "here",
+     "url": "http://cs.stanford.edu/~althoff/raop-dataset/pizza_request_dataset.tar.gz",
+     "description": ""
+    }
+   ],
+   "citations": [
+    "Tim Althoff, Cristian Danescu-Niculescu-Mizil, Dan Jurafsky. How to Ask for a Favor: A Case Study on the Success of Altruistic Requests. ICWSM, 2014."
+   ]
+  },
+  {
+   "name": "web-Reddit",
+   "categories": [
+    "onlinecoms"
+   ],
+   "category_names": [
+    "Online communities"
+   ],
+   "description": "Resubmitted content on reddit.com",
+   "type": "Reddit submissions",
+   "url": "https://snap.stanford.edu/data/web-Reddit.html",
+   "columns": {
+    "Type": "Reddit submissions",
+    "Number of items": "132,308 submissions",
+    "Description": "Resubmitted content on reddit.com"
+   },
+   "statistics": {
+    "Number of submissions": "132,308",
+    "Number of unique images": "16,736",
+    "Average number of times an image is resubmitted": "7.9",
+    "Timespan": "July 2008 - Jan 2013"
+   },
+   "files": [
+    {
+     "name": "redditSubmissions.csv.gz",
+     "url": "https://snap.stanford.edu/data/redditSubmissions.csv.gz",
+     "description": "Table of resubmitted data"
+    },
+    {
+     "name": "redditHtmlData.tar.gz",
+     "url": "https://snap.stanford.edu/data/redditHtmlData.tar.gz",
+     "description": "Html files of resubmitted data"
+    }
+   ],
+   "citations": [
+    "H. Lakkaraju, J. J. McAuley, J. Leskovec What's in a name? Understanding the interplay between titles, content, and communities in social media. ICWSM, 2013."
+   ]
+  },
+  {
+   "name": "web-flickr",
+   "categories": [
+    "onlinecoms"
+   ],
+   "category_names": [
+    "Online communities"
+   ],
+   "description": "Images sharing common metadata on Flickr",
+   "type": "Images",
+   "url": "https://snap.stanford.edu/data/web-flickr.html",
+   "columns": {
+    "Type": "Images",
+    "Number of items": "2,316,948 related images",
+    "Description": "Images sharing common metadata on Flickr"
+   },
+   "statistics": {
+    "Nodes": "105938",
+    "Edges": "2316948",
+    "Nodes in largest WCC": "105722 (0.998)",
+    "Edges in largest WCC": "2316668 (1.000)",
+    "Nodes in largest SCC": "105722 (0.998)",
+    "Edges in largest SCC": "2316668 (1.000)",
+    "Average clustering coefficient": "0.0891",
+    "Number of triangles": "107987357",
+    "Fraction of closed triangles": "0.1828",
+    "Diameter (longest shortest path)": "9",
+    "90-percentile effective diameter": "4.8"
+   },
+   "files": [
+    {
+     "name": "flickrEdges.txt.gz",
+     "url": "https://snap.stanford.edu/data/flickrEdges.txt.gz",
+     "description": "Image relationships on Flickr (edges only)"
+    },
+    {
+     "name": "nodeFeaturesFlickr.tar.gz",
+     "url": "https://snap.stanford.edu/data/nodeFeaturesFlickr.tar.gz",
+     "description": "Node features"
+    },
+    {
+     "name": "edgeFeaturesFlickr.tar.gz",
+     "url": "https://snap.stanford.edu/data/edgeFeaturesFlickr.tar.gz",
+     "description": "Edge features"
+    },
+    {
+     "name": "flickrXml.tar.gz",
+     "url": "https://snap.stanford.edu/data/flickrXml.tar.gz",
+     "description": "Xml of all Flickr metadata"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. Image Labeling on a Network: Using Social-Network Metadata for Image Classification. ECCV, 2012."
+   ]
+  },
+  {
+   "name": "web-BeerAdvocate",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Beer reviews from BeerAdvocate",
+   "type": "Beer reviews",
+   "url": "https://snap.stanford.edu/data/web-BeerAdvocate.html",
+   "columns": {
+    "Type": "Beer reviews",
+    "Number of items": "1,586,259 beer reviews",
+    "Description": "Beer reviews from BeerAdvocate"
+   },
+   "statistics": {
+    "Number of reviews": "1,586,259",
+    "Number of users": "33,387",
+    "Number of beers": "66,051",
+    "Users with > 50 reviews": "4,787",
+    "Median no. of words per review": "126",
+    "Timespan": "Jan 1998 - Nov 2011"
+   },
+   "files": [],
+   "citations": [
+    "J. McAuley, J. Leskovec, and D. Jurafsky. Learning attitudes and attributes from multi-aspect reviews. ICDM, 2012.",
+    "J. McAuley and J. Leskovec. From amateurs to connoisseurs: modeling the evolution of user expertise through online reviews. WWW, 2013."
+   ]
+  },
+  {
+   "name": "web-RateBeer",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Beer reviews from RateBeer",
+   "type": "Beer reviews",
+   "url": "https://snap.stanford.edu/data/web-RateBeer.html",
+   "columns": {
+    "Type": "Beer reviews",
+    "Number of items": "2,924,127 beer reviews",
+    "Description": "Beer reviews from RateBeer"
+   },
+   "statistics": {
+    "Number of reviews": "2,924,127",
+    "Number of users": "40,213",
+    "Number of beers": "110,419",
+    "Users with > 50 reviews": "4,798",
+    "Median no. of words per review": "54",
+    "Timespan": "Apr 2000 - Nov 2011"
+   },
+   "files": [],
+   "citations": [
+    "J. McAuley, J. Leskovec, and D. Jurafsky. Learning attitudes and attributes from multi-aspect reviews. ICDM, 2012.",
+    "J. McAuley and J. Leskovec. From amateurs to connoisseurs: modeling the evolution of user expertise through online reviews. WWW, 2013."
+   ]
+  },
+  {
+   "name": "web-CellarTracker",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Wine reviews from CellarTracker",
+   "type": "Wine reviews",
+   "url": "https://snap.stanford.edu/data/web-CellarTracker.html",
+   "columns": {
+    "Type": "Wine reviews",
+    "Number of items": "2,025,995 wine reviews",
+    "Description": "Wine reviews from CellarTracker"
+   },
+   "statistics": {
+    "Number of reviews": "2,025,995",
+    "Number of users": "44,268",
+    "Number of wines": "485,179",
+    "Users with > 50 reviews": "5,957",
+    "Median no. of words per review": "29"
+   },
+   "files": [],
+   "citations": [
+    "J. McAuley and J. Leskovec. From amateurs to connoisseurs: modeling the evolution of user expertise through online reviews. WWW, 2013."
+   ]
+  },
+  {
+   "name": "web-Amazon",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Reviews from Amazon",
+   "type": "Amazon reviews (all categories)",
+   "url": "https://snap.stanford.edu/data/web-Amazon.html",
+   "columns": {
+    "Type": "Amazon reviews (all categories)",
+    "Number of items": "34,686,770 product reviews",
+    "Description": "Reviews from Amazon"
+   },
+   "statistics": {
+    "Number of reviews": "34,686,770",
+    "Number of users": "6,643,669",
+    "Number of products": "2,441,053",
+    "Users with > 50 reviews": "56,772",
+    "Median no. of words per review": "82",
+    "Timespan": "Jun 1995 - Mar 2013"
+   },
+   "files": [
+    {
+     "name": "all.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "All product reviews (34,686,770 reviews)"
+    },
+    {
+     "name": "possible_dupes.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "List of possible duplicate products"
+    },
+    {
+     "name": "Amazon_Instant_Video.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Amazon Instant Video reviews (717,651 reviews)"
+    },
+    {
+     "name": "Arts.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Arts product reviews (27,980 reviews)"
+    },
+    {
+     "name": "Automotive.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Automotive product reviews (188,728 reviews)"
+    },
+    {
+     "name": "Baby.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Baby product reviews (184,887 reviews)"
+    },
+    {
+     "name": "Beauty.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Beauty product reviews (252,056 reviews)"
+    },
+    {
+     "name": "Books.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Book reviews (12,886,488 reviews)"
+    },
+    {
+     "name": "Cell_Phones_&_Accessories.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Cell Phone reviews (78,930 reviews)"
+    },
+    {
+     "name": "Clothing_&_Accessories.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Clothing reviews (581,933 reviews)"
+    },
+    {
+     "name": "Electronics.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Electronics product reviews (1,241,778 reviews)"
+    },
+    {
+     "name": "Gourmet_Foods.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Gourmet Food reviews (154,635 reviews)"
+    },
+    {
+     "name": "Health.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Health product reviews (428,781 reviews)"
+    },
+    {
+     "name": "Home_&_Kitchen.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Home & Kitchen product reviews (991,794 reviews)"
+    },
+    {
+     "name": "Industrial_&_Scientific.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Industrial & Scientific product reviews (137,042 reviews)"
+    },
+    {
+     "name": "Jewelry.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Jewelry reviews (58,621 reviews)"
+    },
+    {
+     "name": "Kindle_Store.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Kindle Store reviews (160,793 reviews)"
+    },
+    {
+     "name": "Movies_&_TV.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Movie & TV reviews (7,850,072 reviews)"
+    },
+    {
+     "name": "Musical_Instruments.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Musical Instrument reviews (85,405 reviews)"
+    },
+    {
+     "name": "Music.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Music reviews (6,396,350 reviews)"
+    },
+    {
+     "name": "Office_Products.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Office product reviews (138,084 reviews)"
+    },
+    {
+     "name": "Patio.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Patio product reviews (206,250 reviews)"
+    },
+    {
+     "name": "Pet_Supplies.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Pet Supply reviews (217,170 reviews)"
+    },
+    {
+     "name": "Shoes.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Shoe reviews (389,877 reviews)"
+    },
+    {
+     "name": "Software.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Software reviews (95,084 reviews)"
+    },
+    {
+     "name": "Sports_&_Outdoors.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Sports & Outdoor product reviews (510,991 reviews)"
+    },
+    {
+     "name": "Tools_&_Home_Improvement.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Tools & Home Improvement product reviews (409,499 reviews)"
+    },
+    {
+     "name": "Toys_&_Games.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Toy & Game reviews (435,996 reviews)"
+    },
+    {
+     "name": "Video_Games.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Video Game reviews (463,669 reviews)"
+    },
+    {
+     "name": "Watches.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Watch reviews (68,356 reviews)"
+    },
+    {
+     "name": "descriptions.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Dscriptions of all products (where available)"
+    },
+    {
+     "name": "categories.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Category information for all products"
+    },
+    {
+     "name": "titles.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Titles for all products"
+    },
+    {
+     "name": "related.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Related products (\"users who purchased this also purchased\")"
+    },
+    {
+     "name": "brands.txt.gz",
+     "url": "https://snap.stanford.edu/data/amazon/amazon_readme.txt",
+     "description": "Product brand info"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. Hidden factors and hidden topics: understanding rating dimensions with review text. RecSys, 2013."
+   ]
+  },
+  {
+   "name": "web-FineFoods",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Food reviews from Amazon",
+   "type": "Food reviews",
+   "url": "https://snap.stanford.edu/data/web-FineFoods.html",
+   "columns": {
+    "Type": "Food reviews",
+    "Number of items": "568,454 food reviews",
+    "Description": "Food reviews from Amazon"
+   },
+   "statistics": {
+    "Number of reviews": "568,454",
+    "Number of users": "256,059",
+    "Number of products": "74,258",
+    "Users with > 50 reviews": "260",
+    "Median no. of words per review": "56",
+    "Timespan": "Oct 1999 - Oct 2012"
+   },
+   "files": [
+    {
+     "name": "finefoods.txt.gz",
+     "url": "https://snap.stanford.edu/data/finefoods.txt.gz",
+     "description": "Amazon Fine Foods data (~500,000 reviews)"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. From amateurs to connoisseurs: modeling the evolution of user expertise through online reviews. WWW, 2013."
+   ]
+  },
+  {
+   "name": "web-Movies",
+   "categories": [
+    "reviews"
+   ],
+   "category_names": [
+    "Online reviews"
+   ],
+   "description": "Movie reviews from Amazon",
+   "type": "Movie reviews",
+   "url": "https://snap.stanford.edu/data/web-Movies.html",
+   "columns": {
+    "Type": "Movie reviews",
+    "Number of items": "7,911,684 movie reviews",
+    "Description": "Movie reviews from Amazon"
+   },
+   "statistics": {
+    "Number of reviews": "7,911,684",
+    "Number of users": "889,176",
+    "Number of products": "253,059",
+    "Users with > 50 reviews": "16,341",
+    "Median no. of words per review": "101",
+    "Timespan": "Aug 1997 - Oct 2012"
+   },
+   "files": [
+    {
+     "name": "movies.txt.gz",
+     "url": "https://snap.stanford.edu/data/movies.txt.gz",
+     "description": "Amazon movie data (~8 million reviews)"
+    }
+   ],
+   "citations": [
+    "J. McAuley and J. Leskovec. From amateurs to connoisseurs: modeling the evolution of user expertise through online reviews. WWW, 2013."
+   ]
+  },
+  {
+   "name": "Deezer Ego-nets",
+   "categories": [
+    "disjointgraphs"
+   ],
+   "category_names": [
+    "Graph classification datasets"
+   ],
+   "description": "Ego-nets of European Deezer users",
+   "type": "Undirected, Unattributed",
+   "url": "https://snap.stanford.edu/data/deezer_ego_nets.html",
+   "columns": {
+    "Type": "Undirected, Unattributed",
+    "Number of graphs": "9,629",
+    "Description": "Ego-nets of European Deezer users"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "deezer_ego_nets.zip",
+     "url": "https://snap.stanford.edu/data/deezer_ego_nets.zip",
+     "description": "Deezer Ego Nets"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, O. Kiss, R. Sarkar: An API Oriented Open-source Python Framework for Unsupervised Learning on Graphs 2019."
+   ]
+  },
+  {
+   "name": "GitHub Stargazers",
+   "categories": [
+    "disjointgraphs"
+   ],
+   "category_names": [
+    "Graph classification datasets"
+   ],
+   "description": "Communities of developers who starred repositories",
+   "type": "Undirected, Unattributed",
+   "url": "https://snap.stanford.edu/data/github_stargazers.html",
+   "columns": {
+    "Type": "Undirected, Unattributed",
+    "Number of graphs": "12,725",
+    "Description": "Communities of developers who starred repositories"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "github_stargazers.zip",
+     "url": "https://snap.stanford.edu/data/github_stargazers.zip",
+     "description": "Github Gtargazers dataset"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, O. Kiss, R. Sarkar: An API Oriented Open-source Python Framework for Unsupervised Learning on Graphs 2019."
+   ]
+  },
+  {
+   "name": "Reddit Threads",
+   "categories": [
+    "disjointgraphs"
+   ],
+   "category_names": [
+    "Graph classification datasets"
+   ],
+   "description": "Reddit discussion and non-discussion based threads",
+   "type": "Undirected, Unattributed",
+   "url": "https://snap.stanford.edu/data/reddit_threads.html",
+   "columns": {
+    "Type": "Undirected, Unattributed",
+    "Number of graphs": "203,088",
+    "Description": "Reddit discussion and non-discussion based threads"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "reddit_threads.zip",
+     "url": "https://snap.stanford.edu/data/reddit_threads.zip",
+     "description": "Reddit Threads dataset"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, O. Kiss, R. Sarkar: An API Oriented Open-source Python Framework for Unsupervised Learning on Graphs 2019."
+   ]
+  },
+  {
+   "name": "Ego-Nets",
+   "categories": [
+    "disjointgraphs"
+   ],
+   "category_names": [
+    "Graph classification datasets"
+   ],
+   "description": "Ego-Nets of Twitch users in the partnership program",
+   "type": "Undirected, Unattributed",
+   "url": "https://snap.stanford.edu/data/twitch_ego_nets.html",
+   "columns": {
+    "Type": "Undirected, Unattributed",
+    "Number of graphs": "127,094",
+    "Description": "Ego-Nets of Twitch users in the partnership program"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "twitch_egos.zip",
+     "url": "https://snap.stanford.edu/data/twitch_egos.zip",
+     "description": "Twitch Ego Nets dataset"
+    }
+   ],
+   "citations": [
+    "B. Rozemberczki, O. Kiss, R. Sarkar: An API Oriented Open-source Python Framework for Unsupervised Learning on Graphs 2019."
+   ]
+  },
+  {
+   "name": "ERC20-stablecoins",
+   "categories": [
+    "cct"
+   ],
+   "category_names": [
+    "Cryptocurrency transactions"
+   ],
+   "description": "Transaction data of the top five stablecoins in market cap (USDT, USDC, DAI, UST, PAX) and WLUNA",
+   "type": "Directed, Attributed",
+   "url": "https://snap.stanford.edu/data/ERC20-stablecoins.html",
+   "columns": {
+    "Type": "Directed, Attributed",
+    "Number of graphs": "6",
+    "Description": "Transaction data of the top five stablecoins in market cap (USDT, USDC, DAI, UST, PAX) and WLUNA"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "ERC20-stablecoins.zip",
+     "url": "https://snap.stanford.edu/data/ERC20-stablecoins.zip",
+     "description": "ERC20 Stablecoins"
+    }
+   ],
+   "citations": []
+  },
+  {
+   "name": "ethereum-exchanges",
+   "categories": [
+    "cct"
+   ],
+   "category_names": [
+    "Cryptocurrency transactions"
+   ],
+   "description": "Token (asset) networks from the Ethereum blockchain",
+   "type": "Directed, Attributed",
+   "url": "https://snap.stanford.edu/data/ethereum-exchanges.html",
+   "columns": {
+    "Type": "Directed, Attributed",
+    "Number of graphs": "28",
+    "Description": "Token (asset) networks from the Ethereum blockchain"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "ethereum-exchanges.zip",
+     "url": "https://snap.stanford.edu/data/ethereum-exchanges.zip",
+     "description": "Decentralized Exchange Classification Dataset: AlphaCore"
+    }
+   ],
+   "citations": [
+    "F. Victor, C.G. Akcora, Y.R. Gel, M. Kantarcioglu: Alphacore: Data Depth based Core Decomposition, ACM SIGKDD Conference on Knowledge Discovery & Data Mining, 2021."
+   ]
+  },
+  {
+   "name": "telecom-graph",
+   "categories": [
+    "tcn"
+   ],
+   "category_names": [
+    "Telecom networks"
+   ],
+   "description": "Relationships between users, packages, apps, and cells in a telecom network",
+   "type": "Directed, Attributed",
+   "url": "https://snap.stanford.edu/data/telecom-graph.html",
+   "columns": {
+    "Type": "Directed, Attributed",
+    "Number of graphs": "1",
+    "Description": "Relationships between users, packages, apps, and cells in a telecom network"
+   },
+   "statistics": {},
+   "files": [
+    {
+     "name": "telecom-graph.tar.gz",
+     "url": "https://snap.stanford.edu/data/telecom-graph/telecom-graph.tar.gz",
+     "description": "dataset"
+    }
+   ],
+   "citations": []
+  }
+ ]
+}

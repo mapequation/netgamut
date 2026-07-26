@@ -1,0 +1,51 @@
+name: Refresh SNAP catalog
+
+# The bundled catalog is a snapshot of snap.stanford.edu. This re-scrapes it
+# monthly and opens a pull request when the collection has changed, so new
+# datasets reach users without anyone remembering to look.
+on:
+  schedule:
+    - cron: "0 4 1 * *" # 04:00 UTC on the first of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --all-extras --group dev
+
+      # The script exits non-zero if the scrape looks implausible, so a SNAP
+      # redesign fails this job instead of committing an empty catalog.
+      - name: Rebuild the catalog
+        run: uv run python scripts/regenerate_catalog.py
+
+      - name: Test against the rebuilt catalog
+        run: uv run pytest -m "not network"
+
+      - name: Open a pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/refresh-snap-catalog
+          title: "chore: refresh the SNAP catalog"
+          commit-message: "chore: refresh the SNAP catalog"
+          delete-branch: true
+          body: |
+            Automated refresh of `src/networks/snap/catalog.json` from
+            https://snap.stanford.edu/data/index.html.
+
+            The diff shows what changed in the collection: new datasets,
+            withdrawn ones, updated statistics or download links.
+
+            Review the diff before merging — an unexpectedly large change
+            usually means SNAP altered its page structure.

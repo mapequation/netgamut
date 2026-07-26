@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --all-extras --group dev --python ${{ matrix.python-version }}
+
+      # The offline suite must pass without touching snap.stanford.edu; that is
+      # the property that keeps metadata lookups usable on an air-gapped box.
+      - name: Test (offline)
+        run: uv run pytest -m "not network"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --all-extras --group dev
+
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Mypy
+        run: uv run mypy
+
+  live:
+    # Hits the real SNAP site, so it runs on main and on demand rather than on
+    # every pull request.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --all-extras --group dev
+
+      - name: Test (network)
+        run: uv run pytest -m network
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Build distributions
+        run: uv build
+
+      # The vendored catalog and the typing marker must ship in the wheel, or
+      # an installed copy silently loses its offline metadata.
+      - name: Check the wheel contents
+        run: |
+          python -m zipfile -l dist/*.whl | tee contents.txt
+          grep -q 'networks/snap/catalog.json' contents.txt
+          grep -q 'networks/py.typed' contents.txt
+
+      - name: Validate metadata
+        run: |
+          uv tool run twine check dist/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
