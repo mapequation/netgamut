@@ -130,33 +130,45 @@ class Dataset:
         return tuple(payload.get("nets") or ())
 
     @property
-    def files(self) -> tuple[DataFile, ...]:
-        """The download formats the site offers.
+    def default_subgraph(self) -> str:
+        """The subgraph :func:`networks.netzschleuder.load` fetches by default.
+
+        Downloads are named after the *subgraph*, not the entry. For most
+        entries the two coincide, but some publish several: ``karate`` holds
+        ``77`` and ``78``, the two versions of Zachary's data.
+        """
+        return self.subgraphs[0] if self.subgraphs else self.name
+
+    def files_for(self, subgraph: str | None = None) -> tuple[DataFile, ...]:
+        """The download formats the site offers for one subgraph.
 
         The CSV bundle is listed first because it needs nothing beyond the
         standard library; the others are here for callers that prefer them.
         """
-        base = f"{SITE_URL}/net/{self.name}/files/{self.name}"
+        stem = subgraph or self.default_subgraph
+        base = f"{SITE_URL}/net/{self.name}/files/{stem}"
         return (
-            DataFile(
-                f"{self.name}.csv.zip", f"{base}.csv.zip", "Edges, nodes and graph properties"
-            ),
-            DataFile(f"{self.name}.gml.zst", f"{base}.gml.zst", "GML (needs zstd)"),
-            DataFile(f"{self.name}.xml.zst", f"{base}.xml.zst", "GraphML (needs zstd)"),
-            DataFile(
-                f"{self.name}.gt.zst", f"{base}.gt.zst", "graph-tool native (needs graph-tool)"
-            ),
+            DataFile(f"{stem}.csv.zip", f"{base}.csv.zip", "Edges, nodes and graph properties"),
+            DataFile(f"{stem}.gml.zst", f"{base}.gml.zst", "GML (needs zstd)"),
+            DataFile(f"{stem}.xml.zst", f"{base}.xml.zst", "GraphML (needs zstd)"),
+            DataFile(f"{stem}.gt.zst", f"{base}.gt.zst", "graph-tool native (needs graph-tool)"),
         )
+
+    @property
+    def files(self) -> tuple[DataFile, ...]:
+        """Downloads for the default subgraph."""
+        return self.files_for()
 
     @property
     def primary_file(self) -> DataFile | None:
         return self.files[0]
 
-    def file(self, name: str) -> DataFile:
-        for item in self.files:
+    def file(self, name: str, *, subgraph: str | None = None) -> DataFile:
+        candidates = self.files_for(subgraph)
+        for item in candidates:
             if item.name == name or item.name.endswith(name):
                 return item
-        available = ", ".join(item.name for item in self.files)
+        available = ", ".join(item.name for item in candidates)
         raise KeyError(f"{self.name!r} has no file {name!r}. Available: {available}")
 
     # -- serialisation ---------------------------------------------------

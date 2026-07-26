@@ -81,6 +81,27 @@ def test_delimiter_can_be_overridden(csv_edges: Path) -> None:
     assert rows[0][:2] == ("6", "2")
 
 
+def test_csv_with_spaces_in_fields_is_still_csv(csv_edges_with_spaces: Path) -> None:
+    """Detection must not be fooled by a space inside a later column."""
+    network = make_network(csv_edges_with_spaces)
+    assert network.delimiter == ","
+    assert list(network.edges(cast=int)) == [(0, 2), (0, 3)]
+
+
+def test_commas_inside_labels_do_not_imply_csv(whitespace_edges_with_commas: Path) -> None:
+    """Comma-splitting is inconsistent here, so whitespace wins."""
+    network = make_network(whitespace_edges_with_commas)
+    assert network.delimiter is None
+    assert list(network.edges())[0] == ('"Smith,', 'John"')
+
+
+def test_quoted_delimiter_does_not_split(quoted_csv_edges: Path) -> None:
+    """csv.reader honours quoting, so the label stays one field."""
+    network = make_network(quoted_csv_edges)
+    assert network.delimiter == ","
+    assert list(network.rows())[0] == ("1", "2", "Air Lines, Inc.")
+
+
 def test_labels_read_a_node_partition(gzipped_labels: Path) -> None:
     labels = make_network(gzipped_labels).labels(cast=int)
     assert labels == {1: "0", 2: "0", 3: "1", 4: "1"}

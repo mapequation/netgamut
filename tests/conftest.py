@@ -197,3 +197,34 @@ def gzipped_labels(tmp_path: Path) -> Path:
     path = tmp_path / "toy-department-labels.txt.gz"
     path.write_bytes(gzip.compress(b"1 0\n2 0\n3 1\n4 1\n"))
     return path
+
+
+@pytest.fixture
+def csv_edges_with_spaces(tmp_path: Path) -> Path:
+    """CSV whose later fields contain spaces, as openflights' edges.csv does.
+
+    A whitespace-first guess splits these into two fields and wrongly concludes
+    the file is whitespace-separated.
+    """
+    path = tmp_path / "flights.csv"
+    path.write_text("0,2,124.52,CG,1308,0,DH8 DHT,0\n0,3,88.1,CG,1309,0,AT7 ATR,0\n")
+    return path
+
+
+@pytest.fixture
+def whitespace_edges_with_commas(tmp_path: Path) -> Path:
+    """A whitespace-separated file whose labels contain commas.
+
+    Splitting on comma gives an inconsistent field count, so whitespace wins.
+    """
+    path = tmp_path / "named.txt"
+    path.write_text('"Smith, John"\t"Doe, Jane"\n"Wu, Li"\t"Smith, John"\n"a"\t"b"\n')
+    return path
+
+
+@pytest.fixture
+def quoted_csv_edges(tmp_path: Path) -> Path:
+    """CSV with a quoted field containing the delimiter."""
+    path = tmp_path / "quoted.csv"
+    path.write_text('1,2,"Air Lines, Inc."\n2,3,"Rail, Ltd."\n')
+    return path

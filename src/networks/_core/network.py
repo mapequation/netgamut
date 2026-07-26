@@ -9,11 +9,12 @@ use the package.
 
 from __future__ import annotations
 
+import csv
 import gzip
 import io
 import tarfile
 import zipfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
@@ -26,19 +27,31 @@ __all__ = ["Network"]
 
 _COMMENT_PREFIXES = ("#", "%")
 
-# Most SNAP files are tab- or space-separated, but a few are CSV -- the Bitcoin
-# trust networks are `source,target,rating,time`. Splitting those on whitespace
-# yields a single field per line, which would silently look like an empty
-# network, so the delimiter is detected rather than assumed.
+# SNAP files are mostly tab- or space-separated, but its Bitcoin trust networks
+# are `source,target,rating,time` and every Netzschleuder edge list is CSV.
+# Splitting CSV on whitespace can silently yield an empty network, so the
+# delimiter is detected rather than assumed.
 _CANDIDATE_DELIMITERS = (",", ";")
 
+# Enough lines to tell a real delimiter from an incidental character.
+_SAMPLE_LINES = 25
 
-def _detect_delimiter(sample: str) -> str | None:
-    """Return the delimiter used by *sample*, or ``None`` for whitespace."""
-    if len(sample.split()) >= 2:
+
+def _detect_delimiter(samples: Sequence[str]) -> str | None:
+    """Return the delimiter used by *samples*, or ``None`` for whitespace.
+
+    A candidate wins only if it splits *every* sampled line into the same number
+    of fields, at least two. Consistency is what makes this reliable: a
+    whitespace-separated file with commas inside labels splits inconsistently on
+    comma and so falls through to whitespace, while a genuine CSV whose fields
+    contain spaces (``openflights`` has an aircraft column reading ``DH8 DHT``)
+    is still recognised -- which a whitespace-first guess gets wrong.
+    """
+    if not samples:
         return None
     for delimiter in _CANDIDATE_DELIMITERS:
-        if len(sample.split(delimiter)) >= 2:
+        counts = {len(line.split(delimiter)) for line in samples}
+        if len(counts) == 1 and counts.pop() >= 2:
             return delimiter
     return None
 
@@ -170,12 +183,15 @@ class Network:
     @property
     def delimiter(self) -> str | None:
         """The field separator this file uses, or ``None`` for whitespace."""
+        samples: list[str] = []
         with self.open() as stream:
             for line in stream:
                 stripped = line.strip()
                 if stripped and not stripped.startswith(_COMMENT_PREFIXES):
-                    return _detect_delimiter(stripped)
-        return None
+                    samples.append(stripped)
+                    if len(samples) >= _SAMPLE_LINES:
+                        break
+        return _detect_delimiter(samples)
 
     def rows(self, *, delimiter: str | None = None) -> Iterator[tuple[str, ...]]:
         """Yield every non-comment line, split into its fields.
@@ -189,15 +205,22 @@ class Network:
         """
         sniffed = delimiter if delimiter is not None else self.delimiter
         with self.open() as stream:
-            for line in stream:
-                stripped = line.strip()
-                if not stripped or stripped.startswith(_COMMENT_PREFIXES):
-                    continue
-                if sniffed is None:
+            if sniffed is None:
+                for line in stream:
+                    stripped = line.strip()
+                    if not stripped or stripped.startswith(_COMMENT_PREFIXES):
+                        continue
                     fields = stripped.split()
-                else:
-                    fields = [field.strip() for field in stripped.split(sniffed)]
-                if fields:
+                    if fields:
+                        yield tuple(fields)
+                return
+            # csv.reader honours quoting, so a label containing the delimiter
+            # does not split into extra fields.
+            for record in csv.reader(stream, delimiter=sniffed):
+                if not record or record[0].lstrip().startswith(_COMMENT_PREFIXES):
+                    continue
+                fields = [field.strip() for field in record]
+                if any(fields):
                     yield tuple(fields)
 
     def labels(self, *, cast: Callable[[str], Any] | None = None) -> dict[Any, str]:

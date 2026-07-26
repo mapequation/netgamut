@@ -55,6 +55,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
+    "node_properties",
     "refresh",
     "search",
     "set_cache_dir",
@@ -172,9 +173,12 @@ def describe(name: str) -> str:
                 shown = f"{value:.4g}" if isinstance(value, float) else f"{value}"
                 lines.append(f"  {key:<28} {shown}")
 
-    if dataset.subgraphs and len(dataset.subgraphs) > 1:
+    if dataset.subgraph_count > 1:
         lines.append("")
-        lines.append(f"Subgraphs   {len(dataset.subgraphs)}: {', '.join(dataset.subgraphs[:8])}")
+        lines.append(
+            f"Subgraphs   {dataset.subgraph_count} "
+            f"(default {dataset.default_subgraph}): {', '.join(dataset.subgraphs[:8])}"
+        )
 
     if dataset.citations:
         lines.append("")
@@ -188,6 +192,7 @@ def describe(name: str) -> str:
 def load(
     name: str,
     *,
+    subgraph: str | None = None,
     force: bool = False,
     progress: Callable[[int, int | None], None] | bool | None = None,
     max_bytes: int | None = None,
@@ -197,10 +202,17 @@ def load(
     The CSV bundle is fetched and its ``edges.csv`` used as the network, so
     ``Network.path``, ``.edges()`` and ``.to_infomap()`` work exactly as they do
     for SNAP data. The bundle's node and graph properties stay available
-    alongside via :meth:`Network.extract`.
+    alongside via :meth:`Network.extract` and :func:`node_properties`.
+
+    Args:
+        name: Entry name, case-insensitive.
+        subgraph: Which subgraph to fetch. Entries usually have one, named after
+            the entry; some publish several -- ``karate`` holds ``77`` and
+            ``78``. Defaults to ``Dataset.default_subgraph``. See
+            ``info(name).subgraph_count``.
     """
     dataset = info(name)
-    artifact = dataset.files[0]
+    artifact = dataset.files_for(subgraph)[0]
     target = _dataset_dir(SOURCE, dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
     return Network(
@@ -211,11 +223,46 @@ def load(
     )
 
 
-def is_cached(name: str) -> bool:
+def node_properties(
+    name: str,
+    *,
+    subgraph: str | None = None,
+    force: bool = False,
+    progress: Callable[[int, int | None], None] | bool | None = None,
+) -> tuple[list[str], list[dict[str, str]]]:
+    """Read a network's per-node metadata from its CSV bundle.
+
+    Returns ``(column_names, rows)``. This is where a reference partition lives
+    for the classic benchmarks: ``karate`` labels each member with their faction
+    under ``groups``, ``football`` labels each team with its conference under
+    ``value``. Netzschleuder has no separate ground-truth file, so scoring a
+    community-detection run against metadata means reading these columns.
+
+    Be careful drawing conclusions from them: node metadata is not guaranteed to
+    coincide with community structure.
+    """
+    import csv
+
+    network = load(name, subgraph=subgraph, force=force, progress=progress)
+    directory = network.extract()
+    path = directory / "nodes.csv"
+    if not path.is_file():
+        raise LookupError(f"{name!r} ships no nodes.csv in its bundle.")
+
+    with path.open(encoding="utf-8", errors="replace") as handle:
+        reader = csv.reader(handle)
+        header = next(reader, [])
+        # The site prefixes its header row with "# ".
+        columns = [cell.strip().lstrip("# ").strip() for cell in header]
+        rows = [dict(zip(columns, record, strict=False)) for record in reader if record]
+    return columns, rows
+
+
+def is_cached(name: str, *, subgraph: str | None = None) -> bool:
     """Whether *name* is already downloaded, without fetching anything."""
     try:
         dataset = info(name)
     except KeyError:
         return False
-    artifact = dataset.files[0]
+    artifact = dataset.files_for(subgraph)[0]
     return (_dataset_dir(SOURCE, dataset.name) / Path(artifact.name).name).is_file()
