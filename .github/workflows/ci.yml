@@ -54,10 +54,17 @@ jobs:
         run: uv run mypy
 
   live:
-    # Hits the real SNAP site, so it runs on main and on demand rather than on
-    # every pull request.
+    # Hits the real upstream sites, so it runs on main and on demand rather than
+    # on every pull request.
+    #
+    # Advisory, not gating: snap.stanford.edu is intermittently unreachable from
+    # hosted runners, and an upstream outage is not a defect in this package. The
+    # job still surfaces a genuine upstream change -- check it when a refresh PR
+    # looks odd -- but it must not turn main red on someone else's downtime.
+    continue-on-error: true
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
 
