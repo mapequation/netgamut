@@ -25,6 +25,22 @@ __all__ = ["Network"]
 
 _COMMENT_PREFIXES = ("#", "%")
 
+# Most SNAP files are tab- or space-separated, but a few are CSV -- the Bitcoin
+# trust networks are `source,target,rating,time`. Splitting those on whitespace
+# yields a single field per line, which would silently look like an empty
+# network, so the delimiter is detected rather than assumed.
+_CANDIDATE_DELIMITERS = (",", ";")
+
+
+def _detect_delimiter(sample: str) -> str | None:
+    """Return the delimiter used by *sample*, or ``None`` for whitespace."""
+    if len(sample.split()) >= 2:
+        return None
+    for delimiter in _CANDIDATE_DELIMITERS:
+        if len(sample.split(delimiter)) >= 2:
+            return delimiter
+    return None
+
 
 @dataclass(frozen=True)
 class Network:
@@ -114,19 +130,55 @@ class Network:
                 lines.append(line.lstrip("#% ").rstrip())
         return tuple(lines)
 
-    def rows(self) -> Iterator[tuple[str, ...]]:
-        """Yield every non-comment line, split into its whitespace-separated fields.
+    @property
+    def delimiter(self) -> str | None:
+        """The field separator this file uses, or ``None`` for whitespace."""
+        with self.open() as stream:
+            for line in stream:
+                stripped = line.strip()
+                if stripped and not stripped.startswith(_COMMENT_PREFIXES):
+                    return _detect_delimiter(stripped)
+        return None
+
+    def rows(self, *, delimiter: str | None = None) -> Iterator[tuple[str, ...]]:
+        """Yield every non-comment line, split into its fields.
 
         Use this for the datasets that carry more than two columns, such as
         timestamps in the temporal category or signs in the signed category.
+
+        The separator is detected from the first data line, since a few SNAP
+        files are CSV rather than whitespace-separated. Pass *delimiter* to
+        override that.
         """
+        sniffed = delimiter if delimiter is not None else self.delimiter
         with self.open() as stream:
             for line in stream:
-                if not line or line.startswith(_COMMENT_PREFIXES):
+                stripped = line.strip()
+                if not stripped or stripped.startswith(_COMMENT_PREFIXES):
                     continue
-                fields = line.split()
+                if sniffed is None:
+                    fields = stripped.split()
+                else:
+                    fields = [field.strip() for field in stripped.split(sniffed)]
                 if fields:
                     yield tuple(fields)
+
+    def labels(self, *, cast: Callable[[str], Any] | None = None) -> dict[Any, str]:
+        """Read a node-label ground truth into ``{node: label}``.
+
+        Some SNAP datasets give their reference partition as one ``node label``
+        pair per line rather than as community lists -- ``email-Eu-core``
+        labels each person with their department. Unlike
+        :meth:`communities`, this is a hard partition, so it can be scored
+        directly against an Infomap run with NMI or AMI.
+        """
+        mapping: dict[Any, str] = {}
+        for fields in self.rows():
+            if len(fields) < 2:
+                continue
+            node = fields[0] if cast is None else cast(fields[0])
+            mapping[node] = fields[1]
+        return mapping
 
     def communities(self, *, cast: Callable[[str], Any] | None = None) -> Iterator[tuple[Any, ...]]:
         """Stream communities from a SNAP ground-truth file.
@@ -209,7 +261,16 @@ class Network:
             directed = bool(self.dataset.directed)
         kwargs.setdefault("directed", directed)
         instance = Infomap(**kwargs)
-        instance.read_file(str(self.path))
+
+        if self.delimiter is None:
+            # Fast path: let Infomap's own parser read the file directly.
+            instance.read_file(str(self.path))
+        else:
+            # Infomap cannot parse CSV, so feed the links in. Only the first
+            # two columns are used: the extra columns on these files are
+            # ratings and timestamps, and SNAP's signed ratings would be
+            # invalid as Infomap link weights.
+            instance.add_links(self.edges(cast=int))
         return instance
 
     def __repr__(self) -> str:

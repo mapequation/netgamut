@@ -100,6 +100,32 @@ def test_ground_truth_detection(ground_truth_html: str) -> None:
     assert dataset.primary_file.name == "com-dblp.ungraph.txt.gz"
 
 
+def test_label_style_ground_truth_is_recognised() -> None:
+    """email-Eu-core ships a node-label partition, not community lists."""
+    dataset = make(
+        name="email-Eu-core",
+        files=(
+            DataFile("email-Eu-core.txt.gz", "u"),
+            DataFile("email-Eu-core-department-labels.txt.gz", "u"),
+        ),
+    )
+    assert dataset.has_ground_truth
+    assert dataset.ground_truth_kind == "labels"
+    assert dataset.community_files == ()
+    assert dataset.community_file().name == "email-Eu-core-department-labels.txt.gz"
+    # The network itself must still be the default download.
+    assert dataset.primary_file is not None
+    assert dataset.primary_file.name == "email-Eu-core.txt.gz"
+
+
+def test_ground_truth_kind_distinguishes_the_two_shapes() -> None:
+    assert make(files=(DataFile("x.top5000.cmty.txt.gz", "u"),)).ground_truth_kind == (
+        "communities"
+    )
+    assert make(files=(DataFile("x-labels.txt.gz", "u"),)).ground_truth_kind == "labels"
+    assert make(files=(DataFile("x.txt.gz", "u"),)).ground_truth_kind is None
+
+
 def test_ground_truth_absent_raises_lookup_error() -> None:
     with pytest.raises(LookupError):
         make().community_file()

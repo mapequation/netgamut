@@ -172,32 +172,66 @@ class Dataset:
 
     @property
     def community_files(self) -> tuple[DataFile, ...]:
-        """Ground-truth community files, if SNAP publishes any.
+        """Overlapping ground-truth community lists, if SNAP publishes any.
 
-        Only the *Networks with ground-truth communities* datasets have these.
-        They are what makes a dataset usable for scoring a community-detection
-        run against a reference partition.
+        One line per community, listing its node ids. The ``com-*`` datasets
+        use this shape; communities overlap, so scoring needs an
+        overlap-aware measure.
         """
         return tuple(item for item in self.files if "cmty" in item.name.lower())
 
     @property
+    def label_files(self) -> tuple[DataFile, ...]:
+        """Node-label ground truth, if SNAP publishes any.
+
+        One ``node label`` pair per line -- ``email-Eu-core`` labels each
+        person with their department. This shape is a hard partition, so it can
+        be scored directly against a community-detection run with NMI or AMI.
+        """
+        return tuple(item for item in self.files if "label" in item.name.lower())
+
+    @property
+    def ground_truth_files(self) -> tuple[DataFile, ...]:
+        """Every reference-partition file, in either shape."""
+        return self.community_files + self.label_files
+
+    @property
+    def ground_truth_kind(self) -> str | None:
+        """``"communities"``, ``"labels"``, or ``None``.
+
+        The two shapes need different scoring, so check this before choosing a
+        metric.
+        """
+        if self.community_files:
+            return "communities"
+        if self.label_files:
+            return "labels"
+        return None
+
+    @property
     def has_ground_truth(self) -> bool:
-        return bool(self.community_files)
+        return bool(self.ground_truth_files)
 
     def community_file(self, variant: str = "all") -> DataFile:
         """Pick a ground-truth file.
 
-        SNAP ships two per dataset: ``all`` (every community) and ``top5000``
-        (the 5000 highest-quality ones, the usual choice for benchmarking).
+        For the ``com-*`` datasets SNAP ships two: ``all`` (every community)
+        and ``top5000`` (the 5000 highest-quality ones, the usual choice for
+        benchmarking). Datasets whose ground truth is a node-label partition
+        have a single file, returned regardless of *variant*.
         """
-        candidates = self.community_files
+        candidates = self.ground_truth_files
         if not candidates:
-            raise LookupError(f"{self.name!r} has no ground-truth community files.")
+            raise LookupError(f"{self.name!r} has no ground-truth files.")
+        if len(candidates) == 1:
+            return candidates[0]
         for item in candidates:
             if variant.lower() in item.name.lower():
                 return item
         available = ", ".join(item.name for item in candidates)
-        raise KeyError(f"No {variant!r} community file for {self.name!r}. Available: {available}")
+        raise KeyError(
+            f"No {variant!r} ground-truth file for {self.name!r}. Available: {available}"
+        )
 
     def file(self, name: str) -> DataFile:
         """Look up one of this dataset's files by name."""

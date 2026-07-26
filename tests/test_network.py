@@ -63,6 +63,36 @@ def test_communities_parse_variable_length_lines(gzipped_communities: Path) -> N
     assert list(network.communities(cast=int)) == [(1, 2, 3), (3, 4)]
 
 
+def test_comma_separated_files_are_detected(csv_edges: Path) -> None:
+    """A CSV edge list must not silently read as an empty network."""
+    network = make_network(csv_edges)
+    assert network.delimiter == ","
+    assert list(network.edges(cast=int)) == [(6, 2), (6, 5)]
+    assert list(network.rows())[0] == ("6", "2", "4", "1289241911.72836")
+
+
+def test_whitespace_files_report_no_delimiter(gzipped_edges: Path) -> None:
+    assert make_network(gzipped_edges).delimiter is None
+
+
+def test_delimiter_can_be_overridden(csv_edges: Path) -> None:
+    rows = list(make_network(csv_edges).rows(delimiter=","))
+    assert rows[0][:2] == ("6", "2")
+
+
+def test_labels_read_a_node_partition(gzipped_labels: Path) -> None:
+    labels = make_network(gzipped_labels).labels(cast=int)
+    assert labels == {1: "0", 2: "0", 3: "1", 4: "1"}
+
+
+def test_to_infomap_handles_csv_networks(csv_edges: Path) -> None:
+    """Infomap's own parser rejects CSV, so links are fed in instead."""
+    pytest.importorskip("infomap")
+    instance = make_network(csv_edges, type_="Directed").to_infomap(silent=True)
+    instance.run()
+    assert instance.num_nodes == 3
+
+
 def test_plain_uncompressed_files_work(tmp_path: Path) -> None:
     path = tmp_path / "edges.txt"
     path.write_text("# c\n1 2\n2 3\n")

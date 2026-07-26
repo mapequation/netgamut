@@ -173,3 +173,23 @@ def gzipped_communities(tmp_path: Path) -> Path:
     path = tmp_path / "toy.cmty.txt.gz"
     path.write_bytes(gzip.compress(b"1\t2\t3\n3\t4\n"))
     return path
+
+
+@pytest.fixture
+def csv_edges(tmp_path: Path) -> Path:
+    """A comma-separated edge list, as the Bitcoin trust networks use.
+
+    Splitting these on whitespace yields one field per line, which would look
+    like an empty network rather than an error.
+    """
+    path = tmp_path / "trust.csv.gz"
+    path.write_bytes(gzip.compress(b"6,2,4,1289241911.72836\n6,5,2,1289241941.53000\n"))
+    return path
+
+
+@pytest.fixture
+def gzipped_labels(tmp_path: Path) -> Path:
+    """Node-label ground truth, as email-Eu-core uses."""
+    path = tmp_path / "toy-department-labels.txt.gz"
+    path.write_bytes(gzip.compress(b"1 0\n2 0\n3 1\n4 1\n"))
+    return path
