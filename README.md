@@ -60,9 +60,9 @@ For anything source-specific, use that source's own `search()`:
 from networks import netzschleuder as nz
 from networks import snap
 
-nz.search(multilayer=True)              # 17 multiplex networks; SNAP has none
+nz.search(multilayer=True)  # 17 multiplex networks; SNAP has none
 nz.search(subtype="Food web")
-snap.search(ground_truth=True)          # reference partitions
+snap.search(ground_truth=True)  # reference partitions
 ```
 
 ## Look before you download (SNAP)
@@ -228,14 +228,22 @@ multilayer, transport limited to three road networks), so draw across sources:
 
 ```python
 POOL = {
-    "Social":         [("nz", "karate"), ("nz", "football"), ("snap", "email-Eu-core")],
-    "Informational":  [("nz", "polbooks"), ("nz", "polblogs"), ("nz", "dblp_cite")],
-    "Biological":     [("nz", "celegansneural"), ("nz", "celegans_metabolic"),
-                       ("nz", "foodweb_little_rock"), ("nz", "malaria_genes")],
-    "Transportation": [("nz", "london_transport"), ("nz", "openflights"),
-                       ("nz", "us_air_traffic"), ("snap", "roadNet-PA")],
-    "Technological":  [("nz", "power"), ("nz", "internet_as"), ("nz", "linux")],
-    "Economic":       [("nz", "fao_trade"), ("nz", "at_migrations")],
+    "Social": [("nz", "karate"), ("nz", "football"), ("snap", "email-Eu-core")],
+    "Informational": [("nz", "polbooks"), ("nz", "polblogs"), ("nz", "dblp_cite")],
+    "Biological": [
+        ("nz", "celegansneural"),
+        ("nz", "celegans_metabolic"),
+        ("nz", "foodweb_little_rock"),
+        ("nz", "malaria_genes"),
+    ],
+    "Transportation": [
+        ("nz", "london_transport"),
+        ("nz", "openflights"),
+        ("nz", "us_air_traffic"),
+        ("snap", "roadNet-PA"),
+    ],
+    "Technological": [("nz", "power"), ("nz", "internet_as"), ("nz", "linux")],
+    "Economic": [("nz", "fao_trade"), ("nz", "at_migrations")],
 }
 ```
 
@@ -267,7 +275,7 @@ beyond size:
 
 ```python
 nz.search(domain="Transportation", subtype="Airport")
-nz.search(multilayer=True)           # 17 multiplex networks
+nz.search(multilayer=True)  # 17 multiplex networks
 nz.search(weighted=True, domain="Economic")
 nz.search(bipartite=True)
 ```
@@ -277,9 +285,9 @@ being the site's native format:
 
 ```python
 net = nz.load("celegansneural")
-net.path                     # extracted edges.csv
+net.path  # extracted edges.csv
 list(net.edges(cast=int))
-net.extract()                # nodes.csv and gprops.csv too
+net.extract()  # nodes.csv and gprops.csv too
 ```
 
 Metadata is read from a JSON API rather than scraped, so this subpackage is
