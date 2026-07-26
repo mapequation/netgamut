@@ -78,15 +78,20 @@ def set_cache_dir(path: str | os.PathLike[str] | None) -> Path:
     return cache_dir()
 
 
-def snap_dir() -> Path:
-    path = cache_dir() / "snap"
+def source_dir(source: str) -> Path:
+    """Directory for one data source, e.g. ``"snap"``."""
+    path = cache_dir() / _safe_name(source)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def dataset_dir(name: str) -> Path:
-    """Directory holding the downloaded files for one dataset."""
-    path = snap_dir() / "files" / _safe_name(name)
+def dataset_dir(source: str, name: str) -> Path:
+    """Directory holding the downloaded files for one dataset.
+
+    Namespaced by source, so two sources publishing a network under the same
+    name cannot collide.
+    """
+    path = source_dir(source) / "files" / _safe_name(name)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -183,9 +188,14 @@ def _lock_is_stale(lock_path: Path) -> bool:
 class CachedDataset:
     """What is on disk for one dataset."""
 
+    source: str
     name: str
     files: tuple[str, ...]
     bytes: int
+
+    @property
+    def key(self) -> str:
+        return f"{self.source}/{self.name}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,22 +204,36 @@ class CacheInfo:
 
     path: Path
     bytes: int
+    #: Keyed ``"<source>/<name>"``, so the two sources stay distinguishable.
     datasets: dict[str, CachedDataset]
-    #: True when a refreshed catalog in the cache is shadowing the bundled one.
-    catalog_refreshed: bool
+    #: Sources with a refreshed catalog in the cache shadowing the bundled one.
+    refreshed_catalogs: tuple[str, ...] = ()
+
+    @property
+    def catalog_refreshed(self) -> bool:
+        return bool(self.refreshed_catalogs)
 
     def __str__(self) -> str:
         return f"{len(self.datasets)} dataset(s), {self.bytes / 1e6:.1f} MB in {self.path}"
 
 
 def cache_info() -> CacheInfo:
-    """Summarise what is currently cached on this machine."""
+    """Summarise what is currently cached on this machine, across all sources."""
     root = cache_dir()
-    files_root = root / "snap" / "files"
     datasets: dict[str, CachedDataset] = {}
+    refreshed: list[str] = []
     total = 0
 
-    if files_root.is_dir():
+    for source_path in sorted(root.iterdir()) if root.is_dir() else []:
+        if not source_path.is_dir():
+            continue
+        source = source_path.name
+        if (source_path / "catalog.json").is_file():
+            refreshed.append(source)
+
+        files_root = source_path / "files"
+        if not files_root.is_dir():
+            continue
         for entry in sorted(files_root.iterdir()):
             if not entry.is_dir():
                 continue
@@ -224,36 +248,40 @@ def cache_info() -> CacheInfo:
                 names.append(item.name)
                 size += item.stat().st_size
             if names:
-                datasets[entry.name] = CachedDataset(entry.name, tuple(names), size)
+                record = CachedDataset(source, entry.name, tuple(names), size)
+                datasets[record.key] = record
                 total += size
 
     return CacheInfo(
         path=root,
         bytes=total,
         datasets=datasets,
-        catalog_refreshed=(root / "snap" / "catalog.json").is_file(),
+        refreshed_catalogs=tuple(refreshed),
     )
 
 
-def clear_cache(name: str | None = None) -> int:
+def clear_cache(name: str | None = None, *, source: str | None = None) -> int:
     """Delete cached downloads and return the number of bytes reclaimed.
 
-    With *name*, clears just that dataset; otherwise clears every download and
-    any refreshed catalog. The vendored catalog shipped inside the package is
-    never touched.
+    With *name*, clears just that dataset; with *source*, everything from that
+    source; with neither, the whole cache including any refreshed catalogs. The
+    catalogs shipped inside the package are never touched.
     """
     import shutil
 
-    root = cache_dir() / "snap"
+    root = cache_dir()
+    sources = [source] if source else [p.name for p in root.iterdir() if p.is_dir()]
     targets: list[Path] = []
 
-    if name is None:
-        targets.append(root / "files")
-        refreshed = root / "catalog.json"
-        if refreshed.is_file():
-            targets.append(refreshed)
-    else:
-        targets.append(root / "files" / _safe_name(name))
+    for current in sources:
+        base = root / _safe_name(current)
+        if name is None:
+            targets.append(base / "files")
+            refreshed = base / "catalog.json"
+            if refreshed.is_file():
+                targets.append(refreshed)
+        else:
+            targets.append(base / "files" / _safe_name(name))
 
     reclaimed = 0
     for target in targets:

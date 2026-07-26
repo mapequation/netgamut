@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from networks.snap import _cache, _catalog
+from networks._core import cache as _cache
+from networks.netzschleuder import _catalog as _nz_catalog
+from networks.snap import _catalog
 
 INDEX_HTML = """
 <html><body>
@@ -146,8 +148,10 @@ def isolated_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv(_cache.CACHE_ENV_VAR, str(root))
     monkeypatch.setattr(_cache, "_override", None, raising=False)
     monkeypatch.setattr(_catalog, "_cached", None, raising=False)
+    monkeypatch.setattr(_nz_catalog, "_cached", None, raising=False)
     yield root
     monkeypatch.setattr(_catalog, "_cached", None, raising=False)
+    monkeypatch.setattr(_nz_catalog, "_cached", None, raising=False)
 
 
 @pytest.fixture

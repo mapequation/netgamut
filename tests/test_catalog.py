@@ -7,8 +7,9 @@ import json
 import pytest
 
 from networks import snap
+from networks._core.models import DataFile
 from networks.snap._catalog import Catalog, load_catalog
-from networks.snap._models import Category, DataFile, Dataset
+from networks.snap._models import Category, Dataset
 
 
 def build(*datasets: Dataset, categories: tuple[Category, ...] = ()) -> Catalog:

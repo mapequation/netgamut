@@ -19,7 +19,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from ._cache import file_lock, read_sidecar, write_sidecar
+from .cache import file_lock, read_sidecar, write_sidecar
 
 __all__ = ["DownloadError", "download", "fetch_text", "head"]
 

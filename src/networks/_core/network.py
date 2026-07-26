@@ -1,4 +1,4 @@
-"""The handle returned by :func:`networks.snap.load`.
+"""The handle returned by every source's ``load()``.
 
 A :class:`Network` is a thin wrapper around a cached file. It does not read the
 data into memory when you create it, which is what lets the same API serve
@@ -18,8 +18,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
 
-from ._download import extract_gzip
-from ._models import DataFile, Dataset
+from .cache import write_atomic
+from .download import extract_gzip
+from .models import DataFile, DatasetLike
 
 __all__ = ["Network"]
 
@@ -44,14 +45,19 @@ def _detect_delimiter(sample: str) -> str | None:
 
 @dataclass(frozen=True)
 class Network:
-    """A downloaded SNAP dataset on local disk."""
+    """A downloaded network on local disk."""
 
     #: Full metadata for the dataset this file belongs to.
-    dataset: Dataset
+    dataset: DatasetLike
     #: The specific artifact that was downloaded.
     file: DataFile
-    #: The downloaded artifact exactly as SNAP serves it, compression included.
+    #: The downloaded artifact exactly as the source serves it, compression
+    #: included.
     archive_path: Path
+    #: For sources that ship a bundle, the member holding the edge list --
+    #: Netzschleuder's ``csv.zip`` contains ``edges.csv`` alongside node and
+    #: graph properties. ``None`` when the download is a single file.
+    member: str | None = None
 
     # -- paths -----------------------------------------------------------
     @property
@@ -59,19 +65,32 @@ class Network:
         return self.dataset.name
 
     @property
-    def is_archive(self) -> bool:
-        """True for multi-file bundles (``.tar.gz``, ``.zip``)."""
+    def is_bundle(self) -> bool:
+        """Whether the download is a multi-file archive on disk."""
         lowered = self.archive_path.name.lower()
         return lowered.endswith((".tar.gz", ".tgz", ".tar", ".zip"))
+
+    @property
+    def is_archive(self) -> bool:
+        """Whether reading needs :meth:`extract` rather than :attr:`path`.
+
+        False for a bundle with a designated *member*: that member is the
+        network, so reading works directly even though the download is an
+        archive. Use :attr:`is_bundle` to ask about the file itself.
+        """
+        return self.is_bundle and self.member is None
 
     @property
     def path(self) -> Path:
         """A path you can hand to any tool that reads a text file.
 
-        For a single gzipped file this decompresses once, next to the archive,
-        and returns the plain file. For multi-file bundles there is no single
-        text file, so this returns the archive; use :meth:`extract` instead.
+        Gzipped files are decompressed once, next to the archive. A designated
+        *member* is extracted from its bundle the same way. For a bundle with no
+        member there is no single text file, so this returns the archive; use
+        :meth:`extract` instead.
         """
+        if self.member is not None:
+            return self._extract_member()
         if self.is_archive:
             return self.archive_path
         if self.archive_path.name.lower().endswith(".gz"):
@@ -79,13 +98,29 @@ class Network:
             return extract_gzip(self.archive_path, target)
         return self.archive_path
 
+    def _extract_member(self) -> Path:
+        """Pull the designated member out of its bundle, once."""
+        assert self.member is not None
+        stem = self.archive_path.name.split(".")[0]
+        target = self.archive_path.parent / f"{stem}-{Path(self.member).name}"
+        if target.is_file():
+            return target
+        with zipfile.ZipFile(self.archive_path) as archive:
+            payload = archive.read(self.member)
+        write_atomic(target, payload)
+        return target
+
     @property
     def size_bytes(self) -> int:
         return self.archive_path.stat().st_size if self.archive_path.is_file() else 0
 
     def extract(self, destination: Path | None = None) -> Path:
-        """Unpack a ``.tar.gz`` or ``.zip`` bundle and return the directory."""
-        if not self.is_archive:
+        """Unpack a ``.tar.gz`` or ``.zip`` bundle and return the directory.
+
+        Works even when a *member* has been designated as the network, so a
+        Netzschleuder bundle's node and graph properties stay reachable.
+        """
+        if not self.is_bundle:
             raise ValueError(
                 f"{self.file.name} is a single file, not an archive. Use .path instead."
             )
@@ -111,6 +146,8 @@ class Network:
     # -- reading ---------------------------------------------------------
     def open(self) -> IO[str]:
         """Open the network as a text stream, decompressing on the fly."""
+        if self.member is not None:
+            return self.path.open(encoding="utf-8", errors="replace")
         if self.is_archive:
             raise ValueError(f"{self.file.name} is an archive. Call .extract() and open a member.")
         if self.archive_path.name.lower().endswith(".gz"):

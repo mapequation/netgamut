@@ -28,7 +28,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from ._cache import (
+from .._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
     CacheInfo,
@@ -37,12 +37,12 @@ from ._cache import (
     clear_cache,
     set_cache_dir,
 )
-from ._cache import dataset_dir as _dataset_dir
+from .._core.cache import dataset_dir as _dataset_dir
+from .._core.download import DownloadError
+from .._core.download import download as _download_file
+from .._core.network import Network
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
-from ._download import DownloadError
-from ._download import download as _download_file
 from ._models import Category, DataFile, Dataset
-from ._network import Network
 from ._scrape import INDEX_URL, SNAP_BASE_URL
 
 __all__ = [
@@ -218,7 +218,7 @@ def load(
             f"snap.refresh() will pick it up."
         )
 
-    target = _dataset_dir(dataset.name) / Path(artifact.name).name
+    target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
     _download_file(
         artifact.url,
         target,
@@ -252,7 +252,7 @@ def load_ground_truth(
     """
     dataset = info(name)
     artifact = dataset.community_file(variant)
-    target = _dataset_dir(dataset.name) / Path(artifact.name).name
+    target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
     return Network(dataset=dataset, file=artifact, archive_path=target)
 
@@ -266,4 +266,4 @@ def is_cached(name: str, *, file: str | None = None) -> bool:
     artifact = dataset.file(file) if file else dataset.primary_file
     if artifact is None:
         return False
-    return (_dataset_dir(dataset.name) / Path(artifact.name).name).is_file()
+    return (_dataset_dir("snap", dataset.name) / Path(artifact.name).name).is_file()

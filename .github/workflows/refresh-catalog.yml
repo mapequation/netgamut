@@ -1,8 +1,9 @@
-name: Refresh SNAP catalog
+name: Refresh catalogs
 
-# The bundled catalog is a snapshot of snap.stanford.edu. This re-scrapes it
-# monthly and opens a pull request when the collection has changed, so new
-# datasets reach users without anyone remembering to look.
+# The bundled catalogs are snapshots of snap.stanford.edu and
+# networks.skewed.de. This rebuilds both monthly and opens a pull request when
+# either collection has changed, so new datasets reach users without anyone
+# remembering to look.
 on:
   schedule:
     - cron: "0 4 1 * *" # 04:00 UTC on the first of each month
@@ -25,10 +26,13 @@ jobs:
       - name: Install
         run: uv sync --all-extras --group dev
 
-      # The script exits non-zero if the scrape looks implausible, so a SNAP
-      # redesign fails this job instead of committing an empty catalog.
-      - name: Rebuild the catalog
+      # Each script exits non-zero if its result looks implausible, so an
+      # upstream redesign fails this job instead of committing an empty catalog.
+      - name: Rebuild the SNAP catalog
         run: uv run python scripts/regenerate_catalog.py
+
+      - name: Rebuild the Netzschleuder catalog
+        run: uv run python scripts/regenerate_netzschleuder_catalog.py
 
       - name: Test against the rebuilt catalog
         run: uv run pytest -m "not network"
@@ -36,16 +40,17 @@ jobs:
       - name: Open a pull request
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: chore/refresh-snap-catalog
-          title: "chore: refresh the SNAP catalog"
-          commit-message: "chore: refresh the SNAP catalog"
+          branch: chore/refresh-catalogs
+          title: "chore: refresh the vendored catalogs"
+          commit-message: "chore: refresh the vendored catalogs"
           delete-branch: true
           body: |
-            Automated refresh of `src/networks/snap/catalog.json` from
-            https://snap.stanford.edu/data/index.html.
+            Automated refresh of both vendored catalogs, from
+            https://snap.stanford.edu/data/index.html and
+            https://networks.skewed.de/api.
 
             The diff shows what changed in the collection: new datasets,
             withdrawn ones, updated statistics or download links.
 
             Review the diff before merging — an unexpectedly large change
-            usually means SNAP altered its page structure.
+            usually means one of the upstream sites altered its structure.

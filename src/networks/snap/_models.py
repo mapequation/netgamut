@@ -10,6 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .._core.domains import domains_for_snap
+from .._core.models import DataFile
+
 __all__ = ["Category", "DataFile", "Dataset"]
 
 # Fields the SNAP index uses for the node count, in the order we prefer them.
@@ -43,26 +46,6 @@ def _parse_count(raw: str | None) -> int | None:
         else:
             break
     return int(digits) if digits else None
-
-
-@dataclass(frozen=True, slots=True)
-class DataFile:
-    """One downloadable artifact listed in a dataset's *Files* table."""
-
-    name: str
-    url: str
-    description: str = ""
-
-    def to_dict(self) -> dict[str, Any]:
-        return {"name": self.name, "url": self.url, "description": self.description}
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> DataFile:
-        return cls(
-            name=data["name"],
-            url=data["url"],
-            description=data.get("description", ""),
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +87,16 @@ class Dataset:
     def category_name(self) -> str:
         """The heading of the first category SNAP files this dataset under."""
         return self.category_names[0] if self.category_names else ""
+
+    @property
+    def domains(self) -> tuple[str, ...]:
+        """Normalised domains, shared with every other source.
+
+        SNAP groups by provenance rather than by domain, so this is a mapping
+        rather than a relabelling -- see :mod:`networks._core.domains`. A few
+        SNAP sections mix domains and yield nothing here.
+        """
+        return domains_for_snap(self.name, self.categories)
 
     @property
     def nodes(self) -> int | None:

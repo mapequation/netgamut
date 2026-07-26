@@ -2,12 +2,18 @@
 
 Browse, download and cache network datasets from Python.
 
-Metadata for the whole [Stanford SNAP collection](https://snap.stanford.edu/data/index.html)
-ships inside the package, so you can explore every category, compare dataset
-sizes and read the published statistics **without downloading anything**. When
-you do ask for data, it lands in a shared user-level cache — so a dataset is
-fetched from Stanford once per machine, no matter how many projects, notebooks
-or virtualenvs use it.
+Two repositories are indexed, each in its own subpackage:
+
+| Source | Datasets | Strength |
+|---|---|---|
+| [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
+| [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
+
+Metadata for both **ships inside the package**, so you can explore every
+dataset — domains, sizes, statistics, citations — without downloading anything.
+When you do ask for data it lands in a shared user-level cache, so a dataset is
+fetched once per machine no matter how many projects, notebooks or virtualenvs
+use it.
 
 ```bash
 pip install mapequation-networks
@@ -15,7 +21,51 @@ pip install mapequation-networks
 
 The distribution is `mapequation-networks`; the import name is `networks`.
 
-## Look before you download
+## One domain vocabulary across both sources
+
+The two sites label things differently — SNAP groups by provenance
+("Autonomous systems graphs"), Netzschleuder tags by domain — so both are mapped
+onto one vocabulary. That makes it possible to compare methods across *kinds of
+system* rather than kinds of provenance:
+
+```python
+import networks
+
+networks.domains()
+```
+
+```
+{'Social': 212, 'Informational': 70, 'Biological': 36,
+ 'Technological': 30, 'Transportation': 16, 'Economic': 39}
+```
+
+```python
+for match in networks.search(domain="Biological", max_nodes=500):
+    print(match)
+# netzschleuder/celegansneural [Biological] (297 nodes, 2,359 edges)
+# netzschleuder/foodweb_little_rock [Biological] (183 nodes, 2,494 edges)
+# ...
+
+net = networks.load("celegans_metabolic")
+```
+
+Note `Biological: 36` — all of it from Netzschleuder. SNAP has none, which is
+why the second source exists. The mapping is deliberately visible in
+`networks/_core/domains.py` rather than buried per source, so it can be argued
+with in one place.
+
+For anything source-specific, use that source's own `search()`:
+
+```python
+from networks import netzschleuder as nz
+from networks import snap
+
+nz.search(multilayer=True)              # 17 multiplex networks; SNAP has none
+nz.search(subtype="Food web")
+snap.search(ground_truth=True)          # reference partitions
+```
+
+## Look before you download (SNAP)
 
 ```python
 from networks import snap
@@ -169,6 +219,72 @@ appear in several.
 Because every dataset is unique in the catalog and sizes are known up front,
 a graded suite is just a filter — no risk of benchmarking the same network
 several times because SNAP happens to list it under several headings.
+
+### A domain-balanced set for publication
+
+CI regression wants structural diversity; a paper wants *domain* diversity —
+a different axis. SNAP alone cannot supply it (no biological networks, no
+multilayer, transport limited to three road networks), so draw across sources:
+
+```python
+POOL = {
+    "Social":         [("nz", "karate"), ("nz", "football"), ("snap", "email-Eu-core")],
+    "Informational":  [("nz", "polbooks"), ("nz", "polblogs"), ("nz", "dblp_cite")],
+    "Biological":     [("nz", "celegansneural"), ("nz", "celegans_metabolic"),
+                       ("nz", "foodweb_little_rock"), ("nz", "malaria_genes")],
+    "Transportation": [("nz", "london_transport"), ("nz", "openflights"),
+                       ("nz", "us_air_traffic"), ("snap", "roadNet-PA")],
+    "Technological":  [("nz", "power"), ("nz", "internet_as"), ("nz", "linux")],
+    "Economic":       [("nz", "fao_trade"), ("nz", "at_migrations")],
+}
+```
+
+Reference partitions exist for `karate` (2 factions), `football` (12
+conferences), `polbooks`/`polblogs` (political alignment), `malaria_genes`
+(CysPoLV/UPS), `foodweb_little_rock` (trophic groups) and `email-Eu-core`
+(42 departments).
+
+Treat those with care: node metadata is **not** guaranteed to be the community
+structure, a point reviewers will raise. Use synthetic benchmarks with planted
+communities for the quantitative claim, and this pool for generality — reported
+via codelength against baselines. Neither source provides synthetic generators.
+
+## Netzschleuder
+
+```python
+from networks import netzschleuder as nz
+
+nz.domains()
+# {'Social': 148, 'Informational': 53, 'Biological': 36,
+#  'Technological': 14, 'Transportation': 13, 'Economic': 25}
+
+print(nz.describe("celegans_metabolic"))
+```
+
+Every network carries the site's precomputed measures, so sizes, clustering,
+assortativity and diameter are all available before downloading. Filters go
+beyond size:
+
+```python
+nz.search(domain="Transportation", subtype="Airport")
+nz.search(multilayer=True)           # 17 multiplex networks
+nz.search(weighted=True, domain="Economic")
+nz.search(bipartite=True)
+```
+
+Downloads use the site's CSV bundle, so **graph-tool is not required** despite
+being the site's native format:
+
+```python
+net = nz.load("celegansneural")
+net.path                     # extracted edges.csv
+list(net.edges(cast=int))
+net.extract()                # nodes.csv and gprops.csv too
+```
+
+Metadata is read from a JSON API rather than scraped, so this subpackage is
+markedly less fragile than the SNAP one.
+
 
 ## Edge cases worth knowing
 

@@ -87,6 +87,7 @@ jobs:
         run: |
           python -m zipfile -l dist/*.whl | tee contents.txt
           grep -q 'networks/snap/catalog.json' contents.txt
+          grep -q 'networks/netzschleuder/catalog.json' contents.txt
           grep -q 'networks/py.typed' contents.txt
 
       - name: Validate metadata

@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from networks.snap import _cache, _download
+from networks._core import cache as _cache
+from networks._core import download as _download
 
 
 # -- location -------------------------------------------------------------
@@ -32,13 +33,13 @@ def test_cache_is_shared_not_per_project(isolated_cache: Path) -> None:
     This is the property that makes a dataset download once per machine
     instead of once per project.
     """
-    first = _cache.dataset_dir("ca-GrQc")
-    second = _cache.dataset_dir("ca-GrQc")
+    first = _cache.dataset_dir("snap", "ca-GrQc")
+    second = _cache.dataset_dir("snap", "ca-GrQc")
     assert first == second == isolated_cache / "snap" / "files" / "ca-GrQc"
 
 
 def test_dataset_names_are_sanitised_into_one_path_component() -> None:
-    directory = _cache.dataset_dir("../../etc/passwd")
+    directory = _cache.dataset_dir("snap", "../../etc/passwd")
     assert directory.parent.name == "files"
     assert "/" not in directory.name
     assert ".." not in directory.name
@@ -84,26 +85,26 @@ def test_lock_times_out_rather_than_hanging(tmp_path: Path) -> None:
 
 # -- reporting and clearing ----------------------------------------------
 def test_cache_info_reports_sizes(isolated_cache: Path) -> None:
-    directory = _cache.dataset_dir("ca-GrQc")
+    directory = _cache.dataset_dir("snap", "ca-GrQc")
     (directory / "ca-GrQc.txt.gz").write_bytes(b"x" * 100)
     _cache.write_sidecar(directory / "ca-GrQc.txt.gz", {"bytes": 100})
 
     info = _cache.cache_info()
     assert info.bytes == 100
     # The .meta.json sidecar is bookkeeping, not payload.
-    assert info.datasets["ca-GrQc"].files == ("ca-GrQc.txt.gz",)
+    assert info.datasets["snap/ca-GrQc"].files == ("ca-GrQc.txt.gz",)
 
 
 def test_clear_cache_targets_one_dataset(isolated_cache: Path) -> None:
     for name in ("keep", "drop"):
-        (_cache.dataset_dir(name) / "f.txt").write_bytes(b"y" * 10)
+        (_cache.dataset_dir("snap", name) / "f.txt").write_bytes(b"y" * 10)
     assert _cache.clear_cache("drop") == 10
-    assert _cache.dataset_dir("keep").exists()
+    assert _cache.dataset_dir("snap", "keep").exists()
     assert not (isolated_cache / "snap" / "files" / "drop").exists()
 
 
 def test_clear_cache_removes_everything(isolated_cache: Path) -> None:
-    (_cache.dataset_dir("a") / "f.txt").write_bytes(b"z" * 5)
+    (_cache.dataset_dir("snap", "a") / "f.txt").write_bytes(b"z" * 5)
     assert _cache.clear_cache() == 5
     assert _cache.cache_info().datasets == {}
 

@@ -9,7 +9,7 @@ import pytest
 
 from networks import __main__ as cli
 from networks import snap
-from networks.snap import _download
+from networks._core import download as _download
 
 
 @pytest.fixture

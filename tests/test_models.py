@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from networks.snap._models import Category, DataFile, Dataset
+from networks._core.models import DataFile
+from networks.snap._models import Category, Dataset
 from networks.snap._scrape import parse_dataset_page, parse_index
 
 BASE = "https://snap.stanford.edu/data/"

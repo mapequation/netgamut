@@ -19,8 +19,8 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
-from . import _cache
-from ._download import fetch_text
+from .._core import cache as _cache
+from .._core.download import fetch_text
 from ._models import Category, Dataset
 from ._scrape import INDEX_URL, SNAP_BASE_URL, parse_dataset_page, parse_index
 
@@ -196,7 +196,7 @@ class Catalog:
 
 
 def _refreshed_path() -> Path:
-    return _cache.snap_dir() / _VENDORED_NAME
+    return _cache.source_dir("snap") / _VENDORED_NAME
 
 
 def _read_vendored() -> Catalog:
