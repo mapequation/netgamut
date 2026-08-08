@@ -22,10 +22,11 @@ from .cache import (
     write_atomic,
     write_sidecar,
 )
-from .domains import DOMAINS, domains_for_netzschleuder_tags, domains_for_snap
+from .domains import DOMAINS, domains_for_netzschleuder_tags, domains_for_paths, domains_for_snap
 from .download import DownloadError, extract_gzip, fetch_text, head, verify
 from .models import DataFile, DatasetLike
 from .network import Network
+from .state_network import StateNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
@@ -36,11 +37,13 @@ __all__ = [
     "DatasetLike",
     "DownloadError",
     "Network",
+    "StateNetwork",
     "cache_dir",
     "cache_info",
     "clear_cache",
     "dataset_dir",
     "domains_for_netzschleuder_tags",
+    "domains_for_paths",
     "domains_for_snap",
     "extract_gzip",
     "fetch_text",

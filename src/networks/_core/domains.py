@@ -12,7 +12,7 @@ each source, so it can be argued with and corrected in one place.
 
 from __future__ import annotations
 
-__all__ = ["DOMAINS", "domains_for_netzschleuder_tags", "domains_for_snap"]
+__all__ = ["DOMAINS", "domains_for_netzschleuder_tags", "domains_for_paths", "domains_for_snap"]
 
 #: The shared vocabulary, in the order used for reporting.
 DOMAINS: tuple[str, ...] = (
@@ -109,6 +109,18 @@ def domains_for_snap(name: str, categories: tuple[str, ...]) -> tuple[str, ...]:
     for category in categories:
         found.update(_SNAP_CATEGORY_DOMAINS.get(category, ()))
     return _ordered(found)
+
+
+# The paths source is curated, so its datasets are mapped one by one.
+_PATHS_DATASET_DOMAINS: dict[str, tuple[str, ...]] = {
+    "wikispeedia": ("Informational",),
+    "db1b-coupon": ("Transportation",),
+}
+
+
+def domains_for_paths(name: str) -> tuple[str, ...]:
+    """Normalised domains for a dataset in the curated paths source."""
+    return _PATHS_DATASET_DOMAINS.get(name.casefold(), ())
 
 
 def domains_for_netzschleuder_tags(tags: tuple[str, ...]) -> tuple[str, ...]:

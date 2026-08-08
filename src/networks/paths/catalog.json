@@ -1,0 +1,52 @@
+{
+ "schema": 1,
+ "source": "curated",
+ "retrieved": "2026-08-08T00:00:00Z",
+ "datasets": [
+  {
+   "name": "wikispeedia",
+   "description": "Human navigation on Wikipedia: 51,318 finished click trails from the Wikispeedia game, over 4,604 articles. Back clicks are resolved against the browsing history, so each path is the sequence of articles actually visited.",
+   "parser": "wikispeedia",
+   "files": [
+    {
+     "name": "wikispeedia_paths-and-graph.tar.gz",
+     "url": "https://snap.stanford.edu/data/wikispeedia/wikispeedia_paths-and-graph.tar.gz",
+     "description": "Navigation paths and the article hyperlink graph (9.5 MB)"
+    }
+   ],
+   "url": "https://snap.stanford.edu/data/wikispeedia.html",
+   "url_template": "",
+   "default_year": null,
+   "default_quarter": null,
+   "nodes": 4604,
+   "num_paths": 51318,
+   "citations": [
+    "Robert West and Jure Leskovec. Human Wayfinding in Information Networks. WWW, 2012.",
+    "Robert West, Joelle Pineau and Doina Precup. Wikispeedia: An Online Game for Inferring Semantic Distances between Concepts. IJCAI, 2009."
+   ],
+   "license": "Citation requested by SNAP; article content is Wikipedia-derived."
+  },
+  {
+   "name": "db1b-coupon",
+   "description": "US airline itineraries from the BTS Origin and Destination Survey (DB1B), the flight data family behind Rosvall et al. 2014 'Memory in network flows'. A 10% sample of tickets; each itinerary is a sequence of airports and its weight is the sampled passengers. One quarter per download (~200 MB zip, ~2 GB CSV); pass year= and quarter= to load() for other quarters.",
+   "parser": "db1b-coupon",
+   "files": [
+    {
+     "name": "Origin_and_Destination_Survey_DB1BCoupon_2019_1.zip",
+     "url": "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BCoupon_2019_1.zip",
+     "description": "Itinerary coupons for 2019 Q1, the default quarter (~202 MB zip)"
+    }
+   ],
+   "url": "https://www.transtats.bts.gov/PREZIP/",
+   "url_template": "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BCoupon_{year}_{quarter}.zip",
+   "default_year": 2019,
+   "default_quarter": 1,
+   "nodes": null,
+   "num_paths": null,
+   "citations": [
+    "Bureau of Transportation Statistics, US Department of Transportation. Origin and Destination Survey DB1BCoupon. https://transtats.bts.gov"
+   ],
+   "license": "US government work, public domain (17 U.S.C. § 105)."
+  }
+ ]
+}

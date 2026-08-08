@@ -2,14 +2,15 @@
 
 Browse, download and cache network datasets from Python.
 
-Two repositories are indexed, each in its own subpackage:
+Three sources are indexed, each in its own subpackage:
 
 | Source | Datasets | Strength |
 |---|---|---|
 | [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
 | [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
+| `networks.paths` | 2 | curated path data (flight itineraries, navigation trails) for memory networks |
 
-Metadata for both **ships inside the package**, so you can explore every
+Metadata for all three **ships inside the package**, so you can explore every
 dataset — domains, sizes, statistics, citations — without downloading anything.
 When you do ask for data it lands in a shared user-level cache, so a dataset is
 fetched once per machine no matter how many projects, notebooks or virtualenvs
@@ -20,6 +21,8 @@ pip install mapequation-networks
 ```
 
 The distribution is `mapequation-networks`; the import name is `networks`.
+For a runnable tour — browsing, loading, and building memory networks from
+path data — see [`examples/tutorial.ipynb`](examples/tutorial.ipynb).
 
 ## One domain vocabulary across both sources
 
@@ -35,8 +38,8 @@ networks.domains()
 ```
 
 ```
-{'Social': 212, 'Informational': 70, 'Biological': 36,
- 'Technological': 30, 'Transportation': 16, 'Economic': 39}
+{'Social': 212, 'Informational': 71, 'Biological': 36,
+ 'Technological': 30, 'Transportation': 17, 'Economic': 39}
 ```
 
 ```python
@@ -292,6 +295,74 @@ net.extract()  # nodes.csv and gprops.csv too
 
 Metadata is read from a JSON API rather than scraped, so this subpackage is
 markedly less fragile than the SNAP one.
+
+## Path data and memory networks
+
+Edge lists forget where flow came from; path data does not have to. The
+`paths` source curates datasets whose unit of observation is a whole
+trajectory, and converts them into **second-order state networks**: a sliding
+window turns every observed trigram *i → j → k* into a link from state node
+*(i, j)* to state node *(j, k)*, where *(i, j)* means "at physical node *j*,
+having arrived from *i*". Infomap reads this representation natively and
+finds the overlapping, memory-aware modules described in Rosvall et al.,
+*Memory in network flows and its effects on spreading dynamics and community
+detection*, Nat. Commun. 5, 4630 (2014).
+
+```python
+from networks import paths
+
+data = paths.load("wikispeedia")      # 9.5 MB, 51,318 finished navigation trails
+memory = data.to_state_network(order=2)
+print(memory)
+# StateNetwork(order=2): 4,169 physical nodes, 58,944 state nodes,
+# 154,895 links from 50,509 paths
+
+memory.write("wikispeedia_states.net")  # *Vertices / *States / *Links file
+im = memory.to_infomap(silent=True)     # or straight into Infomap, directed flow
+result = im.run()
+```
+
+The `order` parameter generalises the window: `order=1` recovers the plain
+directed network from the same trajectories, so first-order versus
+second-order comparisons — the codelength case for memory — are a
+one-argument change. `StateNetwork.from_paths(...)` accepts your own
+sequences (optionally `(nodes, weight)` pairs) with the same machinery.
+
+For demonstrations and small benchmarks, subset the trajectories first:
+`data.to_state_network(order=2, max_paths=10_000, max_nodes=300)` keeps the
+first 10,000 paths and the 300 most-visited nodes. Trajectories are cut at
+removed nodes, never bridged across them, so no transition is fabricated.
+
+Flight itineraries work the same way, at scale:
+
+```python
+data = paths.load("db1b-coupon", year=2019, quarter=1)  # ~202 MB zip from BTS
+for airports, passengers in data.paths():               # ('OAK', 'SLC', 'LAX', ...)
+    ...
+memory = data.to_state_network(order=2)
+```
+
+DB1B is the US airline itinerary survey (a 10% ticket sample, public domain);
+each itinerary is a sequence of airports weighted by its sampled passengers.
+The raw quarterly CSV scatters an itinerary's coupons across ~2 GB, so the
+first `paths()` call groups them once through SQLite and caches a derived
+path file next to the download; later calls stream it directly. From the
+shell:
+
+```bash
+networks get db1b-coupon --year 2023 --quarter 3
+```
+
+Two parsing choices to be aware of, both deliberate: Wikispeedia back clicks
+(`<`, in ~17% of trails) are resolved against the browsing history, so paths
+record the articles actually visited; and DB1B itineraries keep their full
+airport sequence including the return legs, since that is the memory the
+model is for.
+
+Note that `wikispeedia` now exists in two sources — the navigation *paths*
+here, the article *hyperlink graph* in SNAP — so the top-level
+`networks.load("wikispeedia")` asks you to pass `source="paths"` or
+`source="snap"` rather than guessing.
 
 
 ## Edge cases worth knowing

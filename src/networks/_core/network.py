@@ -12,6 +12,8 @@ from __future__ import annotations
 import csv
 import gzip
 import io
+import os
+import shutil
 import tarfile
 import zipfile
 from collections.abc import Callable, Iterator, Sequence
@@ -19,7 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
 
-from .cache import write_atomic
+from .cache import file_lock, write_atomic
 from .download import extract_gzip
 from .models import DataFile, DatasetLike
 
@@ -132,6 +134,10 @@ class Network:
 
         Works even when a *member* has been designated as the network, so a
         Netzschleuder bundle's node and graph properties stay reachable.
+
+        Extraction lands in a scratch directory and is published with a
+        rename, so a crashed or interrupted run cannot leave a partial
+        directory that a later call would mistake for the real thing.
         """
         if not self.is_bundle:
             raise ValueError(
@@ -144,16 +150,28 @@ class Network:
         )
         if target.is_dir() and any(target.iterdir()):
             return target
-        target.mkdir(parents=True, exist_ok=True)
-        if zipfile.is_zipfile(self.archive_path):
-            with zipfile.ZipFile(self.archive_path) as zip_archive:
-                # ZipFile.extract already strips absolute paths and ".."
-                # components from member names.
-                zip_archive.extractall(target)
-        else:
-            with tarfile.open(self.archive_path) as tar_archive:
-                # filter="data" refuses members that would escape the target.
-                tar_archive.extractall(target, filter="data")
+        with file_lock(target):
+            # Another process may have finished while we waited for the lock.
+            if target.is_dir() and any(target.iterdir()):
+                return target
+            partial = target.with_name(f".{target.name}.{os.getpid()}.part")
+            shutil.rmtree(partial, ignore_errors=True)
+            partial.mkdir(parents=True)
+            try:
+                if zipfile.is_zipfile(self.archive_path):
+                    with zipfile.ZipFile(self.archive_path) as zip_archive:
+                        # ZipFile.extract already strips absolute paths and ".."
+                        # components from member names.
+                        zip_archive.extractall(partial)
+                else:
+                    with tarfile.open(self.archive_path) as tar_archive:
+                        # filter="data" refuses members that would escape the target.
+                        tar_archive.extractall(partial, filter="data")
+                if target.is_dir():
+                    target.rmdir()  # empty, or we would have returned above
+                os.replace(partial, target)
+            finally:
+                shutil.rmtree(partial, ignore_errors=True)
         return target
 
     # -- reading ---------------------------------------------------------

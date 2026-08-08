@@ -71,6 +71,25 @@ def test_a_stale_lock_is_broken(tmp_path: Path, monkeypatch) -> None:
     assert not lock.exists()
 
 
+def test_a_fresh_lock_with_a_dead_owner_is_stale(tmp_path: Path) -> None:
+    """A hard-killed process must not block its retry until the age cutoff."""
+    import subprocess
+    import sys
+
+    gone = subprocess.Popen([sys.executable, "-c", "pass"])
+    gone.wait()
+    lock = tmp_path / ".thing.lock"
+
+    lock.write_text(f"{gone.pid} 0")
+    assert _cache._lock_is_stale(lock)
+
+    lock.write_text(f"{os.getpid()} 0")  # a live owner is never stale
+    assert not _cache._lock_is_stale(lock)
+
+    lock.write_text("")  # just created, not yet written: leave it alone
+    assert not _cache._lock_is_stale(lock)
+
+
 def test_lock_times_out_rather_than_hanging(tmp_path: Path) -> None:
     """Correctness rests on the atomic rename, so a busy lock is not fatal."""
     target = tmp_path / "thing"

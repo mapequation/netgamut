@@ -50,7 +50,7 @@ def test_domains_are_always_in_canonical_order() -> None:
 
 # -- cross-source API -----------------------------------------------------
 def test_sources_are_registered() -> None:
-    assert networks.sources() == ("snap", "netzschleuder")
+    assert networks.sources() == ("snap", "netzschleuder", "paths")
 
 
 def test_domain_counts_sum_across_sources() -> None:
@@ -69,10 +69,10 @@ def test_snap_has_no_biological_networks() -> None:
     assert not [item for item in snap.datasets() if "Biological" in item.domains]
 
 
-def test_cross_source_search_returns_both_sources() -> None:
+def test_cross_source_search_returns_every_source() -> None:
     found = networks.search(domain="Transportation")
     sources = {match.source for match in found}
-    assert sources == {"snap", "netzschleuder"}
+    assert sources == {"snap", "netzschleuder", "paths"}
 
 
 def test_matches_are_uniquely_keyed() -> None:

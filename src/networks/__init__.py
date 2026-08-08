@@ -8,12 +8,15 @@ Each repository lives in its own subpackage:
 * :mod:`networks.netzschleuder` -- networks.skewed.de, 286 networks tagged by
   domain, including the biological, transport and multilayer networks SNAP has
   none of.
+* :mod:`networks.paths` -- curated path data (flight itineraries, navigation
+  trails) plus the conversion into second-order state networks for Infomap's
+  memory model, which no edge list can express.
 
-Metadata for both ships inside the package, so browsing is offline and instant;
-only ``load()`` touches the network, and it caches into a shared user-level
-directory so a dataset is fetched once per machine.
+Metadata for every source ships inside the package, so browsing is offline and
+instant; only ``load()`` touches the network, and it caches into a shared
+user-level directory so a dataset is fetched once per machine.
 
-Both sources are mapped onto one domain vocabulary, so a comparison can span
+All sources are mapped onto one domain vocabulary, so a comparison can span
 kinds of system rather than kinds of provenance::
 
     import networks
@@ -33,7 +36,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from . import netzschleuder, snap
+from . import netzschleuder, paths, snap
 from ._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
@@ -45,6 +48,7 @@ from ._core.cache import (
 )
 from ._core.domains import DOMAINS
 from ._core.network import Network
+from ._core.state_network import StateNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
@@ -53,6 +57,7 @@ __all__ = [
     "CachedDataset",
     "Match",
     "Network",
+    "StateNetwork",
     "__version__",
     "cache_dir",
     "cache_info",
@@ -60,6 +65,7 @@ __all__ = [
     "domains",
     "load",
     "netzschleuder",
+    "paths",
     "search",
     "set_cache_dir",
     "snap",
@@ -69,7 +75,7 @@ __all__ = [
 __version__ = "0.2.0"
 
 #: Source name -> subpackage, in the order results are reported.
-_SOURCES: dict[str, Any] = {"snap": snap, "netzschleuder": netzschleuder}
+_SOURCES: dict[str, Any] = {"snap": snap, "netzschleuder": netzschleuder, "paths": paths}
 
 
 def sources() -> tuple[str, ...]:

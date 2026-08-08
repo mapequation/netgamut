@@ -181,7 +181,27 @@ def _lock_is_stale(lock_path: Path) -> bool:
         age = time.time() - lock_path.stat().st_mtime
     except FileNotFoundError:
         return False
-    return age > _LOCK_STALE_SECONDS
+    if age > _LOCK_STALE_SECONDS:
+        return True
+    # A lock whose owner has died is stale regardless of age; without this, a
+    # hard-killed download or derivation blocks its retry for hours. The pid
+    # is only meaningful on the machine that wrote it: on a shared cache a
+    # foreign pid may coincide with a live local process, in which case this
+    # falls back to the age check -- no worse than before, and the atomic
+    # rename keeps results correct even if a live lock is ever stolen.
+    try:
+        pid = int(lock_path.read_text().split()[0])
+    except (OSError, ValueError, IndexError):
+        return False  # just created and not yet written, or unreadable
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False  # e.g. EPERM: alive but owned by someone else
+    return False
 
 
 @dataclass(frozen=True, slots=True)

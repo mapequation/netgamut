@@ -19,9 +19,9 @@ from typing import Any
 
 import networks
 
-from . import __version__, netzschleuder, snap
+from . import __version__, netzschleuder, paths, snap
 
-_SOURCES = {"snap": snap, "netzschleuder": netzschleuder}
+_SOURCES = {"snap": snap, "netzschleuder": netzschleuder, "paths": paths}
 
 
 def _count(value: int | None) -> str:
@@ -123,8 +123,17 @@ def _cmd_info(args: argparse.Namespace) -> int:
 def _cmd_get(args: argparse.Namespace) -> int:
     source, module = _resolve(args.name, args.source)
     kwargs = {"force": args.force, "progress": True, "max_bytes": args.max_bytes}
-    if source == "snap" and args.file:
+    if args.file:
+        if source != "snap":
+            raise ValueError(f"--file only applies to the snap source, not {source!r}.")
         kwargs["file"] = args.file
+    if args.year is not None or args.quarter is not None:
+        if source != "paths":
+            raise ValueError(f"--year/--quarter only apply to the paths source, not {source!r}.")
+        if args.year is not None:
+            kwargs["year"] = args.year
+        if args.quarter is not None:
+            kwargs["quarter"] = args.quarter
     network = module.load(args.name, **kwargs)
     print(network.archive_path if network.is_archive else network.path)
     return 0
@@ -161,7 +170,10 @@ def _cmd_cache(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="networks",
-        description="Browse and download network datasets from SNAP and Netzschleuder.",
+        description=(
+            "Browse and download network datasets from SNAP, Netzschleuder "
+            "and the curated paths collection."
+        ),
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -191,6 +203,8 @@ def build_parser() -> argparse.ArgumentParser:
     get.add_argument("name")
     get.add_argument("-s", "--source", choices=list(_SOURCES))
     get.add_argument("-f", "--file", help="which artifact to fetch (SNAP only)")
+    get.add_argument("--year", type=int, help="which year to fetch (quarterly paths data only)")
+    get.add_argument("--quarter", type=int, help="which quarter to fetch, 1-4 (paths data only)")
     get.add_argument("--force", action="store_true")
     get.add_argument("--max-bytes", type=int, help="refuse downloads larger than this")
     get.set_defaults(func=_cmd_get)
