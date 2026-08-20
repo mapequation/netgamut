@@ -255,6 +255,9 @@ def multilayer_benchmark(layers, partition, rng=None, seed=None, **kwargs):
             a multilayer partition.
         rng, seed: ``numpy`` Generator, or a seed for a fresh one.
         **kwargs: Passed to :func:`~networks.generate._flowgen.sample_benchmark`.
+            ``connect`` defaults to ``False`` here, unlike for a single network: a
+            layer of a real multiplex is often disconnected on its own, and repairing
+            that would add links the blueprint's layer does not have.
 
     Returns:
         ``(sampled, info)`` -- ``{layer: {(u, v): weight}}`` and diagnostics.
@@ -263,6 +266,7 @@ def multilayer_benchmark(layers, partition, rng=None, seed=None, **kwargs):
 
     if rng is None:
         rng = np.random.default_rng(seed)
+    kwargs.setdefault("connect", False)
     sampled, info = {}, {"layers": {}}
     for layer in sorted(layers, key=repr):
         spec = layers[layer]
