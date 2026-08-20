@@ -34,7 +34,8 @@ dependencies = ["platformdirs>=4.0"]
 [project.optional-dependencies]
 networkx = ["networkx>=3.0"]
 infomap = ["infomap>=2.8"]
-all = ["networkx>=3.0", "infomap>=2.8"]
+generate = ["numpy>=1.24", "networkx>=3.0", "infomap>=2.8", "scipy>=1.10"]
+all = ["networkx>=3.0", "infomap>=2.8", "numpy>=1.24", "scipy>=1.10"]
 
 [project.urls]
 Homepage = "https://www.mapequation.org"
@@ -68,12 +69,33 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+# The sampler internals are the reference implementation of the generative map
+# equation; their style is kept close to the derivations they implement.
+[tool.ruff.lint.per-file-ignores]
+"src/networks/generate/_flowgen.py" = ["B905", "E702", "SIM300"]
+"src/networks/generate/_params.py" = ["B905", "B007"]
+
 [tool.mypy]
 python_version = "3.11"
 packages = ["networks"]
 strict = true
 
-# Optional extras used only behind lazy imports in Network.to_*().
+# Optional extras used only behind lazy imports in Network.to_*() and
+# networks.generate. numpy's stubs use 3.12+ syntax that python_version 3.11
+# rejects, so its stubs are skipped, not followed.
 [[tool.mypy.overrides]]
-module = ["networkx.*", "infomap.*"]
+module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*"]
 ignore_missing_imports = true
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+# The sampler internals are the reference implementation of the generative map
+# equation; kept untyped so they read like the maths they implement.
+[[tool.mypy.overrides]]
+module = [
+  "networks.generate._flowgen",
+  "networks.generate._higher_order",
+  "networks.generate._params",
+]
+ignore_errors = true
+disallow_untyped_defs = false
