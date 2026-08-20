@@ -598,3 +598,26 @@ def test_run_infomap_keeps_ragged_hierarchy_paths() -> None:
     flatG = nx.planted_partition_graph(4, 25, 0.3, 0.02, seed=1)
     flat, _ = generate.run_infomap(flatG, seed=1, num_trials=20, two_level=True)
     assert {len(path) for path in flat.values()} == {1}
+
+
+@pytest.mark.parametrize("routing", ["boundary", "model", "observed"])
+def test_mixing_scale_is_monotone_and_routing_independent(routing: str) -> None:
+    """The detectability dial is orthogonal to the escalation rule.
+
+    ``mixing_scale`` multiplies every module's mixing, so the share of boundary links
+    must rise monotonically with it; and because the dial scales the *total* boundary
+    flow while the escalation rule only decides how that flow spreads over the levels,
+    the curve must be essentially the same whichever rule is in force.
+    """
+    np = pytest.importorskip("numpy")
+    G, partition = directed_hierarchical()
+    fractions = []
+    for scale in (1.0, 1.5, 2.0, 3.0):
+        H, _ = generate.benchmark(G, partition, routing=routing, mixing_scale=scale,
+                                 rng=np.random.default_rng(7))
+        counts = arc_classes(H, partition)
+        total = sum(counts.values())
+        fractions.append((counts["within_super"] + counts["cross_super"]) / total)
+    pairs = list(zip(fractions, fractions[1:], strict=False))   # deliberately offset
+    assert all(b > a for a, b in pairs), fractions
+    assert fractions[0] < 0.3 < fractions[-1]
