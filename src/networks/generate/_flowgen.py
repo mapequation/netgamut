@@ -882,8 +882,13 @@ def raise_clustering(H, partition, rng, target=None, swap_factor=25):
 # Infomap helpers
 # --------------------------------------------------------------------------- #
 def run_infomap(G, two_level=False, num_trials=20, seed=1, directed=None, extra=None,
-                **options):
+                stats=False, **options):
     """Run Infomap on a networkx graph; returns ``({node: path tuple}, codelength)``.
+
+    With ``stats=True`` the second element is a dict of Infomap's own codelength
+    statistics instead -- ``codelength``, ``one_level_codelength``, ``savings`` (the
+    relative codelength savings), ``num_levels`` and ``num_leaf_modules`` -- which is
+    what a compressibility fingerprint needs.
 
     Uses Infomap's keyword API, so engine settings are keyword arguments
     (``markov_time=1.5``, ``flow_model="rawdir"``, ...) rather than a CLI string, and
@@ -893,6 +898,9 @@ def run_infomap(G, two_level=False, num_trials=20, seed=1, directed=None, extra=
     ``directed`` defaults to ``G.is_directed()``; when true Infomap runs with directed
     flow, so a module's enter and exit rates differ.  ``extra`` still accepts a raw
     argument string for CLI parity when an option has no keyword.
+
+    Paths are the solution's own, so they are *ragged*: a leaf sitting directly under a
+    top-level module has a shorter path than one nested deeper.
     """
     if infomap is None:
         raise ImportError("infomap package not available")
@@ -901,11 +909,22 @@ def run_infomap(G, two_level=False, num_trials=20, seed=1, directed=None, extra=
     result = infomap.run(G, num_trials=num_trials, seed=seed, two_level=two_level,
                          directed=directed, silent=True,
                          **({"args": extra} if extra else {}), **options)
+    # Leaf paths from the tree itself, dropping each node's index within its module.
+    # NOT Result.multilevel_modules(), which pads every leaf to uniform depth: that
+    # inserts singleton levels into a ragged hierarchy, inflating depth statistics and
+    # giving ModuleTree tree levels the solution does not have.
     names = result.names
-    paths = result.multilevel_modules()
-    if names:
-        return {names[i]: path for i, path in paths.items()}, result.codelength
-    return dict(paths), result.codelength
+    partition = {(names[node.node_id] if names else node.node_id): tuple(node.path[:-1])
+                 for node in result.nodes()}
+    if not stats:
+        return partition, result.codelength
+    return partition, {
+        "codelength": float(result.codelength),
+        "one_level_codelength": float(result.one_level_codelength),
+        "savings": float(result.relative_codelength_savings),
+        "num_levels": int(result.num_levels),
+        "num_leaf_modules": int(result.num_leaf_modules),
+    }
 
 
 def infomap_partition(G, two_level=True, num_trials=20, seed=1, directed=None, extra=None,

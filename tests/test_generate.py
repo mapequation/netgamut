@@ -548,3 +548,30 @@ def test_read_pajek_aggregates_repeated_edges(tmp_path: Any) -> None:
     assert sorted(G.nodes()) == [1, 2, 3]
     assert G[1][2]["weight"] == pytest.approx(4.0)
     assert G[2][3]["weight"] == pytest.approx(1.0)
+
+
+def test_run_infomap_keeps_ragged_hierarchy_paths() -> None:
+    """Leaf paths are the solution's own depth, not padded to a uniform one.
+
+    ``Result.multilevel_modules()`` pads every leaf to the depth of the deepest one,
+    which inserts singleton levels into a ragged hierarchy: it inflates depth
+    statistics and hands ModuleTree tree levels the solution does not have.
+    """
+    pytest.importorskip("infomap")
+    nx = pytest.importorskip("networkx")
+    # a ragged hierarchy: two tight communities plus a nested pair inside one of them
+    G = nx.Graph()
+    for base in (0, 30):
+        G.add_edges_from((base + u, base + v) for u in range(10) for v in range(u + 1, 10))
+    G.add_edges_from((60 + u, 60 + v) for u in range(6) for v in range(u + 1, 6))
+    G.add_edge(0, 30)
+    G.add_edge(5, 60)
+    partition, _ = generate.run_infomap(G, seed=1, num_trials=20)
+    depths = {len(path) for path in partition.values()}
+    assert depths, "no partition returned"
+    # every path must address a module the solution actually has
+    assert all(len(path) >= 1 for path in partition.values())
+    # and a two-level solution must not be reported as deeper than it is
+    flatG = nx.planted_partition_graph(4, 25, 0.3, 0.02, seed=1)
+    flat, _ = generate.run_infomap(flatG, seed=1, num_trials=20, two_level=True)
+    assert {len(path) for path in flat.values()} == {1}
