@@ -258,7 +258,8 @@ conferences), `polbooks`/`polblogs` (political alignment), `malaria_genes`
 Treat those with care: node metadata is **not** guaranteed to be the community
 structure, a point reviewers will raise. Use synthetic benchmarks with planted
 communities for the quantitative claim, and this pool for generality — reported
-via codelength against baselines. Neither source provides synthetic generators.
+via codelength against baselines. Neither source provides synthetic generators —
+that is what [`networks.generate`](#generating-benchmarks) is for.
 
 ## Netzschleuder
 
@@ -295,6 +296,60 @@ net.extract()  # nodes.csv and gprops.csv too
 
 Metadata is read from a JSON API rather than scraped, so this subpackage is
 markedly less fragile than the SNAP one.
+
+## Generating benchmarks
+
+The `generate` subpackage turns any network in the pool into a synthetic
+benchmark with planted communities: it reads the blueprint's modular flow —
+degrees, module sizes, per-module mixing — and samples fresh networks with the
+same statistics, so ground truth is known while realism is kept:
+
+```python
+import networks
+from networks import generate
+
+G = networks.load("polbooks").to_networkx()
+partition = generate.detect(G)              # Infomap, or bring your own
+H, info = generate.benchmark(G, partition)  # degree- and mixing-preserving
+
+H, info = generate.weighted_benchmark(G, partition)  # + flow-model weights
+```
+
+Or drop the blueprint entirely and generate from fitted parameters — a
+generalized LFR whose degree and community-size families are chosen by AIC
+instead of assumed to be power laws:
+
+```python
+deg = generate.fit_families([k for _, k in G.degree()])
+size = generate.fit_families([120, 80, 60, 45, 30])  # module sizes
+mix = {"family": "delta", "mu": 0.15}                # flat LFR-style mixing
+H, partition, info = generate.parametric(1000, deg, size, mix, seed=1)
+```
+
+Directed blueprints keep both degree sequences and, like undirected ones,
+their full module hierarchy; weighted blueprints need weighted samples, since
+a dense weighted network carries its structure in the weights rather than the
+topology:
+
+```python
+H, info = generate.weighted_benchmark(G, partition)  # topology + flow weights
+```
+
+Higher-order blueprints change only the sampler, never the flow model — a
+memory link has to match at its physical junction, a multiplex link has to
+stay inside its layer:
+
+```python
+sampled, info = generate.memory_benchmark(links, windows, partition, seed=1)
+sampled, info = generate.multilayer_benchmark(layers, partition, seed=1)
+```
+
+Classic LFR is wrapped too (`generate.lfr(...)`), with retries around
+networkx's flaky convergence. The flow model itself is public as well
+(`generate.flow_matrix`, `generate.ModuleTree`, `generate.cross_R`) for
+callers who want the joint distribution rather than a sample of it.
+Everything here needs the extras:
+`pip install "mapequation-networks[generate]"`.
 
 ## Path data and memory networks
 

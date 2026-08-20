@@ -16,6 +16,10 @@ Metadata for every source ships inside the package, so browsing is offline and
 instant; only ``load()`` touches the network, and it caches into a shared
 user-level directory so a dataset is fetched once per machine.
 
+Beyond the datasets, :mod:`networks.generate` samples synthetic benchmark
+networks with planted communities from any blueprint in the pool (requires
+the ``generate`` extra).
+
 All sources are mapped onto one domain vocabulary, so a comparison can span
 kinds of system rather than kinds of provenance::
 
@@ -36,7 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from . import netzschleuder, paths, snap
+from . import generate, netzschleuder, paths, snap
 from ._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
@@ -63,6 +67,7 @@ __all__ = [
     "cache_info",
     "clear_cache",
     "domains",
+    "generate",
     "load",
     "netzschleuder",
     "paths",
