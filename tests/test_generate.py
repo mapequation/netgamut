@@ -621,3 +621,46 @@ def test_mixing_scale_is_monotone_and_routing_independent(routing: str) -> None:
     pairs = list(zip(fractions, fractions[1:], strict=False))   # deliberately offset
     assert all(b > a for a, b in pairs), fractions
     assert fractions[0] < 0.3 < fractions[-1]
+
+
+def test_two_level_samples_are_identical_across_routing_rules() -> None:
+    """Without a hierarchy the escalation rule cannot matter -- and it does not, exactly.
+
+    Every boundary stub of a two-level partition stops at the root, so all three rules
+    reduce to the same single-pool pairing and, given the same generator, produce the
+    *same edge set*. This is what makes the affected surface of a routing change
+    decidable: only experiments that plant a hierarchical partition can move.
+    """
+    np = pytest.importorskip("numpy")
+    rules = ("observed", "boundary", "model")
+
+    G, flat = blueprint()
+    partition = {u: (m,) for u, m in flat.items()}
+    undirected = {
+        r: sorted(
+            tuple(sorted(e))
+            for e in generate.benchmark(
+                G, partition, routing=r, rng=np.random.default_rng(42))[0].edges()
+        )
+        for r in rules
+    }
+    assert undirected["observed"] == undirected["boundary"] == undirected["model"]
+    assert len(undirected["observed"]) > 0
+
+    D, hier = directed_hierarchical(per=20, subs=2, supers=3)
+    two_level = {u: (path[0],) for u, path in hier.items()}
+    directed = {
+        r: sorted(generate.benchmark(
+            D, two_level, routing=r, rng=np.random.default_rng(42))[0].edges())
+        for r in rules
+    }
+    assert directed["observed"] == directed["boundary"] == directed["model"]
+
+    # ... and with the hierarchy restored the rules must genuinely diverge, or the
+    # measurement that chose between them would be meaningless
+    deep = {
+        r: sorted(generate.benchmark(
+            D, hier, routing=r, rng=np.random.default_rng(42))[0].edges())
+        for r in rules
+    }
+    assert not (deep["observed"] == deep["boundary"] == deep["model"])
