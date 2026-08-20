@@ -309,29 +309,52 @@ def test_benchmark_directed_preserves_both_degree_sequences() -> None:
     assert info["levels"] == 2
 
 
-def test_directed_sampler_keeps_the_supermodule_layer() -> None:
+@pytest.mark.parametrize("routing", ["boundary", "model", "observed"])
+def test_directed_sampler_keeps_the_supermodule_layer(routing: str) -> None:
     """The whole point of hierarchical routing: a flattened partition loses it.
 
     Routing boundary stubs up the module tree reproduces the blueprint's split of
     boundary links into within-supermodule and across-supermodule; flattening the
-    partition to its leaves scatters them over the whole network instead.
+    partition to its leaves scatters them over the whole network instead. Every
+    escalation rule must clear this bar -- which rule is *best* is a separate,
+    measured question (see :meth:`ModuleTree.escalation_probs`), so this test is
+    parametrized rather than silently pinning whichever rule is the default.
     """
     np = pytest.importorskip("numpy")
     G, partition = directed_hierarchical()
     flat = {u: (path[0] * 10 + path[1],) for u, path in partition.items()}
     reference = arc_classes(G, partition)
 
-    hier, _ = generate.benchmark(G, partition, rng=np.random.default_rng(1))
+    hier, _ = generate.benchmark(G, partition, routing=routing,
+                                 rng=np.random.default_rng(1))
     flattened, _ = generate.benchmark(G, flat, rng=np.random.default_rng(1))
     hier_counts = arc_classes(hier, partition)
     flat_counts = arc_classes(flattened, partition)
 
     # hierarchical routing keeps both boundary classes within 40% of the blueprint
     for key in ("within_super", "cross_super"):
-        assert 0.6 < hier_counts[key] / reference[key] < 1.4, (key, hier_counts)
+        assert 0.6 < hier_counts[key] / reference[key] < 1.4, (routing, key, hier_counts)
     # flattening inverts them: too few within-supermodule, far too many across
     assert flat_counts["within_super"] < 0.5 * reference["within_super"]
     assert flat_counts["cross_super"] > 2.0 * reference["cross_super"]
+
+
+def test_sampler_default_routing_is_the_documented_one() -> None:
+    """Pin the default explicitly, so changing it is a visible edit and not a side effect.
+
+    The default is a measured choice over the pool's hierarchical blueprints, recorded in
+    the manuscript's ideas log; this test exists so that flipping it cannot happen quietly.
+    """
+    import inspect
+
+    flowgen, _ = generate._modules()
+    expected = "boundary"
+    for fn in (flowgen.sample_stub_matching, flowgen.sample_stub_matching_directed,
+               flowgen.sample_benchmark, flowgen._route_stubs):
+        assert inspect.signature(fn).parameters["routing"].default == expected, fn.__name__
+    tree_default = inspect.signature(
+        flowgen.ModuleTree.escalation_probs).parameters["routing"].default
+    assert tree_default == expected
 
 
 def test_directed_flow_matrix_is_proper() -> None:

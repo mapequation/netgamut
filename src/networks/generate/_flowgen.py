@@ -300,7 +300,7 @@ class ModuleTree:
             if total > 0:
                 return [(A[:t], A[:t + 1], hist.get(t, 0.0) / total)
                         for t in range(depth - 1, -1, -1)]
-            routing = "model"           # no boundary links to learn from
+            routing = "boundary"        # no boundary links to learn from
         if routing not in ("boundary", "model"):
             raise ValueError(f"unknown routing {routing!r}")
         own = self.exit if kind == "out" else self.enter
