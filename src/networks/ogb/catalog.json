@@ -1,0 +1,365 @@
+{
+  "schema": 1,
+  "source": "snap-stanford/ogb",
+  "retrieved": "2026-08-28T14:00:29Z",
+  "datasets": [
+    {
+      "name": "ogbl-biokg",
+      "family": "linkproppred",
+      "description": "Heterogeneous biomedical knowledge graph.",
+      "directed": true,
+      "num_classes": null,
+      "task_type": "KG completion",
+      "download_name": "biokg",
+      "version": 1,
+      "split": "random",
+      "node_files": [],
+      "hetero": true,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Biological"
+      ],
+      "files": [
+        {
+          "name": "biokg.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/biokg.zip",
+          "description": "ogbl-biokg archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-citation2",
+      "family": "linkproppred",
+      "description": "Paper citation network, for link prediction.",
+      "directed": true,
+      "num_classes": null,
+      "task_type": "link prediction",
+      "download_name": "citation-v2",
+      "version": 1,
+      "split": "time",
+      "node_files": [
+        "node_year"
+      ],
+      "hetero": false,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Informational"
+      ],
+      "files": [
+        {
+          "name": "citation-v2.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/citation-v2.zip",
+          "description": "ogbl-citation2 archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-collab",
+      "family": "linkproppred",
+      "description": "Author collaboration network, for link prediction.",
+      "directed": false,
+      "num_classes": null,
+      "task_type": "link prediction",
+      "download_name": "collab",
+      "version": 1,
+      "split": "time",
+      "node_files": [],
+      "hetero": false,
+      "binary": false,
+      "nodes": 235868,
+      "edges": 1179052,
+      "domains": [
+        "Social"
+      ],
+      "files": [
+        {
+          "name": "collab.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/collab.zip",
+          "description": "ogbl-collab archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-ddi",
+      "family": "linkproppred",
+      "description": "Drug-drug interaction network, for link prediction.",
+      "directed": false,
+      "num_classes": null,
+      "task_type": "link prediction",
+      "download_name": "ddi",
+      "version": 1,
+      "split": "target",
+      "node_files": [],
+      "hetero": false,
+      "binary": false,
+      "nodes": 4267,
+      "edges": 1067911,
+      "domains": [
+        "Biological"
+      ],
+      "files": [
+        {
+          "name": "ddi.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/ddi.zip",
+          "description": "ogbl-ddi archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-ppa",
+      "family": "linkproppred",
+      "description": "Protein association network, for link prediction.",
+      "directed": false,
+      "num_classes": null,
+      "task_type": "link prediction",
+      "download_name": "ppassoc",
+      "version": 1,
+      "split": "throughput",
+      "node_files": [],
+      "hetero": false,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Biological"
+      ],
+      "files": [
+        {
+          "name": "ppassoc.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/ppassoc.zip",
+          "description": "ogbl-ppa archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-vessel",
+      "family": "linkproppred",
+      "description": "Mouse brain vasculature network.",
+      "directed": true,
+      "num_classes": null,
+      "task_type": "link prediction",
+      "download_name": "vessel",
+      "version": 1,
+      "split": "spatial",
+      "node_files": [],
+      "hetero": false,
+      "binary": true,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Biological"
+      ],
+      "files": [
+        {
+          "name": "vessel.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/vessel.zip",
+          "description": "ogbl-vessel archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbl-wikikg2",
+      "family": "linkproppred",
+      "description": "Wikidata knowledge graph, for relation completion.",
+      "directed": true,
+      "num_classes": null,
+      "task_type": "KG completion",
+      "download_name": "wikikg-v2",
+      "version": 1,
+      "split": "time",
+      "node_files": [],
+      "hetero": false,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Informational"
+      ],
+      "files": [
+        {
+          "name": "wikikg-v2.zip",
+          "url": "http://snap.stanford.edu/ogb/data/linkproppred/wikikg-v2.zip",
+          "description": "ogbl-wikikg2 archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbn-arxiv",
+      "family": "nodeproppred",
+      "description": "Citation network among arXiv CS papers; each node's label is its arXiv subject area.",
+      "directed": true,
+      "num_classes": 40,
+      "task_type": "multiclass classification",
+      "download_name": "arxiv",
+      "version": 1,
+      "split": "time",
+      "node_files": [
+        "node_year"
+      ],
+      "hetero": false,
+      "binary": false,
+      "nodes": 169343,
+      "edges": 1166243,
+      "domains": [
+        "Informational"
+      ],
+      "files": [
+        {
+          "name": "arxiv.zip",
+          "url": "http://snap.stanford.edu/ogb/data/nodeproppred/arxiv.zip",
+          "description": "ogbn-arxiv archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbn-mag",
+      "family": "nodeproppred",
+      "description": "Heterogeneous academic graph: papers, authors, institutions and fields of study.",
+      "directed": true,
+      "num_classes": 349,
+      "task_type": "multiclass classification",
+      "download_name": "mag",
+      "version": 2,
+      "split": "time",
+      "node_files": [
+        "node_year"
+      ],
+      "hetero": true,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Informational"
+      ],
+      "files": [
+        {
+          "name": "mag.zip",
+          "url": "http://snap.stanford.edu/ogb/data/nodeproppred/mag.zip",
+          "description": "ogbn-mag archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbn-papers100M",
+      "family": "nodeproppred",
+      "description": "Citation network of 111M papers, the largest OGB node dataset.",
+      "directed": true,
+      "num_classes": 172,
+      "task_type": "multiclass classification",
+      "download_name": "papers100M-bin",
+      "version": 1,
+      "split": "time",
+      "node_files": [
+        "node_year"
+      ],
+      "hetero": false,
+      "binary": true,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Informational"
+      ],
+      "files": [
+        {
+          "name": "papers100M-bin.zip",
+          "url": "http://snap.stanford.edu/ogb/data/nodeproppred/papers100M-bin.zip",
+          "description": "ogbn-papers100M archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbn-products",
+      "family": "nodeproppred",
+      "description": "Amazon co-purchasing network; each node's label is its product category.",
+      "directed": false,
+      "num_classes": 47,
+      "task_type": "multiclass classification",
+      "download_name": "products",
+      "version": 1,
+      "split": "sales_ranking",
+      "node_files": [],
+      "hetero": false,
+      "binary": false,
+      "nodes": null,
+      "edges": null,
+      "domains": [
+        "Economic"
+      ],
+      "files": [
+        {
+          "name": "products.zip",
+          "url": "http://snap.stanford.edu/ogb/data/nodeproppred/products.zip",
+          "description": "ogbn-products archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    },
+    {
+      "name": "ogbn-proteins",
+      "family": "nodeproppred",
+      "description": "Protein association network; labels are 112 binary presence indicators, and node_species is the categorical attribute.",
+      "directed": false,
+      "num_classes": 2,
+      "task_type": "binary classification",
+      "download_name": "proteins",
+      "version": 1,
+      "split": "species",
+      "node_files": [
+        "node_species"
+      ],
+      "hetero": false,
+      "binary": false,
+      "nodes": 132534,
+      "edges": 39561252,
+      "domains": [
+        "Biological"
+      ],
+      "files": [
+        {
+          "name": "proteins.zip",
+          "url": "http://snap.stanford.edu/ogb/data/nodeproppred/proteins.zip",
+          "description": "ogbn-proteins archive"
+        }
+      ],
+      "citations": [
+        "Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta and Jure Leskovec. Open Graph Benchmark: Datasets for Machine Learning on Graphs. NeurIPS 2020."
+      ]
+    }
+  ]
+}

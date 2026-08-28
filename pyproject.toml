@@ -33,6 +33,9 @@ dependencies = ["platformdirs>=4.0"]
 
 [project.optional-dependencies]
 networkx = ["networkx>=3.0"]
+# Only needed to materialise a PyG dataset the first time; a materialised one is
+# plain CSV and reads without torch.
+pyg = ["torch-geometric>=2.4", "networkx>=3.0"]
 infomap = ["infomap>=2.8"]
 generate = ["numpy>=1.24", "networkx>=3.0", "infomap>=2.8", "scipy>=1.10"]
 all = ["networkx>=3.0", "infomap>=2.8", "numpy>=1.24", "scipy>=1.10"]
@@ -84,7 +87,7 @@ strict = true
 # networks.generate. numpy's stubs use 3.12+ syntax that python_version 3.11
 # rejects, so its stubs are skipped, not followed.
 [[tool.mypy.overrides]]
-module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*"]
+module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*", "torch_geometric.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 follow_imports_for_stubs = true

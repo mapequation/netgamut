@@ -40,7 +40,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from . import generate, netzschleuder, paths, snap
+from . import generate, netzschleuder, ogb, paths, pyg, snap
 from ._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
@@ -70,7 +70,9 @@ __all__ = [
     "generate",
     "load",
     "netzschleuder",
+    "ogb",
     "paths",
+    "pyg",
     "search",
     "set_cache_dir",
     "snap",
@@ -80,7 +82,13 @@ __all__ = [
 __version__ = "0.2.0"
 
 #: Source name -> subpackage, in the order results are reported.
-_SOURCES: dict[str, Any] = {"snap": snap, "netzschleuder": netzschleuder, "paths": paths}
+_SOURCES: dict[str, Any] = {
+    "snap": snap,
+    "netzschleuder": netzschleuder,
+    "ogb": ogb,
+    "pyg": pyg,
+    "paths": paths,
+}
 
 
 def sources() -> tuple[str, ...]:
@@ -168,9 +176,12 @@ def search(
 ) -> tuple[Match, ...]:
     """Search every source at once, filtering on the shared domain vocabulary.
 
-    Only the fields both sources agree on are accepted here. For anything
-    source-specific -- SNAP's ground-truth partitions, Netzschleuder's
-    multilayer flag -- use that source's own ``search()``.
+    Only the fields every source agrees on are accepted here. For anything
+    source-specific -- SNAP's ground-truth partitions, Netzschleuder's multilayer
+    flag, OGB's loadability, PyG's class -- use that source's own ``search()``.
+
+    Size filters exclude datasets whose size the source does not publish rather than
+    assuming anything: most PyG entries and the largest OGB ones have no counts.
 
     Raises:
         KeyError: Unknown *domain* or *source*.

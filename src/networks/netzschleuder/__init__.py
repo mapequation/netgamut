@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from .._core.cache import cache_dir, cache_info, clear_cache, set_cache_dir
 from .._core.cache import dataset_dir as _dataset_dir
@@ -33,6 +34,7 @@ from .._core.download import DownloadError
 from .._core.download import download as _download_file
 from .._core.models import DataFile
 from .._core.network import Network
+from .._core.nodes import NodeTable
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
 from ._models import SITE_URL, Dataset
 
@@ -55,7 +57,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
-    "node_properties",
+    "node_table",
     "refresh",
     "search",
     "set_cache_dir",
@@ -66,6 +68,7 @@ SOURCE = "netzschleuder"
 
 #: The member of the CSV bundle holding the edge list.
 _EDGES_MEMBER = "edges.csv"
+_NODES_MEMBER = "nodes.csv"
 
 
 def catalog(*, reload: bool = False) -> Catalog:
@@ -202,7 +205,7 @@ def load(
     The CSV bundle is fetched and its ``edges.csv`` used as the network, so
     ``Network.path``, ``.edges()`` and ``.to_infomap()`` work exactly as they do
     for SNAP data. The bundle's node and graph properties stay available
-    alongside via :meth:`Network.extract` and :func:`node_properties`.
+    alongside via :meth:`Network.extract` and :meth:`Network.nodes`.
 
     Args:
         name: Entry name, case-insensitive.
@@ -220,42 +223,46 @@ def load(
         file=artifact,
         archive_path=target,
         member=_EDGES_MEMBER,
+        source=SOURCE,
     )
 
 
-def node_properties(
-    name: str,
-    *,
-    subgraph: str | None = None,
-    force: bool = False,
-    progress: Callable[[int, int | None], None] | bool | None = None,
-) -> tuple[list[str], list[dict[str, str]]]:
-    """Read a network's per-node metadata from its CSV bundle.
+def node_table(network: Network) -> NodeTable:
+    """Read a Netzschleuder network's per-node metadata into the shared shape.
 
-    Returns ``(column_names, rows)``. This is where a reference partition lives
-    for the classic benchmarks: ``karate`` labels each member with their faction
-    under ``groups``, ``football`` labels each team with its conference under
-    ``value``. Netzschleuder has no separate ground-truth file, so scoring a
-    community-detection run against metadata means reading these columns.
+    The CSV bundle already downloaded for the edge list carries ``nodes.csv`` beside
+    it, so this costs an extraction and no network access. Every column the site
+    published comes through under its own name: ``karate`` labels each member with
+    their faction under ``groups``, ``football`` each team with its conference under
+    ``value``. Netzschleuder has no separate ground-truth file, so these columns are
+    what a community-detection run gets scored against -- with the usual caveat that
+    an attribute is not ground truth for community structure.
 
-    Be careful drawing conclusions from them: node metadata is not guaranteed to
-    coincide with community structure.
+    Node ids are the row order the bundle uses, which is what ``edges.csv`` refers to.
+
+    Raises:
+        LookupError: The bundle ships no ``nodes.csv``.
     """
     import csv
 
-    network = load(name, subgraph=subgraph, force=force, progress=progress)
     directory = network.extract()
-    path = directory / "nodes.csv"
+    path = directory / _NODES_MEMBER
     if not path.is_file():
-        raise LookupError(f"{name!r} ships no nodes.csv in its bundle.")
+        raise LookupError(f"{network.name!r} ships no {_NODES_MEMBER} in its bundle.")
 
     with path.open(encoding="utf-8", errors="replace") as handle:
         reader = csv.reader(handle)
         header = next(reader, [])
         # The site prefixes its header row with "# ".
         columns = [cell.strip().lstrip("# ").strip() for cell in header]
-        rows = [dict(zip(columns, record, strict=False)) for record in reader if record]
-    return columns, rows
+        values: dict[str, dict[Any, Any]] = {column: {} for column in columns}
+        for node, record in enumerate(reader):
+            if not record:
+                continue
+            for column, cell in zip(columns, record, strict=False):
+                values[column][node] = cell
+
+    return NodeTable(values=values, origin=f"{SOURCE}/{network.name}/{_NODES_MEMBER}")
 
 
 def is_cached(name: str, *, subgraph: str | None = None) -> bool:

@@ -102,9 +102,15 @@ def test_quoted_delimiter_does_not_split(quoted_csv_edges: Path) -> None:
     assert list(network.rows())[0] == ("1", "2", "Air Lines, Inc.")
 
 
-def test_labels_read_a_node_partition(gzipped_labels: Path) -> None:
-    labels = make_network(gzipped_labels).labels(cast=int)
-    assert labels == {1: "0", 2: "0", 3: "1", 4: "1"}
+def test_nodes_needs_a_source_that_knows_the_layout(gzipped_labels: Path) -> None:
+    """Reading node metadata is delegated, because every source stores it elsewhere.
+
+    A handle built without a source tag cannot locate its metadata, and says so rather
+    than guessing that whatever file it points at is a label table.
+    """
+    network = make_network(gzipped_labels)
+    with pytest.raises(LookupError, match="source tag"):
+        network.nodes()
 
 
 def test_to_infomap_handles_csv_networks(csv_edges: Path) -> None:
