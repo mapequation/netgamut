@@ -75,8 +75,8 @@ class Network:
     #: graph properties. ``None`` when the download is a single file.
     member: str | None = None
     #: Which ``networks.<source>`` produced this handle. :meth:`nodes` uses it to
-    #: reach the reader that understands this source's metadata layout, since the
-    #: four sources keep node attributes in four different places.
+    #: reach the reader that understands this source's metadata layout, since no
+    #: two sources keep node attributes in the same place.
     source: str = ""
 
     # -- paths -----------------------------------------------------------

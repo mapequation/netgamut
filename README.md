@@ -2,7 +2,7 @@
 
 Browse, download and cache network datasets from Python.
 
-Five sources are indexed, each in its own subpackage:
+Six sources are indexed, each in its own subpackage:
 
 | Source | Datasets | Strength |
 |---|---|---|
@@ -11,8 +11,9 @@ Five sources are indexed, each in its own subpackage:
 | [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
 | [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
 | `networks.paths` | 2 | curated path data (flight itineraries, navigation trails) for memory networks |
+| [`networks.ahorn`](https://ahorn.rwth-aachen.de) | 83 | higher-order data: hypergraphs, simplicial complexes, revision-pinned |
 
-Metadata for all five **ships inside the package**, so you can explore every
+Metadata for all six **ships inside the package**, so you can explore every
 dataset — domains, sizes, statistics, citations — without downloading anything.
 When you do ask for data it lands in a shared user-level cache, so a dataset is
 fetched once per machine no matter how many projects, notebooks or virtualenvs
@@ -26,12 +27,13 @@ The distribution is `mapequation-networks`; the import name is `networks`.
 For a runnable tour — browsing, loading, and building memory networks from
 path data — see [`examples/tutorial.ipynb`](examples/tutorial.ipynb).
 
-## One domain vocabulary across both sources
+## One domain vocabulary across every source
 
-The two sites label things differently — SNAP groups by provenance
-("Autonomous systems graphs"), Netzschleuder tags by domain — so both are mapped
-onto one vocabulary. That makes it possible to compare methods across *kinds of
-system* rather than kinds of provenance:
+The sites label things differently — SNAP groups by provenance ("Autonomous
+systems graphs"), Netzschleuder tags by domain, AHORN by a vocabulary of its
+own, OGB and PyG by nothing at all — so all six are mapped onto one vocabulary.
+That makes it possible to compare methods across *kinds of system* rather than
+kinds of provenance:
 
 ```python
 import networks
@@ -40,22 +42,24 @@ networks.domains()
 ```
 
 ```
-{'Social': 212, 'Informational': 71, 'Biological': 36,
- 'Technological': 30, 'Transportation': 17, 'Economic': 39}
+{'Social': 283, 'Informational': 133, 'Biological': 46,
+ 'Technological': 30, 'Transportation': 26, 'Economic': 80}
 ```
 
 ```python
 for match in networks.search(domain="Biological", max_nodes=500):
     print(match)
-# netzschleuder/celegansneural [Biological] (297 nodes, 2,359 edges)
-# netzschleuder/foodweb_little_rock [Biological] (183 nodes, 2,494 edges)
+# netzschleuder/blumenau_drug [Biological] (75 nodes, 181 edges)
+# netzschleuder/celegans_2019 [Biological] (453 nodes, 4,879 edges)
+# netzschleuder/celegans_metabolic [Biological] (453 nodes, 4,596 edges)
 # ...
 
 net = networks.load("celegans_metabolic")
 ```
 
-Note `Biological: 36` — all of it from Netzschleuder. SNAP has none, which is
-why the second source exists. The mapping is deliberately visible in
+Note `Biological: 46` — 36 from Netzschleuder, 5 from OGB, 4 from AHORN, 1 from
+PyG, and none at all from SNAP. That imbalance is why the other sources exist.
+The mapping is deliberately visible in
 `networks/_core/domains.py` rather than buried per source, so it can be argued
 with in one place.
 
@@ -643,6 +647,98 @@ here, the article *hyperlink graph* in SNAP — so the top-level
 `source="snap"` rather than guessing.
 
 
+## Higher-order data: hypergraphs and complexes
+
+An edge list says two things met. A hypergraph says *how many* met at once, and
+that is not recoverable afterwards — three authors on one paper and three
+authors on three pairwise papers project onto the same triangle. The
+[`ahorn`](https://ahorn.rwth-aachen.de) source indexes the Aachen Higher-Order
+Repository of Networks: 83 datasets whose unit of observation is a **set** of
+nodes, so `load` returns a `Hypergraph`, not a `Network`.
+
+```python
+from networks import ahorn
+
+ahorn.search(network_type="simplicial-complex", max_nodes=1000)
+ahorn.search(tag="benson")          # everything from the Benson collection
+ahorn.search(temporal=True)         # 16 with timestamped interactions
+
+h = ahorn.load("algebra-questions")
+print(h)
+# algebra-questions revision 2: 423 nodes, 1,268 interactions
+
+for members, attributes in h.interactions(cast=int):
+    ...   # ((2, 12, 20), {'category': 'lie-algebras'})
+```
+
+Flattening is a choice you make, never something that happens behind your back:
+
+```python
+h.to_networkx(projection="clique")  # every pair inside an interaction; lossy
+h.to_networkx(projection="star")    # interactions as nodes; lossless
+h.to_network()                      # a plain Network over the clique projection
+```
+
+`to_infomap()` uses the bipartite representation, which Infomap reads natively,
+so the interaction sizes are still in the model when the modules are found —
+the clique projection would have thrown them away first:
+
+```python
+im = h.to_infomap(silent=True)
+result = im.run()   # modules span both nodes and interactions
+```
+
+Check `max_interaction_size` before projecting a wide one: an interaction of
+*k* members becomes *k(k-1)/2* edges, and `algebra-questions` has one of 107.
+
+### Revisions are pinnable, and only here
+
+AHORN archives each revision as its own Zenodo record, so a pinned call keeps
+returning the same bytes after a correction lands:
+
+```python
+ahorn.load("algebra-questions", revision=1)   # reproducible
+ahorn.load("algebra-questions")               # latest, and not
+```
+
+That matters more than it sounds: revision 2 of that dataset renamed the
+attribute revision 1 called `genre`. `describe()` prints the changelog, and
+revisions cache side by side so pinning one does not evict another.
+
+### Node and interaction attributes
+
+Node attributes arrive as the same `NodeTable` every other source produces, and
+interaction attributes — which are the interesting reference labels here — come
+off the interactions:
+
+```python
+ahorn.load("senate-committees").nodes().partition("party")
+# {'1': 0, '2': 0, ...}   Democrat / Republican
+
+h.interaction_labels("category")   # one label per interaction, in file order
+```
+
+The same caveat as everywhere: an attribute is what someone recorded, not a
+claim about flow.
+
+### Multi-network files
+
+Two datasets hold many networks in one file — `MANTRA-2-manifolds` is 43,214
+triangulated manifolds, each with its own Betti numbers and orientability:
+
+```python
+m = ahorn.load("MANTRA-2-manifolds")
+m.networks()[0]
+# {'id': 'manifold_2_4_5_1', 'betti_numbers': [1, 0, 1], 'name': 'S^2', ...}
+m.interactions(network="manifold_2_4_5_1")
+```
+
+Three versions of AHORN's exchange format are in circulation — 0.1, 0.2 and the
+0.3 the specification documents — and they disagree about whether the reserved
+metadata keys are underscore-prefixed. The parser reads all three;
+`h.format_version` says which one a file used, and `h.file_revision` is `None`
+for the 0.1 files, which recorded no revision at all.
+
 ## Edge cases worth knowing
 
 ### Datasets SNAP has withdrawn
@@ -714,6 +810,7 @@ networks list --category "Collaboration networks"
 networks list --directed --max-edges 100000
 networks info ca-GrQc
 networks get ca-GrQc            # prints the cached path
+networks get algebra-questions --revision 1   # pin an AHORN revision
 networks cache
 networks refresh
 ```
@@ -725,12 +822,19 @@ uv venv && uv pip install -e ".[all]" --group dev
 pytest                       # offline tests only
 pytest -m network            # also hits snap.stanford.edu
 python scripts/regenerate_catalog.py
+python scripts/regenerate_ahorn_catalog.py
 ```
 
-`scripts/regenerate_catalog.py` rebuilds the vendored snapshot and refuses to
-write an implausible result, so a SNAP redesign fails loudly instead of
-shipping an empty catalog. CI runs it monthly and opens a pull request when the
-collection changes.
+Each `scripts/regenerate_*_catalog.py` rebuilds one vendored snapshot and
+refuses to write an implausible result, so an upstream redesign fails loudly
+instead of shipping an empty catalog. `refresh-catalogs.yml` runs the SNAP,
+Netzschleuder and AHORN ones monthly and opens a pull request when a collection
+changes; the OGB and PyG scripts are run by hand.
+
+The AHORN one reads YAML frontmatter out of the repository behind the site, so
+it needs `pyyaml` — which is in the dev group and *not* a dependency of the
+package, because only rebuilding needs it. `ahorn.refresh()` says so if it is
+missing.
 
 ## Attribution
 
@@ -748,6 +852,17 @@ OGB and PyG are other people's collections too. Cite them if you use them:
 
 > Matthias Fey and Jan Eric Lenssen. *Fast Graph Representation Learning with PyTorch
 > Geometric.* ICLR Workshop on Representation Learning on Graphs and Manifolds, 2019.
+AHORN is a repository in its own right, and it asks you to cite two things
+separately: the original source publication for a dataset — the BibTeX in
+`Dataset.citations`, plus the Zenodo record when the exact revision matters —
+and the repository itself, in `ahorn.CITATION`:
+
+> Florian Frantzen and Michael T. Schaub. *A repository for discovery and reuse
+> of higher-order network datasets.* arXiv:2608.03491 (2026).
+
+Licences on AHORN records are the upstream source's, and grant nothing beyond
+what that source already allowed.
+
 `generate.lfr` runs Andrea Lancichinetti and Santo Fortunato's own programs,
 downloaded on demand from
 [their MIT-licensed repository](https://github.com/andrealancichinetti/LFRbenchmarks).

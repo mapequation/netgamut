@@ -50,7 +50,7 @@ def test_domains_are_always_in_canonical_order() -> None:
 
 # -- cross-source API -----------------------------------------------------
 def test_sources_are_registered() -> None:
-    assert networks.sources() == ("snap", "netzschleuder", "ogb", "pyg", "paths")
+    assert networks.sources() == ("snap", "netzschleuder", "ogb", "pyg", "paths", "ahorn")
 
 
 def test_domain_counts_sum_across_sources() -> None:

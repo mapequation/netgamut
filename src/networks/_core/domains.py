@@ -12,7 +12,13 @@ each source, so it can be argued with and corrected in one place.
 
 from __future__ import annotations
 
-__all__ = ["DOMAINS", "domains_for_netzschleuder_tags", "domains_for_paths", "domains_for_snap"]
+__all__ = [
+    "DOMAINS",
+    "domains_for_ahorn",
+    "domains_for_netzschleuder_tags",
+    "domains_for_paths",
+    "domains_for_snap",
+]
 
 #: The shared vocabulary, in the order used for reporting.
 DOMAINS: tuple[str, ...] = (
@@ -131,3 +137,75 @@ def domains_for_netzschleuder_tags(tags: tuple[str, ...]) -> tuple[str, ...]:
     are excluded.
     """
     return _ordered({tag for tag in tags if tag in _NETZSCHLEUDER_DOMAIN_TAGS})
+
+# AHORN tags its datasets ``domain: <something>`` in a vocabulary of its own,
+# eight labels wide and covering only about four fifths of the catalog. These
+# translate it; the datasets it leaves untagged are handled one by one below.
+#
+# Two are arguable and deliberately so. ``reviews`` becomes Economic because the
+# systems are marketplaces -- who reviewed which bar, who bought which basket --
+# rather than conversations. ``food`` becomes Informational because those 21
+# datasets are recipes: ingredient co-occurrence records, closer to a corpus
+# than to a market or an organism. Neither fits the six-domain vocabulary
+# cleanly, which is an argument about the vocabulary as much as about AHORN.
+_AHORN_DOMAIN_TAGS: dict[str, tuple[str, ...]] = {
+    "reviews": ("Economic",),
+    "food": ("Informational",),
+    "communication": ("Social",),
+    "collaboration": ("Social",),
+    "social": ("Social",),
+    "proximity": ("Social",),
+    "biomedical": ("Biological",),
+    # A property of how the interactions were derived, not a kind of system.
+    "similarity": (),
+}
+
+# Datasets AHORN leaves untagged, or tags in a way that describes the derivation
+# rather than the system. Co-citation datasets are tagged ``collaboration``, but
+# their nodes are papers rather than people, which makes them Informational.
+_AHORN_DATASET_DOMAINS: dict[str, tuple[str, ...]] = {
+    # Nodes are documents, not authors.
+    "citeseer-cocitation": ("Informational",),
+    "cora-cocitation": ("Informational",),
+    "pubmed-cocitation": ("Informational", "Biological"),
+    # Coauthorship and co-answering: nodes are people.
+    "coauth-dblp": ("Social",),
+    "coauth-mag-geology": ("Social",),
+    "coauth-mag-history": ("Social",),
+    "mag-10": ("Social",),
+    "algebra-questions": ("Social",),
+    "geometry-questions": ("Social",),
+    "mathoverflow-answers": ("Social",),
+    # Legislators co-sponsoring bills and sitting on committees.
+    "house-bills": ("Social",),
+    "house-committees": ("Social",),
+    "senate-bills": ("Social",),
+    "senate-committees": ("Social",),
+    # Drug codes and the substances in them.
+    "ndc-classes": ("Biological",),
+    "ndc-substances": ("Biological",),
+    # Retail baskets and accommodation browsing.
+    "walmart-trips": ("Economic",),
+    "trivago-clicks": ("Economic",),
+    # Triangulated manifolds: geometric benchmarks with no empirical domain.
+    "mantra-2-manifolds": (),
+    "mantra-3-manifolds": (),
+}
+
+
+def domains_for_ahorn(name: str, tags: tuple[str, ...]) -> tuple[str, ...]:
+    """Normalised domains for an AHORN dataset.
+
+    A per-dataset override wins; otherwise every ``domain:`` tag contributes.
+    Datasets with neither map to nothing rather than being guessed at.
+    """
+    override = _AHORN_DATASET_DOMAINS.get(name.casefold())
+    if override is not None:
+        return override
+
+    found: set[str] = set()
+    for tag in tags:
+        prefix, separator, value = tag.partition(":")
+        if separator and prefix.strip() == "domain":
+            found.update(_AHORN_DOMAIN_TAGS.get(value.strip().casefold(), ()))
+    return _ordered(found)

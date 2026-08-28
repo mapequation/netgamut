@@ -21,7 +21,7 @@ from typing import Any
 
 from .cache import file_lock, read_sidecar, write_sidecar
 
-__all__ = ["DownloadError", "download", "fetch_text", "head"]
+__all__ = ["DownloadError", "download", "fetch_bytes", "fetch_text", "head"]
 
 USER_AGENT = "mapequation-networks (+https://github.com/mapequation/networks)"
 
@@ -72,6 +72,18 @@ def fetch_text(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> str:
         raw: bytes = response.read()
         charset: str = response.headers.get_content_charset() or "utf-8"
     return raw.decode(charset, errors="replace")
+
+
+def fetch_bytes(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> bytes:
+    """Retrieve *url* into memory, undecoded.
+
+    For build-time archives that are read once and never cached -- AHORN's
+    catalog is a repository tarball. Anything a user asks for goes through
+    :func:`download` instead, which streams to disk and caches.
+    """
+    with _open(url, timeout=timeout) as response:
+        payload: bytes = response.read()
+    return payload
 
 
 def head(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> dict[str, str | int | None]:

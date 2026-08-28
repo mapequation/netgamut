@@ -1,0 +1,3662 @@
+{
+  "schema": 1,
+  "source": "netsci-rwth/ahorn",
+  "retrieved": "2026-08-28T22:18:39Z",
+  "datasets": [
+    {
+      "name": "algebra-questions",
+      "title": "Algebra Questions",
+      "description": "This hypergraph has MathOverflow users as nodes and question-category co-answer groups as hyperedges. The categories are derived from tags involving algebra. The dataset was derived from the Stack Exchange data dump.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 423,
+      "interactions": 1268,
+      "max_interaction_size": 107,
+      "mean_interaction_size": 6.5157728706624605,
+      "max_node_degree": 375,
+      "mean_node_degree": 19.53191489361702,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-algebra-questions/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "",
+      "related": [
+        "geometry-questions"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202446/files/algebra-questions.txt?download=1",
+          "hif_url": "",
+          "size": 68524,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/18771367/files/algebra-questions.txt.gz?download=1",
+          "hif_url": "",
+          "size": 9862,
+          "changelog": [
+            "Renamed the edge attribute from `genre` to `category`.",
+            "Provided the dataset in gzipped format to reduce file size."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "amazon-reviews",
+      "title": "Amazon Reviews",
+      "description": "The `amazon-reviews` network is a hypergraph where hyperedges are sets of product reviews on Amazon, as collected by Jianmo Ni, Jiacheng Li, and Julian McAuley (specifically, we use the collection of 5-core datasets). Nodes are labeled by their product categories.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 2268264,
+      "interactions": 4285363,
+      "max_interaction_size": 9350,
+      "mean_interaction_size": 17.067731485057394,
+      "max_node_degree": 28973,
+      "mean_node_degree": 32.246021238577555,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/amazon-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@inproceedings{ni2019justifying,\n  title={Justifying Recommendations using Distantly-Labeled Reviews and Fine-Grained Aspects},\n  author={Ni, Jianmo and Li, Jiacheng and McAuley, Julian},\n  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},\n  pages={188--197},\n  year={2019},\n  doi={10.18653/v1/D19-1018}\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202002/files/amazon-reviews.txt.gz?download=1",
+          "hif_url": "",
+          "size": 265141569,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "citeseer-cocitation",
+      "title": "CiteSeer Co-Citation",
+      "description": "The CiteSeer co-citation network is a hypergraph where nodes are scientific papers from the CiteSeer dataset and hyperedges are sets of papers that are co-cited together by another paper. Each node is labeled with the paper's research field, chosen from six computer science topics: Agents, Artificial Intelligence (AI), Databases (DB), Information Retrieval (IR), Machine Learning (ML), and Human-Computer Interaction (HCI). This dataset is commonly used as a benchmark in hypergraph learning tasks.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: collaboration",
+        "metadata: node classes"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 3312,
+      "interactions": 1079,
+      "max_interaction_size": 26,
+      "mean_interaction_size": 3.200185356811863,
+      "max_node_degree": 88,
+      "mean_node_degree": 2.3683127572016462,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://drive.google.com/file/d/1XWfu1jtijsmHmfCP6UQxyLsuPM8GBNJb/view?usp=sharing",
+      "license": "",
+      "license_url": "",
+      "citations": [],
+      "parent": "",
+      "related": [
+        "cora-cocitation",
+        "pubmed-cocitation"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18632377/files/citeseer-cocitation.txt.gz?download=1",
+          "hif_url": "",
+          "size": 17378,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "coauth-DBLP",
+      "title": "coauth-DBLP",
+      "description": "This temporal higher-order network is a sequence of timestamped simplices, where each simplex is a set of nodes. In this dataset, nodes are authors and a simplex is a publication recorded on DBLP. Timestamps are the year of publication. > [!IMPORTANT] > In the original dataset, some nodes are repeated within hyperedges. This version of the dataset has removed these duplicates.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: weighted",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1930378,
+      "interactions": 3700681,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 1425,
+      "mean_node_degree": 5.349611837681532,
+      "temporal": true,
+      "weighted": true,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/coauth-DBLP/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "coauth-MAG-Geology",
+        "coauth-MAG-History"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17600531/files/coauth-DBLP.txt.gz?download=1",
+          "hif_url": "",
+          "size": 56430542,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "coauth-MAG-Geology",
+      "title": "coauth-MAG-Geology",
+      "description": "This temporal higher-order network is a sequence of timestamped simplices, where each simplex is a set of nodes. In this dataset, nodes are authors and a simplex is a publication marked with the \"Geology\" tag in the Microsoft Academic Graph. Timestamps are the year of publication.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: weighted",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1261129,
+      "interactions": 1591166,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 1153,
+      "mean_node_degree": 3.5273378060452183,
+      "temporal": true,
+      "weighted": true,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/coauth-MAG-Geology/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115",
+        "10.1145/2740908.2742839"
+      ],
+      "parent": "",
+      "related": [
+        "coauth-DBLP",
+        "coauth-MAG-History"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17600658/files/coauth-MAG-Geology.txt.gz?download=1",
+          "hif_url": "",
+          "size": 30311118,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "coauth-MAG-History",
+      "title": "coauth-MAG-History",
+      "description": "This temporal higher-order network is a sequence of timestamped simplices, where each simplex is a set of nodes. In this dataset, nodes are authors and a simplex is a publication marked with the \"History\" tag in the Microsoft Academic Graph. Timestamps are the year of publication.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: weighted",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1034876,
+      "interactions": 1813147,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 4348,
+      "mean_node_degree": 2.317864169233802,
+      "temporal": true,
+      "weighted": true,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/coauth-MAG-History/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115",
+        "10.1145/2740908.2742839"
+      ],
+      "parent": "",
+      "related": [
+        "coauth-DBLP",
+        "coauth-MAG-Geology"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17600662/files/coauth-MAG-History.txt.gz?download=1",
+          "hif_url": "",
+          "size": 21767556,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "contact-high-school",
+      "title": "Contact High School",
+      "description": "This temporal higher-order network records close-proximity interactions among high-school students. Wearable sensors captured contacts in 20-second windows; each timestamped simplex is a group of students interacting during one window.",
+      "network_types": [
+        "simplicial-complex"
+      ],
+      "tags": [
+        "domain: social",
+        "network-type: temporal",
+        "domain: proximity",
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 327,
+      "interactions": 172035,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/contact-high-school/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115",
+        "10.1371/journal.pone.0136497"
+      ],
+      "parent": "",
+      "related": [
+        "contact-primary-school"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/16837446/files/contact-high-school.txt?download=1",
+          "hif_url": "",
+          "size": 7788202,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "contact-primary-school",
+      "title": "Contact Primary School",
+      "description": "This temporal higher-order network records close-proximity interactions among people at a primary school. Wearable sensors captured contacts in 20-second windows; each timestamped simplex is a group of students interacting during one window.",
+      "network_types": [
+        "simplicial-complex"
+      ],
+      "tags": [
+        "domain: social",
+        "network-type: temporal",
+        "domain: proximity",
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 242,
+      "interactions": 106879,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/contact-primary-school/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115",
+        "10.1371/journal.pone.0023176"
+      ],
+      "parent": "",
+      "related": [
+        "contact-high-school"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17092521/files/contact-primary-school.txt?download=1",
+          "hif_url": "",
+          "size": 4860730,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking",
+      "title": "Cooking",
+      "description": "This hypergraph has food ingredients as nodes and recipes as hyperedges. Each recipe is labeled by cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > In the original dataset, some nodes are repeated within hyperedges. This version of the dataset removes these duplicates and drops hyperedges that contain only a single distinct ingredient.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 6714,
+      "interactions": 39752,
+      "max_interaction_size": 65,
+      "mean_interaction_size": 10.772464278526867,
+      "max_node_degree": 18048,
+      "mean_node_degree": 63.78120345546619,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202566/files/cooking.txt.gz?download=1",
+          "hif_url": "",
+          "size": 851444,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking.hif.json.gz?download=1",
+          "size": 851301,
+          "changelog": [
+            "Dropped hyperedges with only a single distinct ingredient.",
+            "Updated the format version to `0.3`."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cooking-brazilian",
+      "title": "Cooking (Brazilian)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `brazilian`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 853,
+      "interactions": 467,
+      "max_interaction_size": 59,
+      "mean_interaction_size": 9.5203426124197,
+      "max_node_degree": 194,
+      "mean_node_degree": 5.212192262602579,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-brazilian.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-brazilian.hif.json.gz?download=1",
+          "size": 15493,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-british",
+      "title": "Cooking (British)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `british`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1166,
+      "interactions": 804,
+      "max_interaction_size": 30,
+      "mean_interaction_size": 9.708955223880597,
+      "max_node_degree": 407,
+      "mean_node_degree": 6.694682675814751,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-british.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-british.hif.json.gz?download=1",
+          "size": 23825,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-cajun-creole",
+      "title": "Cooking (Cajun Creole)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `cajun_creole`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1576,
+      "interactions": 1546,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 12.617076326002588,
+      "max_node_degree": 743,
+      "mean_node_degree": 12.376903553299492,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-cajun-creole.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-cajun-creole.hif.json.gz?download=1",
+          "size": 43962,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-chinese",
+      "title": "Cooking (Chinese)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `chinese`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1792,
+      "interactions": 2673,
+      "max_interaction_size": 38,
+      "mean_interaction_size": 11.98279087167976,
+      "max_node_degree": 1363,
+      "mean_node_degree": 17.873883928571427,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-chinese.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-chinese.hif.json.gz?download=1",
+          "size": 62591,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-filipino",
+      "title": "Cooking (Filipino)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `filipino`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 947,
+      "interactions": 755,
+      "max_interaction_size": 38,
+      "mean_interaction_size": 10.0,
+      "max_node_degree": 421,
+      "mean_node_degree": 7.972544878563886,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-filipino.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-filipino.hif.json.gz?download=1",
+          "size": 20320,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-french",
+      "title": "Cooking (French)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `french`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Two recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 2102,
+      "interactions": 2644,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 9.824508320726173,
+      "max_node_degree": 1203,
+      "mean_node_degree": 12.357754519505233,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-french.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-french.hif.json.gz?download=1",
+          "size": 60239,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-greek",
+      "title": "Cooking (Greek)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `greek`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > One recipe with only one distinct ingredient has been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1198,
+      "interactions": 1174,
+      "max_interaction_size": 27,
+      "mean_interaction_size": 10.18228279386712,
+      "max_node_degree": 571,
+      "mean_node_degree": 9.978297161936561,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-greek.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-greek.hif.json.gz?download=1",
+          "size": 29863,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-indian",
+      "title": "Cooking (Indian)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `indian`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Six recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1664,
+      "interactions": 2997,
+      "max_interaction_size": 49,
+      "mean_interaction_size": 12.729396062729396,
+      "max_node_degree": 1934,
+      "mean_node_degree": 22.926682692307693,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-indian.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-indian.hif.json.gz?download=1",
+          "size": 68786,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-irish",
+      "title": "Cooking (Irish)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `irish`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 999,
+      "interactions": 667,
+      "max_interaction_size": 27,
+      "mean_interaction_size": 9.299850074962519,
+      "max_node_degree": 376,
+      "mean_node_degree": 6.2092092092092095,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-irish.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-irish.hif.json.gz?download=1",
+          "size": 19587,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-italian",
+      "title": "Cooking (Italian)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `italian`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > One recipe with only one distinct ingredient has been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 2929,
+      "interactions": 7837,
+      "max_interaction_size": 65,
+      "mean_interaction_size": 9.908893709327549,
+      "max_node_degree": 3454,
+      "mean_node_degree": 26.512803004438375,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-italian.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-italian.hif.json.gz?download=1",
+          "size": 146962,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-jamaican",
+      "title": "Cooking (Jamaican)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `jamaican`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 877,
+      "interactions": 526,
+      "max_interaction_size": 35,
+      "mean_interaction_size": 12.214828897338403,
+      "max_node_degree": 332,
+      "mean_node_degree": 7.326111744583809,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-jamaican.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-jamaican.hif.json.gz?download=1",
+          "size": 18022,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-japanese",
+      "title": "Cooking (Japanese)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `japanese`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Three recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1439,
+      "interactions": 1420,
+      "max_interaction_size": 34,
+      "mean_interaction_size": 9.753521126760564,
+      "max_node_degree": 561,
+      "mean_node_degree": 9.624739402362751,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-japanese.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-japanese.hif.json.gz?download=1",
+          "size": 35075,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-korean",
+      "title": "Cooking (Korean)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `korean`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 898,
+      "interactions": 830,
+      "max_interaction_size": 29,
+      "mean_interaction_size": 11.28433734939759,
+      "max_node_degree": 427,
+      "mean_node_degree": 10.429844097995545,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-korean.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-korean.hif.json.gz?download=1",
+          "size": 21728,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-mexican",
+      "title": "Cooking (Mexican)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `mexican`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Two recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 2684,
+      "interactions": 6436,
+      "max_interaction_size": 52,
+      "mean_interaction_size": 10.879428216283406,
+      "max_node_degree": 2720,
+      "mean_node_degree": 26.087928464977644,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-mexican.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-mexican.hif.json.gz?download=1",
+          "size": 130129,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-moroccan",
+      "title": "Cooking (Moroccan)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `moroccan`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 974,
+      "interactions": 821,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 12.909866017052375,
+      "max_node_degree": 413,
+      "mean_node_degree": 10.881930184804927,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-moroccan.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-moroccan.hif.json.gz?download=1",
+          "size": 24573,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-russian",
+      "title": "Cooking (Russian)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `russian`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 872,
+      "interactions": 489,
+      "max_interaction_size": 25,
+      "mean_interaction_size": 10.224948875255624,
+      "max_node_degree": 288,
+      "mean_node_degree": 5.73394495412844,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-russian.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-russian.hif.json.gz?download=1",
+          "size": 16543,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-southern-us",
+      "title": "Cooking (Southern US)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `southern_us`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > One recipe with only one distinct ingredient has been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 2462,
+      "interactions": 4319,
+      "max_interaction_size": 40,
+      "mean_interaction_size": 9.636952998379254,
+      "max_node_degree": 2290,
+      "mean_node_degree": 16.905767668562145,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-southern-us.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-southern-us.hif.json.gz?download=1",
+          "size": 86182,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-spanish",
+      "title": "Cooking (Spanish)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `spanish`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Two recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1263,
+      "interactions": 987,
+      "max_interaction_size": 35,
+      "mean_interaction_size": 10.44275582573455,
+      "max_node_degree": 460,
+      "mean_node_degree": 8.160728424386381,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-spanish.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-spanish.hif.json.gz?download=1",
+          "size": 28675,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-thai",
+      "title": "Cooking (Thai)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `thai`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > Three recipes with only one distinct ingredient have been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1375,
+      "interactions": 1536,
+      "max_interaction_size": 40,
+      "mean_interaction_size": 12.568359375,
+      "max_node_degree": 625,
+      "mean_node_degree": 14.04,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-thai.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-thai.hif.json.gz?download=1",
+          "size": 41904,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cooking-vietnamese",
+      "title": "Cooking (Vietnamese)",
+      "description": "This dataset is the `Cooking` subset restricted to recipes labelled as `vietnamese`. It keeps the ingredient nodes that participate in at least one recipe of this cuisine. Raw data was obtained from the \u201cWhat's Cooking?\u201d Kaggle competition. > [!IMPORTANT] > One recipe with only one distinct ingredient has been dropped from this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: food",
+        "source: benson"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 1108,
+      "interactions": 824,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 12.689320388349515,
+      "max_node_degree": 392,
+      "mean_node_degree": 9.436823104693142,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-Cooking/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "cooking",
+      "related": [],
+      "revisions": [
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20491193/files/cooking-vietnamese.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20491193/files/cooking-vietnamese.hif.json.gz?download=1",
+          "size": 26307,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "cora-coauthorship",
+      "title": "Cora Co-Authorship",
+      "description": "The Cora co-authorship network is a hypergraph where nodes are authors from the Cora dataset and hyperedges are papers, representing sets of authors who collaborated on a publication. Each author is labeled with their primary research area, inferred from the majority research area of their publications. The research areas include Case-Based Reasoning, Genetic Algorithms, Neural Networks, Probabilistic Methods, Reinforcement Learning, Rule Learning, and Theory. This dataset is commonly used as a benchmark in hypergraph learning tasks for author classification and link prediction.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "domain: collaboration"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1072,
+      "interactions": 1393,
+      "max_interaction_size": 23,
+      "mean_interaction_size": 2.5771715721464465,
+      "max_node_degree": 28,
+      "mean_node_degree": 3.6153071500503526,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://drive.google.com/file/d/1J5fLPABWrM9SH_7m85n7--oHDVmwJeib/view?usp=sharing",
+      "license": "",
+      "license_url": "",
+      "citations": [],
+      "parent": "",
+      "related": [
+        "cora-cocitation",
+        "dblp-coauthorship"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18632379/files/cora-coauthorship.txt.gz?download=1",
+          "hif_url": "",
+          "size": 19101,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/19232933/files/cora-coauthorship.txt.gz?download=1",
+          "hif_url": "",
+          "size": 16903,
+          "changelog": [
+            "Updated the format version to 0.3.",
+            "Dropped papers with only one author."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cora-cocitation",
+      "title": "Cora Co-Citation",
+      "description": "The Cora co-citation network is a hypergraph where nodes are scientific papers from the Cora dataset and hyperedges are sets of papers that are co-cited together by another paper. Each node is labeled with the paper's research field, chosen from seven computer science topics. This dataset is commonly used as a benchmark in hypergraph learning tasks.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: collaboration",
+        "metadata: node classes"
+      ],
+      "domains": [
+        "Informational"
+      ],
+      "nodes": 2708,
+      "interactions": 1579,
+      "max_interaction_size": 5,
+      "mean_interaction_size": 3.0310322989233693,
+      "max_node_degree": 145,
+      "mean_node_degree": 3.3375174337517435,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://drive.google.com/file/d/1WVRx5yDxSdZpvL6FK5Ji8H3lOnyYlraN/view?usp=sharing",
+      "license": "",
+      "license_url": "",
+      "citations": [],
+      "parent": "",
+      "related": [
+        "citeseer-cocitation",
+        "pubmed-cocitation",
+        "cora-coauthorship"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18632383/files/cora-cocitation.txt.gz?download=1",
+          "hif_url": "",
+          "size": 17848,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "dblp-coauthorship",
+      "title": "DBLP Co-Authorship",
+      "description": "The DBLP co-authorship network is a hypergraph where nodes are authors from the DBLP computer science bibliography database and hyperedges are papers, representing sets of authors who collaborated on a publication. Each author is labeled with their primary research area, inferred from the majority research area of their publications. The research areas include Database, Data Mining, AI, Information Retrieval, Computer Vision, and Machine Learning. This dataset is commonly used as a benchmark in hypergraph learning tasks for author classification and link prediction.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: collaboration",
+        "metadata: node classes"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 22363,
+      "interactions": 32304,
+      "max_interaction_size": 18,
+      "mean_interaction_size": 2.8034608717186726,
+      "max_node_degree": 197,
+      "mean_node_degree": 4.174564395685443,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://drive.google.com/file/d/16ryf4Ve-t0_nAla0VfjtSxSAG8Sye8TZ/view?usp=sharing",
+      "license": "",
+      "license_url": "",
+      "citations": [],
+      "parent": "",
+      "related": [
+        "cora-coauthorship"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18632385/files/dblp-coauthorship.txt.gz?download=1",
+          "hif_url": "",
+          "size": 468280,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/19232918/files/dblp-coauthorship.txt.gz?download=1",
+          "hif_url": "",
+          "size": 445155,
+          "changelog": [
+            "Updated the format version to 0.3.",
+            "Dropped papers with only one author."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "drug-target-interaction",
+      "title": "Drug-Target Interaction",
+      "description": "The `drug-target-interaction` dataset is a combinatorial complex representing drug-target interactions and similarity relationships. The dataset is based on the work by Perlman et al., which combines multiple drug and gene similarity measures to predict drug-target interactions.",
+      "network_types": [
+        "combinatorial-complex"
+      ],
+      "tags": [
+        "domain: biomedical",
+        "domain: similarity"
+      ],
+      "domains": [
+        "Biological"
+      ],
+      "nodes": 565,
+      "interactions": 79627,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://github.com/perlman/DTI",
+      "license": "",
+      "license_url": "",
+      "citations": [
+        "@article{perlman2011combining,\n  title={Combining drug and gene similarity measures for drug-target elucidation},\n  author={Perlman, Liat and Gottlieb, Assaf and Atias, Nir and Ruppin, Eytan and Sharan, Roded},\n  journal={Journal of Computational Biology},\n  volume={18},\n  number={2},\n  pages={133--145},\n  year={2011},\n  doi={10.1089/cmb.2010.0213}\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/21131192/files/drug-target-interaction.txt.gz?download=1",
+          "hif_url": "",
+          "size": 424459,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "email-enron",
+      "title": "Email Enron",
+      "description": "This temporal higher-order network represents email communication in the Enron corpus. Nodes are email addresses, and each hyperedge contains the sender together with all recipients of an email message. > [!IMPORTANT] > Singleton hyperedges, such as emails sent only to oneself, are omitted in this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 148,
+      "interactions": 10454,
+      "max_interaction_size": 37,
+      "mean_interaction_size": 2.53328869332313,
+      "max_node_degree": 1282,
+      "mean_node_degree": 185.1958041958042,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/email-Enron/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "email-eu"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20759663/files/email-enron.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20759663/files/email-enron.hif.json.gz?download=1",
+          "size": 67967,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "email-eu",
+      "title": "Email EU",
+      "description": "This temporal higher-order network represents email communication at a European research institution. Nodes are email addresses, and each hyperedge contains the sender together with all recipients of an email sharing the same timestamp. > [!IMPORTANT] > Singleton hyperedges, such as emails sent only to oneself, are omitted in this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1005,
+      "interactions": 209508,
+      "max_interaction_size": 40,
+      "mean_interaction_size": 2.562403344979667,
+      "max_node_degree": 8586,
+      "mean_node_degree": 544.4665314401623,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/email-Eu/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115",
+        "10.1145/1217299.1217301",
+        "10.1145/3097983.3098069"
+      ],
+      "parent": "",
+      "related": [
+        "email-enron"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20759801/files/email-eu.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20759801/files/email-eu.hif.json.gz?download=1",
+          "size": 1550383,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "florentine-families",
+      "title": "Florentine Families",
+      "description": "The Florentine families network represents marriage ties among prominent families in Renaissance Florence. We lifted the graph to its clique complex using `toponetx.graph_to_clique_complex`, so cliques become higher-dimensional simplices. This dataset is suited to test graph-based methods on a small historical social network and to exercise AHORN's clique-complex dataset structure.",
+      "network_types": [
+        "graph",
+        "simplicial-complex"
+      ],
+      "tags": [
+        "domain: social",
+        "lifting: clique complex"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 15,
+      "interactions": 23,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 6,
+      "mean_node_degree": 2.6666666666666665,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://networkx.org/documentation/stable/reference/generated/networkx.generators.social.florentine_families_graph.html",
+      "license": "",
+      "license_url": "",
+      "citations": [
+        "@article{Breiger1986a,\n  title = {Cumulated social roles: The duality of persons and their algebras},\n  author = {Ronald L. Breiger and Philippa E. Pattison},\n  journal = {Social Networks},\n  volume = {8},\n  number = {3},\n  pages = {215--256},\n  year = {1986},\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20741918/files/florentine-families.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20741918/files/florentine-families.hif.json?download=1",
+          "size": 749,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "geometry-questions",
+      "title": "Geometry Questions",
+      "description": "This hypergraph has MathOverflow users as nodes and question-category co-answer groups as hyperedges. The categories are derived from tags involving geometry. The dataset was derived from the Stack Exchange data dump.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 580,
+      "interactions": 1193,
+      "max_interaction_size": 230,
+      "mean_interaction_size": 10.465213746856664,
+      "max_node_degree": 260,
+      "mean_node_degree": 21.525862068965516,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-geometry-questions/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "",
+      "related": [
+        "algebra-questions"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202479/files/geometry-questions.txt?download=1",
+          "hif_url": "",
+          "size": 83454,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/18771452/files/geometry-questions.txt.gz?download=1",
+          "hif_url": "",
+          "size": 12889,
+          "changelog": [
+            "Renamed the edge attribute from `genre` to `category`.",
+            "Provided the dataset in gzipped format to reduce file size."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "house-bills",
+      "title": "House Bills",
+      "description": "This hypergraph has US Congresspersons as nodes and sponsor/co-sponsor groups for House of Representatives bills as hyperedges. Some hyperedges are repeated. The dataset was derived from James Fowler's data. Each node is labeled with political party affiliation.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1494,
+      "interactions": 60987,
+      "max_interaction_size": 399,
+      "mean_interaction_size": 20.474297801170742,
+      "max_node_degree": 6220,
+      "mean_node_degree": 835.7871485943775,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/house-bills/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1126/sciadv.abh1303",
+        "10.1093/pan/mpl002",
+        "10.1016/j.socnet.2005.11.003"
+      ],
+      "parent": "",
+      "related": [
+        "house-committees",
+        "congress-bills",
+        "senate-bills"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17198796/files/house-bills.txt?download=1",
+          "hif_url": "",
+          "size": 5330425,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "house-committees",
+      "title": "House Committees",
+      "description": "This hypergraph has members of the US House of Representatives as nodes and committee memberships as hyperedges. The dataset is derived from Congressional data compiled by Charles Stewart and Jonathan Woon. Each node is labeled with political party affiliation. > [!IMPORTANT] > In the original dataset, some nodes are repeated within hyperedges. This version of the dataset has removed these duplicates.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1290,
+      "interactions": 341,
+      "max_interaction_size": 81,
+      "mean_interaction_size": 34.73020527859237,
+      "max_node_degree": 44,
+      "mean_node_degree": 9.18062015503876,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/house-committees/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1126/sciadv.abh1303"
+      ],
+      "parent": "",
+      "related": [
+        "house-bills",
+        "senate-committees"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202783/files/house-committees.txt?download=1",
+          "hif_url": "",
+          "size": 82777,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "karate-club",
+      "title": "Karate Club",
+      "description": "Zachary's karate club network is the classic social network of friendships at a university karate club. We lifted the graph to its clique complex using `toponetx.graph_to_clique_complex`, so cliques become higher-dimensional simplices (edges, triangles, and higher cliques). This dataset is suited to test your code, especially concerning your interaction with AHORN and our dataset structure.",
+      "network_types": [
+        "graph",
+        "simplicial-complex"
+      ],
+      "tags": [
+        "domain: social",
+        "lifting: clique complex"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 34,
+      "interactions": 136,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 17,
+      "mean_node_degree": 4.588235294117647,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://networkx.org/documentation/stable/reference/generated/networkx.generators.social.karate_club_graph.html",
+      "license": "",
+      "license_url": "",
+      "citations": [
+        "10.1086/jar.33.4.3629752"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17953924/files/karate-club.txt?download=1",
+          "hif_url": "",
+          "size": 2931,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/19236080/files/karate-club.txt?download=1",
+          "hif_url": "",
+          "size": 2945,
+          "changelog": [
+            "Updated the format version to 0.3."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "madison-restaurant-reviews",
+      "title": "Madison Restaurant Reviews",
+      "description": "This hypergraph has Yelp users as nodes and monthly co-review groups for Madison, WI restaurants as hyperedges. Each hyperedge is associated with a restaurant category. The dataset was derived from the Yelp Kaggle competition data.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 565,
+      "interactions": 601,
+      "max_interaction_size": 43,
+      "mean_interaction_size": 7.655574043261232,
+      "max_node_degree": 59,
+      "mean_node_degree": 8.143362831858408,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-madison-restaurant-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202762/files/madison-restaurant-reviews.txt?download=1",
+          "hif_url": "",
+          "size": 29926,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/18771507/files/madison-restaurant-reviews.txt.gz?download=1",
+          "hif_url": "",
+          "size": 8004,
+          "changelog": [
+            "Renamed the edge attribute from `genre` to `cuisine`.",
+            "Provided the dataset in gzipped format to reduce file size."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MAG-10",
+      "title": "MAG-10",
+      "description": "The MAG-10 network is a subset of the Microsoft Academic Graph where nodes are authors, hyperedges correspond to a publication from those authors, and the hyperedges are categorized by one of 10 computer science conferences. If the same set of authors published at more than one conference, we used the most common venue as the category and any cases where there is a tie were discarded. Papers with more than 25 authors were omitted. > [!IMPORTANT] > Node `40706` has an erroneous label assignment in the source dataset. We assigned it to the first category.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 80198,
+      "interactions": 51889,
+      "max_interaction_size": 25,
+      "mean_interaction_size": 3.4829154541424967,
+      "max_node_degree": 187,
+      "mean_node_degree": 2.2534851243173146,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-MAG-10/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152",
+        "10.1145/2740908.2742839"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17200740/files/MAG-10.txt.gz?download=1",
+          "hif_url": "",
+          "size": 560579,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "MANTRA-2-manifolds",
+      "title": "MANTRA 2-Manifolds",
+      "description": "> [!NOTE] > The original MANTRA dataset includes both 2-manifolds and 3-manifolds. AHORN lists them as two separate datasets, with this page focusing on the 2-manifolds. You can find the 3-manifolds dataset here. The MANTRA collection provides simplicial complexes built from triangulations of closed 2- and 3-manifolds. Each manifold is represented by its vertex set and list of simplices (triangles or tetrahedra), enabling topological and combinatorial experiments across two dimensions. This dataset is derived from version 0.0.16 of MANTRA.",
+      "network_types": [
+        "simplicial-complex"
+      ],
+      "tags": [
+        "network-type: multi-network",
+        "source: aidos lab"
+      ],
+      "domains": [],
+      "nodes": 15,
+      "interactions": 992948,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": true,
+      "source_url": "https://aidos.group/mantra/",
+      "license": "BSD-3-Clause",
+      "license_url": "https://github.com/aidos-lab/mantra/blob/main/LICENSE.md",
+      "citations": [
+        "@inproceedings{Ballester25a,\n  title         = {{MANTRA}: {T}he {M}anifold {T}riangulations {A}ssemblage},\n  author        = {Rub\u00e9n Ballester and Ernst R\u00f6ell and Daniel B\u012bn Schmid and Mathieu Alain and Sergio Escalera and Carles Casacuberta and Bastian Rieck},\n  year          = 2025,\n  booktitle     = {International Conference on Learning Representations},\n  url           = {https://openreview.net/forum?id=X6y5CC44HM},\n}"
+      ],
+      "parent": "",
+      "related": [
+        "MANTRA-3-manifolds"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18161249/files/MANTRA-2-manifolds.txt.gz?download=1",
+          "hif_url": "",
+          "size": 3021246,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "MANTRA-3-manifolds",
+      "title": "MANTRA 3-Manifolds",
+      "description": "> [!NOTE] > The original MANTRA dataset includes both 2-manifolds and 3-manifolds. AHORN lists them as two separate datasets, with this page focusing on the 3-manifolds. You can find the 2-manifolds dataset here. The MANTRA collection provides simplicial complexes built from triangulations of closed 2- and 3-manifolds. Each manifold is represented by its vertex set and list of simplices (triangles or tetrahedra), enabling topological and combinatorial experiments across two dimensions. This dataset is derived from version 0.0.16 of MANTRA.",
+      "network_types": [
+        "simplicial-complex"
+      ],
+      "tags": [
+        "network-type: multi-network",
+        "source: aidos lab"
+      ],
+      "domains": [],
+      "nodes": 120,
+      "interactions": 8062251,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": true,
+      "source_url": "https://aidos.group/mantra/",
+      "license": "BSD-3-Clause",
+      "license_url": "https://github.com/aidos-lab/mantra/blob/main/LICENSE.md",
+      "citations": [
+        "@inproceedings{Ballester25a,\n  title         = {{MANTRA}: {T}he {M}anifold {T}riangulations {A}ssemblage},\n  author        = {Rub\u00e9n Ballester and Ernst R\u00f6ell and Daniel B\u012bn Schmid and Mathieu Alain and Sergio Escalera and Carles Casacuberta and Bastian Rieck},\n  year          = 2025,\n  booktitle     = {International Conference on Learning Representations},\n  url           = {https://openreview.net/forum?id=X6y5CC44HM},\n}"
+      ],
+      "parent": "",
+      "related": [
+        "MANTRA-2-manifolds"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18161249/files/MANTRA-3-manifolds.txt.gz?download=1",
+          "hif_url": "",
+          "size": 23982585,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "mathoverflow-answers",
+      "title": "MathOverflow Answers",
+      "description": "The `mathoverflow-answers` network is a hypergraph where hyperedges are sets of questions answered by users on MathOverflow. Nodes are labeled by the tags used in the questions, and nodes often have multiple labels.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node labels",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 73851,
+      "interactions": 5446,
+      "max_interaction_size": 1784,
+      "mean_interaction_size": 24.185457216305544,
+      "max_node_degree": 173,
+      "mean_node_degree": 1.7835100404869264,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/mathoverflow-answers/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3394486.3403222"
+      ],
+      "parent": "",
+      "related": [
+        "stackoverflow-answers"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202738/files/mathoverflow-answers.txt.gz?download=1",
+          "hif_url": "",
+          "size": 1080433,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews",
+      "title": "Music Blues Reviews",
+      "description": "This hypergraph has Amazon reviewers as nodes and monthly co-review groups for blues music categories as hyperedges. The dataset was derived from the product reviews collected by Jianmo Ni, Jiacheng Li, and Julian McAuley. > [!IMPORTANT] > The original dataset is temporal, which this version does not capture yet.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: temporal",
+        "domain: reviews",
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 1106,
+      "interactions": 694,
+      "max_interaction_size": 83,
+      "mean_interaction_size": 15.128242074927954,
+      "max_node_degree": 127,
+      "mean_node_degree": 9.492766726943943,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202708/files/music-blues-reviews.txt?download=1",
+          "hif_url": "",
+          "size": 58404,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/20411732/files/music-blues-reviews.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20411732/files/music-blues-reviews.hif.json.gz?download=1",
+          "size": 58449,
+          "changelog": [
+            "Updated the format version to 0.3."
+          ]
+        },
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews.hif.json.gz?download=1",
+          "size": 58449,
+          "changelog": [
+            "Sub-dataset for each music genre."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-cajun-zydeco",
+      "title": "Music Blues Reviews (Cajun & Zydeco)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `Cajun & Zydeco`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 18,
+      "interactions": 40,
+      "max_interaction_size": 5,
+      "mean_interaction_size": 2.475,
+      "max_node_degree": 9,
+      "mean_node_degree": 5.5,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-cajun-zydeco.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-cajun-zydeco.hif.json.gz?download=1",
+          "size": 594,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-chicago-blues",
+      "title": "Music Blues Reviews (Chicago Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `Chicago Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 404,
+      "interactions": 223,
+      "max_interaction_size": 72,
+      "mean_interaction_size": 25.130044843049326,
+      "max_node_degree": 87,
+      "mean_node_degree": 13.871287128712872,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-chicago-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-chicago-blues.hif.json.gz?download=1",
+          "size": 22678,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-delta-blues",
+      "title": "Music Blues Reviews (Delta Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `Delta Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 178,
+      "interactions": 146,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 6.198630136986301,
+      "max_node_degree": 38,
+      "mean_node_degree": 5.084269662921348,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-delta-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-delta-blues.hif.json.gz?download=1",
+          "size": 4198,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-detroit-blues",
+      "title": "Music Blues Reviews (Detroit Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `Detroit Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 12,
+      "interactions": 4,
+      "max_interaction_size": 4,
+      "mean_interaction_size": 3.0,
+      "max_node_degree": 1,
+      "mean_node_degree": 1.0,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-detroit-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-detroit-blues.hif.json.gz?download=1",
+          "size": 154,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-memphis-blues",
+      "title": "Music Blues Reviews (Memphis Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `Memphis Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 14,
+      "interactions": 26,
+      "max_interaction_size": 4,
+      "mean_interaction_size": 2.6538461538461537,
+      "max_node_degree": 10,
+      "mean_node_degree": 4.928571428571429,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-memphis-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-memphis-blues.hif.json.gz?download=1",
+          "size": 440,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-new-york-blues",
+      "title": "Music Blues Reviews (New York Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `New York Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 565,
+      "interactions": 239,
+      "max_interaction_size": 83,
+      "mean_interaction_size": 15.790794979079498,
+      "max_node_degree": 37,
+      "mean_node_degree": 6.679646017699115,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-new-york-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-new-york-blues.hif.json.gz?download=1",
+          "size": 13960,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "music-blues-reviews-st-louis-blues",
+      "title": "Music Blues Reviews (St. Louis Blues)",
+      "description": "This dataset is the `Music Blues Reviews` subset restricted to review groups labelled as `St. Louis Blues`. It keeps the Amazon reviewer nodes that participate in at least one co-review hyperedge for this blues music genre.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 9,
+      "interactions": 16,
+      "max_interaction_size": 3,
+      "mean_interaction_size": 2.25,
+      "max_node_degree": 8,
+      "mean_node_degree": 4.0,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-music-blues-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "music-blues-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-st-louis-blues.txt?download=1",
+          "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-st-louis-blues.hif.json.gz?download=1",
+          "size": 279,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "NDC-classes",
+      "title": "NDC Classes",
+      "description": "This temporal higher-order network is a sequence of timestamped simplices, where each simplex is a set of nodes. Under the Drug Listing Act of 1972, the U.S. Food and Drug Administration releases information on all commercial drugs going through the regulation of the agency, forming the National Drug Code (NDC) Directory. In this dataset, each simplex corresponds to a drug and the nodes are class labels applied to the drugs. Timestamps are in days and represent when the drug was first marketed.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Biological"
+      ],
+      "nodes": 1161,
+      "interactions": 49726,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 5358,
+      "mean_node_degree": 134.58311800172265,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/NDC-classes/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "NDC-substances"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17607716/files/NDC-classes.txt.gz?download=1",
+          "hif_url": "",
+          "size": 506164,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "NDC-substances",
+      "title": "NDC Substances",
+      "description": "This temporal higher-order network is a sequence of timestamped simplices, where each simplex is a set of nodes. Under the Drug Listing Act of 1972, the U.S. Food and Drug Administration releases information on all commercial drugs going through the regulation of the agency, forming the National Drug Code (NDC) Directory. In this dataset, each simplex corresponds to an NDC code for a drug, and the nodes are substances that make up the drug. Timestamps are in days and represent when the drug was first marketed.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Biological"
+      ],
+      "nodes": 5556,
+      "interactions": 112919,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 6693,
+      "mean_node_degree": 40.94564434845213,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/NDC-substances/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "NDC-classes"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17607718/files/NDC-substances.txt.gz?download=1",
+          "hif_url": "",
+          "size": 1645221,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "pubmed-cocitation",
+      "title": "PubMed Co-Citation",
+      "description": "The PubMed co-citation network is a hypergraph where nodes are scientific papers from the PubMed database and hyperedges are sets of papers that are co-cited together by another paper. Each node is labeled with the paper's research topic, chosen from three diabetes-related categories: Diabetes Mellitus Experimental, Diabetes Mellitus Type 1, and Diabetes Mellitus Type 2. This dataset is commonly used as a benchmark in hypergraph learning tasks, particularly for biomedical document classification.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: collaboration",
+        "domain: biomedical",
+        "metadata: node classes"
+      ],
+      "domains": [
+        "Informational",
+        "Biological"
+      ],
+      "nodes": 19717,
+      "interactions": 7963,
+      "max_interaction_size": 171,
+      "mean_interaction_size": 4.348737912846917,
+      "max_node_degree": 99,
+      "mean_node_degree": 9.01796875,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://drive.google.com/file/d/1XbqDJnHnV0HYvie3fcM8rquamnQsLTpK/view?usp=sharing",
+      "license": "",
+      "license_url": "",
+      "citations": [],
+      "parent": "",
+      "related": [
+        "cora-cocitation",
+        "citeseer-cocitation"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18632387/files/pubmed-cocitation.txt.gz?download=1",
+          "hif_url": "",
+          "size": 136661,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "semantic-scholar-coauth-sample",
+      "title": "Semantic Scholar Co-Authorship Sample",
+      "description": "Constructed from a subsample of the Semantic Scholar Open Research Corpus, this dataset is a simplicial complex where nodes are authors and simplices are sets of co-authors on papers. Values on every simplex indicate the sum of citations of all papers co-authored at least by the corresponding set of authors.",
+      "network_types": [
+        "simplicial-complex"
+      ],
+      "tags": [
+        "domain: social",
+        "metadata: edge labels"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 352,
+      "interactions": 24200,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": 3787,
+      "mean_node_degree": 341.5681818181818,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://github.com/stefaniaebli/simplicial_neural_networks",
+      "license": "",
+      "license_url": "",
+      "citations": [
+        "@inproceedings{\n  ebli2020simplicial,\n  title={Simplicial Neural Networks},\n  author={Stefania Ebli and Micha{\\\"e}l Defferrard and Gard Spreemann},\n  booktitle={TDA {\\&} Beyond},\n  year={2020},\n  url={https://openreview.net/forum?id=nPCt39DVIfk}\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/18199501/files/semantic-scholar-coauth-sample.txt.gz?download=1",
+          "hif_url": "",
+          "size": 98128,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "senate-bills",
+      "title": "Senate Bills",
+      "description": "This hypergraph has US Congresspersons as nodes and sponsor/co-sponsor groups for Senate bills as hyperedges. Some hyperedges are repeated. The dataset was derived from James Fowler's data. Each node is labeled with political party affiliation.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 294,
+      "interactions": 29157,
+      "max_interaction_size": 99,
+      "mean_interaction_size": 7.961964536817916,
+      "max_node_degree": 3514,
+      "mean_node_degree": 789.6156462585034,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/senate-bills/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1126/sciadv.abh1303",
+        "10.1093/pan/mpl002",
+        "10.1016/j.socnet.2005.11.003"
+      ],
+      "parent": "",
+      "related": [
+        "senate-committees",
+        "congress-bills",
+        "house-bills"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17198877/files/senate-bills.txt?download=1",
+          "hif_url": "",
+          "size": 864643,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "senate-committees",
+      "title": "Senate Committees",
+      "description": "This hypergraph has members of the US Senate as nodes and committee memberships as hyperedges. The dataset is derived from Congressional data compiled by Charles Stewart and Jonathan Woon. Each node is labeled with political party affiliation. > [!IMPORTANT] > In the original dataset, some nodes are repeated within hyperedges. This version of the dataset does not contain duplicates.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 282,
+      "interactions": 315,
+      "max_interaction_size": 31,
+      "mean_interaction_size": 17.168253968253968,
+      "max_node_degree": 63,
+      "mean_node_degree": 19.177304964539008,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/senate-committees/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.18653/v1/D19-1018"
+      ],
+      "parent": "",
+      "related": [
+        "senate-bills",
+        "house-committees"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17200512/files/senate-committees.txt?download=1",
+          "hif_url": "",
+          "size": 26606,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "tags-ask-ubuntu",
+      "title": "Ask Ubuntu Tags",
+      "description": "This temporal higher-order network represents tag co-occurrence on Ask Ubuntu. Nodes are tags, and each hyperedge is the set of tags applied to a question. > [!IMPORTANT] > Singleton hyperedges, corresponding to questions with only one tag, are omitted in this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 3029,
+      "interactions": 219076,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/tags-ask-ubuntu/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "threads-ask-ubuntu",
+        "tags-math-sx",
+        "tags-stack-overflow"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20762201/files/tags-ask-ubuntu.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20762201/files/tags-ask-ubuntu.hif.json.gz?download=1",
+          "size": 3372027,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "tags-math-sx",
+      "title": "Mathematics Stack Exchange Tags",
+      "description": "This temporal higher-order network represents tag co-occurrence on Mathematics Stack Exchange. Nodes are tags, and each hyperedge is the set of tags applied to a question. > [!IMPORTANT] > Singleton hyperedges, corresponding to questions with only one tag, are omitted in this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 1629,
+      "interactions": 558272,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/tags-math-sx/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "threads-math-sx",
+        "tags-ask-ubuntu",
+        "tags-stack-overflow"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20762447/files/tags-math-sx.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20762447/files/tags-math-sx.hif.json.gz?download=1",
+          "size": 7784735,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "tags-stack-overflow",
+      "title": "Stack Overflow Tags",
+      "description": "This temporal higher-order network represents tag co-occurrence on Stack Overflow. Nodes are tags, and each hyperedge is the set of tags applied to a question. > [!IMPORTANT] > Singleton hyperedges, corresponding to questions with only one tag, are omitted in this dataset.",
+      "network_types": [
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 49998,
+      "interactions": 12741779,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/tags-stack-overflow/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "threads-stack-overflow",
+        "tags-ask-ubuntu",
+        "tags-math-sx"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20761904/files/tags-stack-overflow.txt.gz?download=1",
+          "hif_url": "",
+          "size": 195994274,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "threads-ask-ubuntu",
+      "title": "Ask Ubuntu Threads",
+      "description": "This temporal higher-order network represents discussion threads on Ask Ubuntu. Nodes are users, and each hyperedge is the set of users participating in a thread. > [!IMPORTANT] > Singleton hyperedges, corresponding to threads with only one participating user, are omitted in this dataset.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 125602,
+      "interactions": 117764,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/threads-ask-ubuntu/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "tags-ask-ubuntu",
+        "threads-math-sx",
+        "threads-stack-overflow"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20762271/files/threads-ask-ubuntu.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20762271/files/threads-ask-ubuntu.hif.json.gz?download=1",
+          "size": 1893009,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "threads-math-sx",
+      "title": "Mathematics Stack Exchange Threads",
+      "description": "This temporal higher-order network represents discussion threads on Mathematics Stack Exchange. Nodes are users, and each hyperedge is the set of users participating in a thread. > [!IMPORTANT] > Singleton hyperedges, corresponding to threads with only one participating user, are omitted in this dataset.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 176445,
+      "interactions": 563710,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/threads-math-sx/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "tags-math-sx",
+        "threads-ask-ubuntu",
+        "threads-stack-overflow"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20762488/files/threads-math-sx.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20762488/files/threads-math-sx.hif.json.gz?download=1",
+          "size": 9360886,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "threads-stack-overflow",
+      "title": "Stack Overflow Threads",
+      "description": "This temporal higher-order network represents discussion threads on Stack Overflow. Nodes are users, and each hyperedge is the set of users participating in a thread. > [!IMPORTANT] > Singleton hyperedges, corresponding to threads with only one participating user, are omitted in this dataset.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: communication",
+        "network-type: temporal",
+        "source: benson"
+      ],
+      "domains": [
+        "Social"
+      ],
+      "nodes": 2675969,
+      "interactions": 8804634,
+      "max_interaction_size": null,
+      "mean_interaction_size": null,
+      "max_node_degree": null,
+      "mean_node_degree": null,
+      "temporal": true,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/threads-stack-overflow/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1073/pnas.1800683115"
+      ],
+      "parent": "",
+      "related": [
+        "tags-stack-overflow",
+        "threads-ask-ubuntu",
+        "threads-math-sx"
+      ],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/20761583/files/threads-stack-overflow.txt.gz?download=1",
+          "hif_url": "",
+          "size": 162693306,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "trivago-clicks",
+      "title": "Trivago Clicks",
+      "description": "This hypergraph has accommodations, mostly hotels, as nodes. Hyperedges are sets of accommodations for which a user performed the \"click-out\" action during the same browsing session, meaning the user was forwarded to a partner site. A few hyperedges are repeated. The dataset was derived from the ACM RecSys Challenge 2019.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 172738,
+      "interactions": 233202,
+      "max_interaction_size": 85,
+      "mean_interaction_size": 3.1168729256181336,
+      "max_node_degree": 339,
+      "mean_node_degree": 4.207881300003473,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/trivago-clicks/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3394486.3403222"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202694/files/trivago-clicks.txt.gz?download=1",
+          "hif_url": "",
+          "size": 2862516,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews",
+      "title": "Vegas Bars Reviews",
+      "description": "This hypergraph has Yelp users as nodes and monthly co-review groups for Las Vegas, NV bars as hyperedges. Each hyperedge is associated with a bar category. The dataset was derived from the Yelp Kaggle competition data.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "metadata: edge classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 1234,
+      "interactions": 1194,
+      "max_interaction_size": 73,
+      "mean_interaction_size": 9.93718592964824,
+      "max_node_degree": 147,
+      "mean_node_degree": 9.615072933549433,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17202660/files/vegas-bars-reviews.txt?download=1",
+          "hif_url": "",
+          "size": 65649,
+          "changelog": []
+        },
+        {
+          "number": 2,
+          "url": "https://zenodo.org/records/18771537/files/vegas-bars-reviews.txt.gz?download=1",
+          "hif_url": "",
+          "size": 21694,
+          "changelog": [
+            "Renamed the edge attribute from `genre` to `category`.",
+            "Updated the category edge attribute to store the category name instead of a numeric code.",
+            "Provided the dataset in gzipped format to reduce file size."
+          ]
+        },
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews.hif.json.gz?download=1",
+          "size": 21691,
+          "changelog": [
+            "Sub-dataset for each bar category."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-adult-entertainment",
+      "title": "Vegas Bars Reviews (Adult Entertainment)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Adult Entertainment`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 47,
+      "interactions": 93,
+      "max_interaction_size": 8,
+      "mean_interaction_size": 3.935483870967742,
+      "max_node_degree": 10,
+      "mean_node_degree": 7.787234042553192,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-adult-entertainment.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-adult-entertainment.hif.json.gz?download=1",
+          "size": 740,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-bar-crawl",
+      "title": "Vegas Bars Reviews (Bar Crawl)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Bar Crawl`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 5,
+      "interactions": 6,
+      "max_interaction_size": 3,
+      "mean_interaction_size": 2.1666666666666665,
+      "max_node_degree": 4,
+      "mean_node_degree": 2.6,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-bar-crawl.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-bar-crawl.hif.json.gz?download=1",
+          "size": 161,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-champagne-bars",
+      "title": "Vegas Bars Reviews (Champagne Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Champagne Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 55,
+      "interactions": 94,
+      "max_interaction_size": 10,
+      "mean_interaction_size": 4.372340425531915,
+      "max_node_degree": 16,
+      "mean_node_degree": 7.472727272727273,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-champagne-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-champagne-bars.hif.json.gz?download=1",
+          "size": 816,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-cocktail-bars",
+      "title": "Vegas Bars Reviews (Cocktail Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Cocktail Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 241,
+      "interactions": 133,
+      "max_interaction_size": 30,
+      "mean_interaction_size": 15.496240601503759,
+      "max_node_degree": 22,
+      "mean_node_degree": 8.551867219917012,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-cocktail-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-cocktail-bars.hif.json.gz?download=1",
+          "size": 3347,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-comedy-clubs",
+      "title": "Vegas Bars Reviews (Comedy Clubs)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Comedy Clubs`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 61,
+      "interactions": 106,
+      "max_interaction_size": 11,
+      "mean_interaction_size": 4.566037735849057,
+      "max_node_degree": 18,
+      "mean_node_degree": 7.934426229508197,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-comedy-clubs.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-comedy-clubs.hif.json.gz?download=1",
+          "size": 935,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-dance-clubs",
+      "title": "Vegas Bars Reviews (Dance Clubs)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Dance Clubs`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 55,
+      "interactions": 104,
+      "max_interaction_size": 9,
+      "mean_interaction_size": 4.086538461538462,
+      "max_node_degree": 21,
+      "mean_node_degree": 7.7272727272727275,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dance-clubs.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dance-clubs.hif.json.gz?download=1",
+          "size": 849,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-dive-bars",
+      "title": "Vegas Bars Reviews (Dive Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Dive Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 33,
+      "interactions": 68,
+      "max_interaction_size": 7,
+      "mean_interaction_size": 2.911764705882353,
+      "max_node_degree": 9,
+      "mean_node_degree": 6.0,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dive-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dive-bars.hif.json.gz?download=1",
+          "size": 477,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-gay-bars",
+      "title": "Vegas Bars Reviews (Gay Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Gay Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 4,
+      "interactions": 3,
+      "max_interaction_size": 3,
+      "mean_interaction_size": 2.3333333333333335,
+      "max_node_degree": 3,
+      "mean_node_degree": 1.75,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-gay-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-gay-bars.hif.json.gz?download=1",
+          "size": 146,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-hookah-bars",
+      "title": "Vegas Bars Reviews (Hookah Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Hookah Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 23,
+      "interactions": 48,
+      "max_interaction_size": 6,
+      "mean_interaction_size": 2.75,
+      "max_node_degree": 8,
+      "mean_node_degree": 5.739130434782608,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-hookah-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-hookah-bars.hif.json.gz?download=1",
+          "size": 362,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-karaoke",
+      "title": "Vegas Bars Reviews (Karaoke)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Karaoke`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 576,
+      "interactions": 139,
+      "max_interaction_size": 73,
+      "mean_interaction_size": 40.0863309352518,
+      "max_node_degree": 88,
+      "mean_node_degree": 9.67361111111111,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-karaoke.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-karaoke.hif.json.gz?download=1",
+          "size": 8302,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-lounges",
+      "title": "Vegas Bars Reviews (Lounges)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Lounges`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 21,
+      "interactions": 56,
+      "max_interaction_size": 5,
+      "mean_interaction_size": 2.6607142857142856,
+      "max_node_degree": 10,
+      "mean_node_degree": 7.095238095238095,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-lounges.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-lounges.hif.json.gz?download=1",
+          "size": 384,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-piano-bars",
+      "title": "Vegas Bars Reviews (Piano Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Piano Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 5,
+      "interactions": 9,
+      "max_interaction_size": 2,
+      "mean_interaction_size": 2.0,
+      "max_node_degree": 5,
+      "mean_node_degree": 3.6,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-piano-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-piano-bars.hif.json.gz?download=1",
+          "size": 170,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-pool-halls",
+      "title": "Vegas Bars Reviews (Pool Halls)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Pool Halls`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 41,
+      "interactions": 94,
+      "max_interaction_size": 9,
+      "mean_interaction_size": 3.5,
+      "max_node_degree": 11,
+      "mean_node_degree": 8.024390243902438,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pool-halls.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pool-halls.hif.json.gz?download=1",
+          "size": 656,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-pubs",
+      "title": "Vegas Bars Reviews (Pubs)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Pubs`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 118,
+      "interactions": 126,
+      "max_interaction_size": 19,
+      "mean_interaction_size": 7.9523809523809526,
+      "max_node_degree": 20,
+      "mean_node_degree": 8.491525423728813,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pubs.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pubs.hif.json.gz?download=1",
+          "size": 1716,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "vegas-bars-reviews-sports-bars",
+      "title": "Vegas Bars Reviews (Sports Bars)",
+      "description": "This dataset is the `Vegas Bars Reviews` subset restricted to bars labelled as `Sports Bars`. It keeps the Yelp user nodes that participate in at least one co-review hyperedge for this Las Vegas bar category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "domain: reviews",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 90,
+      "interactions": 115,
+      "max_interaction_size": 13,
+      "mean_interaction_size": 6.069565217391304,
+      "max_node_degree": 11,
+      "mean_node_degree": 7.7555555555555555,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/cat-edge-vegas-bars-reviews/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "@article{amburg2020fair,\n  title={Fair Clustering for Diverse and Experienced Groups},\n  author={Amburg, Ilya and Veldt, Nate and Benson, Austin R},\n  journal={arXiv:2006.05645},\n  year={2020}\n}"
+      ],
+      "parent": "vegas-bars-reviews",
+      "related": [],
+      "revisions": [
+        {
+          "number": 3,
+          "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-sports-bars.txt.gz?download=1",
+          "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-sports-bars.hif.json.gz?download=1",
+          "size": 1260,
+          "changelog": []
+        }
+      ]
+    },
+    {
+      "name": "walmart-trips",
+      "title": "Walmart Trips",
+      "description": "The walmart-trips network is a hypergraph where hyperedges are sets of co-purchased products at Walmart, as released as part of a Kaggle competition. Products are assigned to one of ten broad departments in which the product appears on walmart.com (e.g., \"Clothing, Shoes, and Accessories\"). Products not assigned to any of these departments are grouped into an \"Other\" category.",
+      "network_types": [
+        "simplicial-complex",
+        "hypergraph"
+      ],
+      "tags": [
+        "metadata: node classes",
+        "source: benson"
+      ],
+      "domains": [
+        "Economic"
+      ],
+      "nodes": 88860,
+      "interactions": 69906,
+      "max_interaction_size": 25,
+      "mean_interaction_size": 6.589277029153434,
+      "max_node_degree": 5733,
+      "mean_node_degree": 5.183772225973441,
+      "temporal": false,
+      "weighted": false,
+      "multi_network": false,
+      "source_url": "https://www.cs.cornell.edu/~arb/data/walmart-trips/",
+      "license": "unprovided-reuse-encouraged",
+      "license_url": "",
+      "citations": [
+        "10.1145/3366423.3380152"
+      ],
+      "parent": "",
+      "related": [],
+      "revisions": [
+        {
+          "number": 1,
+          "url": "https://zenodo.org/records/17201931/files/walmart-trips.txt.gz?download=1",
+          "hif_url": "",
+          "size": 1391552,
+          "changelog": []
+        }
+      ]
+    }
+  ]
+}

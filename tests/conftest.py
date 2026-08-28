@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from networks._core import cache as _cache
+from networks.ahorn import _catalog as _ahorn_catalog
 from networks.netzschleuder import _catalog as _nz_catalog
 from networks.paths import _catalog as _paths_catalog
 from networks.snap import _catalog
@@ -151,10 +152,12 @@ def isolated_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(_catalog, "_cached", None, raising=False)
     monkeypatch.setattr(_nz_catalog, "_cached", None, raising=False)
     monkeypatch.setattr(_paths_catalog, "_cached", None, raising=False)
+    monkeypatch.setattr(_ahorn_catalog, "_cached", None, raising=False)
     yield root
     monkeypatch.setattr(_catalog, "_cached", None, raising=False)
     monkeypatch.setattr(_nz_catalog, "_cached", None, raising=False)
     monkeypatch.setattr(_paths_catalog, "_cached", None, raising=False)
+    monkeypatch.setattr(_ahorn_catalog, "_cached", None, raising=False)
 
 
 @pytest.fixture

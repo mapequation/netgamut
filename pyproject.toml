@@ -49,7 +49,10 @@ Issues = "https://github.com/mapequation/networks/issues"
 networks = "networks.__main__:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6"]
+# pyyaml is here rather than in the extras because only the AHORN catalog
+# *build* needs it -- reading the vendored snapshot and downloading datasets
+# need nothing. See scripts/regenerate_ahorn_catalog.py.
+dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "pyyaml>=6", "types-PyYAML>=6"]
 
 [tool.hatch.version]
 path = "src/networks/__init__.py"

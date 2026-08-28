@@ -8,9 +8,17 @@ Each repository lives in its own subpackage:
 * :mod:`networks.netzschleuder` -- networks.skewed.de, 286 networks tagged by
   domain, including the biological, transport and multilayer networks SNAP has
   none of.
+* :mod:`networks.ogb` -- Open Graph Benchmark, 12 datasets whose node
+  categories are *named* rather than left as anonymous codes.
+* :mod:`networks.pyg` -- the PyTorch Geometric corpus, 99 datasets: citation,
+  web, social and heterophilous graphs.
 * :mod:`networks.paths` -- curated path data (flight itineraries, navigation
   trails) plus the conversion into second-order state networks for Infomap's
   memory model, which no edge list can express.
+* :mod:`networks.ahorn` -- the Aachen Higher-Order Repository of Networks, 83
+  hypergraphs and simplicial complexes. Its unit is a *set* of nodes rather than
+  a pair, so it returns a
+  :class:`~networks._core.hypergraph.Hypergraph` rather than a ``Network``.
 
 Metadata for every source ships inside the package, so browsing is offline and
 instant; only ``load()`` touches the network, and it caches into a shared
@@ -40,7 +48,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from . import generate, netzschleuder, ogb, paths, pyg, snap
+from . import ahorn, generate, netzschleuder, ogb, paths, pyg, snap
 from ._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
@@ -51,6 +59,7 @@ from ._core.cache import (
     set_cache_dir,
 )
 from ._core.domains import DOMAINS
+from ._core.hypergraph import Hypergraph
 from ._core.network import Network
 from ._core.state_network import StateNetwork
 
@@ -59,10 +68,12 @@ __all__ = [
     "DOMAINS",
     "CacheInfo",
     "CachedDataset",
+    "Hypergraph",
     "Match",
     "Network",
     "StateNetwork",
     "__version__",
+    "ahorn",
     "cache_dir",
     "cache_info",
     "clear_cache",
@@ -88,6 +99,7 @@ _SOURCES: dict[str, Any] = {
     "ogb": ogb,
     "pyg": pyg,
     "paths": paths,
+    "ahorn": ahorn,
 }
 
 

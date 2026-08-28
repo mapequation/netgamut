@@ -19,9 +19,10 @@ from typing import Any
 
 import networks
 
-from . import __version__, netzschleuder, paths, snap
+from . import __version__, snap
 
-_SOURCES = {"snap": snap, "netzschleuder": netzschleuder, "paths": paths}
+# The package's own registry, so the CLI cannot drift behind a new source.
+_SOURCES = networks._SOURCES
 
 
 def _count(value: int | None) -> str:
@@ -134,15 +135,26 @@ def _cmd_get(args: argparse.Namespace) -> int:
             kwargs["year"] = args.year
         if args.quarter is not None:
             kwargs["quarter"] = args.quarter
-    network = module.load(args.name, **kwargs)
-    print(network.archive_path if network.is_archive else network.path)
+    if args.revision is not None:
+        if source != "ahorn":
+            raise ValueError(f"--revision only applies to the ahorn source, not {source!r}.")
+        kwargs["revision"] = args.revision
+    handle = module.load(args.name, **kwargs)
+    # A Hypergraph has no members to extract; its file is the dataset.
+    print(handle.archive_path if getattr(handle, "is_archive", False) else handle.path)
     return 0
 
 
 def _cmd_refresh(args: argparse.Namespace) -> int:
     for name in [args.source] if args.source else list(_SOURCES):
         print(f"Refreshing {name} ...", file=sys.stderr)
-        catalog = _SOURCES[name].refresh()
+        try:
+            catalog = _SOURCES[name].refresh()
+        except ImportError as error:
+            # A source whose rebuild needs a package this install lacks -- ahorn
+            # needs pyyaml. Skipping keeps `networks refresh` useful for the rest.
+            print(f"  skipped: {error}", file=sys.stderr)
+            continue
         print(f"  {len(catalog.datasets)} datasets ({catalog.retrieved})")
     return 0
 
@@ -171,8 +183,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="networks",
         description=(
-            "Browse and download network datasets from SNAP, Netzschleuder "
-            "and the curated paths collection."
+            "Browse and download network datasets from SNAP, Netzschleuder, OGB, "
+            "PyG, the curated paths collection and AHORN."
         ),
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -203,6 +215,9 @@ def build_parser() -> argparse.ArgumentParser:
     get.add_argument("name")
     get.add_argument("-s", "--source", choices=list(_SOURCES))
     get.add_argument("-f", "--file", help="which artifact to fetch (SNAP only)")
+    get.add_argument(
+        "--revision", type=int, help="which published revision to pin (AHORN only)"
+    )
     get.add_argument("--year", type=int, help="which year to fetch (quarterly paths data only)")
     get.add_argument("--quarter", type=int, help="which quarter to fetch, 1-4 (paths data only)")
     get.add_argument("--force", action="store_true")
