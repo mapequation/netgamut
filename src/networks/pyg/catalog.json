@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "source": "pyg-team/pytorch_geometric",
-  "retrieved": "2026-08-28T14:10:55Z",
+  "retrieved": "2026-08-28T15:14:46Z",
   "omitted": {
     "AQSOL": "a collection of many graphs, which one Network cannot hold",
     "AirfRANS": "a collection of many graphs, which one Network cannot hold",
@@ -65,26 +65,60 @@
       "edges": 30019,
       "features": 932,
       "num_classes": 5,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
-      "name": "Airports",
+      "name": "Airports/Brazil",
       "cls": "Airports",
-      "dataset": "",
+      "dataset": "Brazil",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 131,
+      "edges": 1074,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
+    },
+    {
+      "name": "Airports/Europe",
+      "cls": "Airports",
+      "dataset": "Europe",
+      "description": "",
+      "nodes": 399,
+      "edges": 5995,
+      "features": null,
+      "num_classes": null,
+      "directed": true,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": "",
+      "load_error": ""
+    },
+    {
+      "name": "Airports/USA",
+      "cls": "Airports",
+      "dataset": "USA",
+      "description": "",
+      "nodes": 1190,
+      "edges": 13599,
+      "features": null,
+      "num_classes": null,
+      "directed": true,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Amazon/Computers",
@@ -92,14 +126,15 @@
       "dataset": "Computers",
       "description": "",
       "nodes": 13752,
-      "edges": 491722,
+      "edges": 245861,
       "features": 767,
       "num_classes": 10,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Amazon/Photo",
@@ -107,14 +142,15 @@
       "dataset": "Photo",
       "description": "",
       "nodes": 7650,
-      "edges": 238162,
+      "edges": 119081,
       "features": 745,
       "num_classes": 8,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AmazonProducts",
@@ -129,7 +165,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/BlogCatalog",
@@ -137,14 +174,15 @@
       "dataset": "BlogCatalog",
       "description": "",
       "nodes": 5196,
-      "edges": 343486,
+      "edges": 171743,
       "features": 8189,
       "num_classes": 6,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/CiteSeer",
@@ -155,11 +193,12 @@
       "edges": 4715,
       "features": 3703,
       "num_classes": 6,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/Cora",
@@ -170,11 +209,12 @@
       "edges": 5429,
       "features": 1433,
       "num_classes": 7,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/Facebook",
@@ -185,11 +225,12 @@
       "edges": 88234,
       "features": 1283,
       "num_classes": 193,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/Flickr",
@@ -197,14 +238,15 @@
       "dataset": "Flickr",
       "description": "",
       "nodes": 7575,
-      "edges": 479476,
+      "edges": 239738,
       "features": 12047,
       "num_classes": 9,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/MAG",
@@ -219,7 +261,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/PPI",
@@ -227,14 +270,15 @@
       "dataset": "PPI",
       "description": "",
       "nodes": 56944,
-      "edges": 1612348,
+      "edges": 806174,
       "features": 50,
       "num_classes": 121,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Biological"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/PubMed",
@@ -245,11 +289,12 @@
       "edges": 44338,
       "features": 500,
       "num_classes": 3,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/TWeibo",
@@ -264,7 +309,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "AttributedGraphDataset/Wiki",
@@ -275,11 +321,12 @@
       "edges": 17981,
       "features": 4973,
       "num_classes": 17,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CitationFull/CiteSeer",
@@ -287,14 +334,15 @@
       "dataset": "CiteSeer",
       "description": "",
       "nodes": 4230,
-      "edges": 10674,
+      "edges": 5337,
       "features": 602,
       "num_classes": 6,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CitationFull/Cora",
@@ -302,14 +350,15 @@
       "dataset": "Cora",
       "description": "",
       "nodes": 19793,
-      "edges": 126842,
+      "edges": 63421,
       "features": 8710,
       "num_classes": 70,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CitationFull/Cora_ML",
@@ -317,14 +366,15 @@
       "dataset": "Cora_ML",
       "description": "",
       "nodes": 2995,
-      "edges": 16316,
+      "edges": 8158,
       "features": 2879,
       "num_classes": 7,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CitationFull/DBLP",
@@ -332,14 +382,15 @@
       "dataset": "DBLP",
       "description": "",
       "nodes": 17716,
-      "edges": 105734,
+      "edges": 52867,
       "features": 1639,
       "num_classes": 4,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CitationFull/PubMed",
@@ -347,14 +398,15 @@
       "dataset": "PubMed",
       "description": "",
       "nodes": 19717,
-      "edges": 88648,
+      "edges": 44324,
       "features": 500,
       "num_classes": 3,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CityNetwork/la",
@@ -365,11 +417,12 @@
       "edges": 341523,
       "features": 37,
       "num_classes": 10,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CityNetwork/london",
@@ -380,11 +433,12 @@
       "edges": 756502,
       "features": 37,
       "num_classes": 10,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CityNetwork/paris",
@@ -395,11 +449,12 @@
       "edges": 182511,
       "features": 37,
       "num_classes": 10,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CityNetwork/shanghai",
@@ -410,11 +465,12 @@
       "edges": 262092,
       "features": 37,
       "num_classes": 10,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Coauthor/CS",
@@ -422,14 +478,15 @@
       "dataset": "CS",
       "description": "",
       "nodes": 18333,
-      "edges": 163788,
+      "edges": 81894,
       "features": 6805,
       "num_classes": 15,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Coauthor/Physics",
@@ -437,14 +494,15 @@
       "dataset": "Physics",
       "description": "",
       "nodes": 34493,
-      "edges": 495924,
+      "edges": 247962,
       "features": 8415,
       "num_classes": 5,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "CoraFull",
@@ -452,14 +510,15 @@
       "dataset": "",
       "description": "",
       "nodes": 19793,
-      "edges": 126842,
+      "edges": 63421,
       "features": 8710,
       "num_classes": 70,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "DGraphFin",
@@ -474,7 +533,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "DeezerEurope",
@@ -489,7 +549,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "EllipticBitcoinDataset",
@@ -500,11 +561,12 @@
       "edges": 234355,
       "features": 165,
       "num_classes": 2,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "EllipticBitcoinTemporalDataset",
@@ -519,22 +581,24 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: EllipticBitcoinTemporalDataset.__init__() missing 1 required positional argument: 't'"
     },
     {
       "name": "EmailEUCore",
       "cls": "EmailEUCore",
       "dataset": "",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 1005,
+      "edges": 25571,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Entities/AIFB",
@@ -549,7 +613,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Entities/AM",
@@ -564,7 +629,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Entities/BGS",
@@ -579,7 +645,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Entities/MUTAG",
@@ -594,7 +661,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "FacebookPagePage",
@@ -609,7 +677,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Flickr",
@@ -617,29 +686,31 @@
       "dataset": "",
       "description": "",
       "nodes": 89250,
-      "edges": 899756,
+      "edges": 449878,
       "features": 500,
       "num_classes": 7,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GDELTLite",
       "cls": "GDELTLite",
       "dataset": "",
       "description": "",
-      "nodes": 8831,
+      "nodes": 16682,
       "edges": 1912909,
       "features": 413,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GemsecDeezer/HR",
@@ -654,7 +725,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GemsecDeezer/HU",
@@ -669,7 +741,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GemsecDeezer/RO",
@@ -684,7 +757,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GitHub",
@@ -699,7 +773,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/artnet-exp",
@@ -714,7 +789,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/artnet-views",
@@ -729,7 +805,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/avazu-ctr",
@@ -744,7 +821,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/city-reviews",
@@ -759,7 +837,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/city-roads-L",
@@ -774,7 +853,8 @@
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/city-roads-M",
@@ -789,7 +869,8 @@
       "domains": [
         "Transportation"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/hm-categories",
@@ -804,7 +885,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/hm-prices",
@@ -819,7 +901,8 @@
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/pokec-regions",
@@ -834,7 +917,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/tolokers-2",
@@ -849,7 +933,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: GraphLandDataset.__init__() missing 1 required positional argument: 'split'"
     },
     {
       "name": "GraphLandDataset/twitch-views",
@@ -864,7 +949,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/web-fraud",
@@ -879,7 +965,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/web-topics",
@@ -894,7 +981,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "GraphLandDataset/web-traffic",
@@ -909,7 +997,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "HeterophilousGraphDataset/Amazon-ratings",
@@ -920,11 +1009,12 @@
       "edges": 93050,
       "features": 300,
       "num_classes": 5,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "HeterophilousGraphDataset/Minesweeper",
@@ -935,11 +1025,12 @@
       "edges": 39402,
       "features": 7,
       "num_classes": 2,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "HeterophilousGraphDataset/Questions",
@@ -950,11 +1041,12 @@
       "edges": 153540,
       "features": 301,
       "num_classes": 2,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "HeterophilousGraphDataset/Roman-empire",
@@ -965,11 +1057,12 @@
       "edges": 32927,
       "features": 300,
       "num_classes": 18,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "HeterophilousGraphDataset/Tolokers",
@@ -980,11 +1073,12 @@
       "edges": 519000,
       "features": 10,
       "num_classes": 2,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "JODIEDataset/LastFM",
@@ -995,11 +1089,12 @@
       "edges": 1293103,
       "features": 2,
       "num_classes": 1,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "JODIEDataset/MOOC",
@@ -1010,26 +1105,28 @@
       "edges": 411749,
       "features": 4,
       "num_classes": 2,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "JODIEDataset/Reddit",
       "cls": "JODIEDataset",
       "dataset": "Reddit",
       "description": "",
-      "nodes": 6509,
-      "edges": 25470,
+      "nodes": 10749,
+      "edges": 407911,
       "features": 172,
       "num_classes": 1,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "JODIEDataset/Wikipedia",
@@ -1040,11 +1137,12 @@
       "edges": 157474,
       "features": 172,
       "num_classes": 2,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "KarateClub",
@@ -1052,104 +1150,111 @@
       "dataset": "",
       "description": "",
       "nodes": 34,
-      "edges": 156,
+      "edges": 78,
       "features": 34,
       "num_classes": 4,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/amherst41",
       "cls": "LINKXDataset",
       "dataset": "amherst41",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 2235,
+      "edges": 90954,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/cornell5",
       "cls": "LINKXDataset",
       "dataset": "cornell5",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 18660,
+      "edges": 790777,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/genius",
       "cls": "LINKXDataset",
       "dataset": "genius",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 421961,
+      "edges": 984979,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/johnshopkins55",
       "cls": "LINKXDataset",
       "dataset": "johnshopkins55",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 5180,
+      "edges": 186586,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/penn94",
       "cls": "LINKXDataset",
       "dataset": "penn94",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 41554,
+      "edges": 1362229,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LINKXDataset/reed98",
       "cls": "LINKXDataset",
       "dataset": "reed98",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 962,
+      "edges": 18812,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "LastFMAsia",
@@ -1164,7 +1269,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "MyketDataset/Myket",
@@ -1175,11 +1281,12 @@
       "edges": 694121,
       "features": 33,
       "num_classes": 1,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Economic"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "NELL",
@@ -1187,14 +1294,15 @@
       "dataset": "",
       "description": "",
       "nodes": 65755,
-      "edges": 251550,
+      "edges": 125775,
       "features": 61278,
       "num_classes": 186,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Planetoid/CiteSeer",
@@ -1202,14 +1310,15 @@
       "dataset": "CiteSeer",
       "description": "",
       "nodes": 3327,
-      "edges": 9104,
+      "edges": 4552,
       "features": 3703,
       "num_classes": 6,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Planetoid/Cora",
@@ -1217,14 +1326,15 @@
       "dataset": "Cora",
       "description": "",
       "nodes": 2708,
-      "edges": 10556,
+      "edges": 5278,
       "features": 1433,
       "num_classes": 7,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Planetoid/PubMed",
@@ -1232,14 +1342,15 @@
       "dataset": "PubMed",
       "description": "",
       "nodes": 19717,
-      "edges": 88648,
+      "edges": 44324,
       "features": 500,
       "num_classes": 3,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "PolBlogs",
@@ -1250,11 +1361,12 @@
       "edges": 19025,
       "features": 0,
       "num_classes": 2,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Reddit",
@@ -1269,7 +1381,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Reddit2",
@@ -1284,7 +1397,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "RelLinkPredDataset",
@@ -1299,7 +1413,8 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "TypeError: RelLinkPredDataset.__init__() missing 1 required positional argument: 'name'"
     },
     {
       "name": "Twitch/DE",
@@ -1314,7 +1429,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Twitch/EN",
@@ -1329,7 +1445,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Twitch/ES",
@@ -1344,7 +1461,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Twitch/FR",
@@ -1359,7 +1477,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Twitch/PT",
@@ -1374,7 +1493,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Twitch/RU",
@@ -1389,7 +1509,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WebKB/Cornell",
@@ -1400,11 +1521,12 @@
       "edges": 298,
       "features": 1703,
       "num_classes": 5,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WebKB/Texas",
@@ -1415,11 +1537,12 @@
       "edges": 325,
       "features": 1703,
       "num_classes": 5,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WebKB/Wisconsin",
@@ -1430,41 +1553,44 @@
       "edges": 515,
       "features": 1703,
       "num_classes": 5,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WikiCS",
       "cls": "WikiCS",
       "dataset": "",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 11701,
+      "edges": 215863,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": false,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WikipediaNetwork/chameleon",
       "cls": "WikipediaNetwork",
       "dataset": "chameleon",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 2277,
+      "edges": 36101,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "WikipediaNetwork/crocodile",
@@ -1479,22 +1605,24 @@
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": "AttributeError: The dataset 'crocodile' is not available in case 'geom_gcn_preprocess=True'"
     },
     {
       "name": "WikipediaNetwork/squirrel",
       "cls": "WikipediaNetwork",
       "dataset": "squirrel",
       "description": "",
-      "nodes": null,
-      "edges": null,
+      "nodes": 5201,
+      "edges": 217073,
       "features": null,
       "num_classes": null,
-      "directed": null,
+      "directed": true,
       "domains": [
         "Informational"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     },
     {
       "name": "Yelp",
@@ -1509,7 +1637,8 @@
       "domains": [
         "Social"
       ],
-      "paper": ""
+      "paper": "",
+      "load_error": ""
     }
   ]
 }

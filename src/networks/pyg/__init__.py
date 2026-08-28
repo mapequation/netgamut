@@ -101,11 +101,15 @@ def search(
     domain: str | None = None,
     max_nodes: int | None = None,
     cls: str | None = None,
+    directed: bool | None = None,
+    supported: bool | None = None,
 ) -> tuple[Dataset, ...]:
     """Filter the catalog. *query* matches the name and description.
 
-    ``max_nodes`` matches only datasets whose size PyG publishes; the ones with
-    unknown size are excluded rather than assumed small.
+    ``max_nodes`` matches only datasets whose size PyG publishes, and ``directed``
+    only those a measuring pass has loaded: PyG states neither, so an unmeasured
+    dataset is excluded rather than assumed to be anything. ``supported=False`` lists
+    the ones a pass found could not be constructed at all.
     """
     results = []
     for dataset in catalog().datasets:
@@ -116,6 +120,10 @@ def search(
         if cls and dataset.cls != cls:
             continue
         if max_nodes is not None and (dataset.nodes is None or dataset.nodes > max_nodes):
+            continue
+        if directed is not None and dataset.directed is not directed:
+            continue
+        if supported is not None and dataset.supported is not supported:
             continue
         results.append(dataset)
     return tuple(results)
@@ -132,7 +140,13 @@ def describe(name: str) -> str:
     if dataset.nodes is not None:
         lines.append(f"  Size        {dataset.nodes:,} nodes, {dataset.edges:,} edges")
     else:
-        lines.append("  Size        not published by PyG")
+        lines.append("  Size        not published by PyG, and not measured yet")
+    if dataset.directed is not None:
+        lines.append(f"  Direction   {'directed' if dataset.directed else 'undirected'} (measured)")
+    else:
+        lines.append("  Direction   unknown; PyG does not say and it has not been measured")
+    if not dataset.supported:
+        lines.append(f"  Unloadable  {dataset.load_error}")
     if dataset.num_classes is not None:
         lines.append(f"  Classes     {dataset.num_classes} (unnamed; see the source paper)")
     lines.append(f"  Docs        {dataset.url}")
@@ -258,11 +272,17 @@ def load(
 
     Raises:
         KeyError: No such dataset in the catalog.
+        LookupError: A measuring pass established this one cannot be constructed.
         ImportError: First load, and PyTorch Geometric is not installed.
         LookupError: The installed PyG has no such class, or it turned out to hold
             several graphs.
     """
     dataset = info(name)
+    if not dataset.supported:
+        raise LookupError(
+            f"{dataset.name!r} cannot be built: {dataset.load_error} "
+            f"pyg.search(supported=True) lists the ones that can."
+        )
     base, edges, _, meta_path = _paths(dataset)
     if force or not edges.is_file():
         base.mkdir(parents=True, exist_ok=True)

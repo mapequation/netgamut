@@ -9,7 +9,7 @@ Five sources are indexed, each in its own subpackage:
 | [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
 | [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
 | [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
-| [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 97 | the graph-learning corpus: citation, web, social, heterophilous |
+| [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
 | `networks.paths` | 2 | curated path data (flight itineraries, navigation trails) for memory networks |
 
 Metadata for all five **ships inside the package**, so you can explore every
@@ -366,9 +366,11 @@ refused with their reason. Node and edge counts are read out of each archive's o
 `num-node-list.csv.gz`, so the ones too large to download stay `None` rather than
 being guessed.
 
-**PyG** catalogues 97 single-graph datasets across 38 classes; the collections of
+**PyG** catalogues 99 single-graph datasets across 38 classes; the collections of
 thousands of molecules or meshes are omitted, with `pyg.omitted()` giving the reason
-for every class left out. Browsing needs nothing installed:
+for every class left out. A further 9 are listed but marked unloadable — PyG's
+constructor wants an argument this loader does not supply — so they refuse with the
+reason instead of failing deep inside PyG. Browsing needs nothing installed:
 
 ```python
 pyg.search(domain="Informational", max_nodes=50_000)
@@ -384,17 +386,34 @@ written: Cora's raw PyG directory is ~16 MB, almost all of it the 1,433-dimensio
 bag-of-words matrix, against ~44 KB materialised. Use `pyg.from_pyg(data)` when you
 want a `Data` object you already have — including one this package does not catalogue.
 
+PyG is **not** an undirected-only collection, which is easy to assume because its
+docstrings never mention direction. Of the 58 measured so far, 24 are directed —
+WebKB, Actor, `WikipediaNetwork/chameleon`, the Airports networks, PolBlogs,
+EmailEUCore and the JODIE interaction graphs — against undirected Planetoid, Amazon
+and the heterophilous set.
+
+Because PyG publishes nothing about it, direction is *measured* rather than assumed:
+`--with-direction` materialises each dataset and reads the answer off its
+`edge_index`, filling in unpublished sizes at the same time. Until a dataset has been
+measured its direction is `None` and `search(directed=...)` skips it. That the
+measurement is worth making is clear from Cora, which is **undirected through
+`Planetoid` and directed through `AttributedGraphDataset`** — the preprocessing
+decides, not the network, so no lookup table keyed on a name could get it right.
+
 Both catalogs are regenerated from upstream's own registry:
 
 ```bash
 python scripts/regenerate_ogb_catalog.py [--with-stats]
 python scripts/regenerate_pyg_catalog.py [--show-omitted]
+python scripts/regenerate_pyg_catalog.py --with-direction --max-edges 3000000
 ```
 
-Neither needs torch: OGB publishes `master.csv`, and PyG's statistics live in its class
-docstrings, which is what its documentation cheatsheet is generated from. That
-cheatsheet is a work in progress upstream, so 18 of the 97 PyG datasets have no
-published size and are excluded from `max_nodes` filters rather than assumed small.
+Neither needs torch for the catalog itself: OGB publishes `master.csv`, and PyG's
+statistics live in its class docstrings, which is what its documentation cheatsheet is
+generated from. Only `--with-direction` does, because measuring means loading. Both
+`--with-stats` and `--with-direction` keep whatever a previous run established for
+datasets they cannot reach, so a partial pass never resets known values to unknown.
+
 ## Generating benchmarks
 
 The `generate` subpackage turns any network in the pool into a synthetic
