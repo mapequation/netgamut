@@ -664,3 +664,56 @@ def test_two_level_samples_are_identical_across_routing_rules() -> None:
         for r in rules
     }
     assert not (deep["observed"] == deep["boundary"] == deep["model"])
+
+
+def test_partition_distances_match_the_dense_flow_models() -> None:
+    """GMD/GMS/AGMD/AGMS: blockwise evaluation against the dense reference.
+
+    The blockwise cell decomposition must reproduce ``D_dist`` on the materialized
+    ``n x n`` flow models exactly, and the element-centric decomposition
+    ``D^2 = sum_i p_i d_i^2`` must hold -- both on a flat and on a hierarchical
+    partition, since the hierarchical path shares no code branch with the flat one.
+    """
+    pytest.importorskip("numpy")
+    G, partition = blueprint()
+    coarse = {u: partition[u] // 2 for u in G}                 # merge pairs of blocks
+    hier = {u: (partition[u] // 2, partition[u]) for u in G}    # two planted levels
+
+    for A, B in ((partition, coarse), (hier, coarse), (hier, partition)):
+        PA, _, _ = generate.flow_matrix(G, A)
+        PB, _, _ = generate.flow_matrix(G, B)
+        D, d_node = generate.gmd(G, A, B, element=True)
+        assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
+        p = generate.ModuleTree(G, A).p
+        assert sum(p[u] * d_node[u]**2 for u in G) == pytest.approx(D**2, abs=1e-12)
+        assert generate.gms(G, A, B) == pytest.approx(1.0 - D, abs=1e-15)
+        assert 0.0 <= generate.agms(G, A, B) <= 1.0
+
+    # identity and the adjusted end points: N is at AGMD = 1 from any structure
+    assert generate.gmd(G, partition, partition) == pytest.approx(0.0, abs=1e-15)
+    assert generate.agms(G, partition, partition) == pytest.approx(1.0, abs=1e-15)
+    N = generate.null_partition(G)
+    assert generate.agmd(G, partition, N) == pytest.approx(1.0, abs=1e-12)
+    assert generate.agms(G, N, N) == pytest.approx(1.0, abs=1e-15)
+
+
+def test_zero_flow_nodes_carry_no_weight() -> None:
+    """Partitions that differ only on nodes with no flow are flow-equivalent.
+
+    An isolated node has visit rate ``p_i = 0``, so where a partition puts it makes
+    no claim about flow and ``D`` must be exactly zero -- the property that separates
+    ``D`` from label measures, which score such a node as a pure cluster.
+    """
+    nx = pytest.importorskip("networkx")
+    G = nx.Graph([(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3), (2, 3)])
+    G.add_nodes_from([6, 7, 8])                      # no links, hence no flow
+    base = {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1}
+    shattered = {**base, 6: 2, 7: 3, 8: 4}           # each zero-flow node its own module
+    absorbed = {**base, 6: 0, 7: 0, 8: 0}            # all three swept into module 0
+
+    assert generate.gmd(G, shattered, absorbed) == 0.0
+    assert generate.gms(G, shattered, absorbed) == 1.0
+    assert generate.agmd(G, shattered, absorbed) == 0.0
+    # and they stay indistinguishable against any third partition
+    N = generate.null_partition(G)
+    assert generate.gmd(G, shattered, N) == pytest.approx(generate.gmd(G, absorbed, N), abs=1e-15)

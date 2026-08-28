@@ -96,6 +96,7 @@ module = [
   "networks.generate._flowgen",
   "networks.generate._higher_order",
   "networks.generate._params",
+  "networks.generate._partdist",
 ]
 ignore_errors = true
 disallow_untyped_defs = false
