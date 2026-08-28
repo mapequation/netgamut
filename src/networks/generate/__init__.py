@@ -26,8 +26,13 @@ Three routes, increasingly detached from the blueprint:
   handful of fitted parameters, and :func:`parametric` generates from those
   alone -- a generalized LFR whose degree and community-size families are
   chosen by AIC instead of assumed to be power laws.
-* :func:`lfr` wraps the classic LFR generator from networkx, with retries
-  around its flaky convergence.
+* :func:`lfr` runs the Lancichinetti--Fortunato LFR generators themselves --
+  the authors' C++, fetched and compiled on first use -- covering the binary,
+  weighted, directed, hierarchical and multiplex benchmarks, with overlapping
+  communities and a seed that fully determines the network.
+  :func:`lfr_networkx` keeps networkx's reimplementation of the binary case,
+  with retries around its flaky convergence, for callers who would rather not
+  have a compiler in the loop.
 
 Higher-order blueprints keep the same flow model and change only the sampler:
 :func:`memory_benchmark` and :func:`multilayer_benchmark` pair *typed* stubs,
@@ -60,7 +65,11 @@ __all__ = [
     "detect",
     "fit_families",
     "fit_mixing_beta",
+    "LfrSource",
     "lfr",
+    "lfr_available",
+    "lfr_networkx",
+    "lfr_source",
     "memory_benchmark",
     "multilayer_benchmark",
     "parametric",
@@ -120,6 +129,7 @@ _REEXPORTS = {
         "D_adjusted", "D_blockwise", "D_null", "agmd", "agms", "gmd", "gms",
         "null_partition",
     )},
+    **{name: "_lfr" for name in ("LfrSource", "lfr", "lfr_available", "lfr_source")},
     **{name: "_higher_order" for name in (
         "memory_benchmark", "multilayer_benchmark", "sample_state_links",
     )},
@@ -416,7 +426,7 @@ def fit_mixing_beta(mixing: Any, flows: Any) -> dict[str, Any]:
     return result
 
 
-def lfr(
+def lfr_networkx(
     n: int,
     tau1: float,
     tau2: float,
@@ -431,13 +441,18 @@ def lfr(
     max_iters: int = 800,
     retries: int = 5,
 ) -> tuple[Any, dict[Any, int]]:
-    """Generate a classic LFR benchmark, with retries around networkx.
+    """Generate a classic LFR benchmark with networkx's reimplementation.
 
     ``networkx.LFR_benchmark_graph`` fails to converge for perfectly
     reasonable parameters depending on the seed. This wrapper retries with
     escalating seeds and iteration budgets, strips self-loops, and returns
     the planted communities as a plain partition dict instead of node
     attributes.
+
+    This is the undirected unweighted case only. :func:`lfr` runs the
+    authors' own generator instead -- weighted, directed, hierarchical and
+    multiplex too, and without the convergence failures -- at the cost of a
+    C++ compiler and one download.
 
     Args:
         n: Number of nodes.

@@ -184,10 +184,15 @@ def test_parametric_rejects_fits_without_a_winner() -> None:
         generate.parametric(100, bad, bad, {"family": "delta", "mu": 0.1}, seed=12)
 
 
-# -- lfr ----------------------------------------------------------------------
-def test_lfr_returns_graph_and_partition() -> None:
+# -- lfr_networkx ---------------------------------------------------------------
+def test_lfr_networkx_returns_graph_and_partition() -> None:
+    """networkx's reimplementation of the binary benchmark.
+
+    The authors' own generators are :func:`generate.lfr`, covered in test_lfr.py;
+    this one stays because it needs no compiler and no download.
+    """
     nx = pytest.importorskip("networkx")
-    G, partition = generate.lfr(
+    G, partition = generate.lfr_networkx(
         250,
         2.5,
         1.5,

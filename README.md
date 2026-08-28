@@ -344,12 +344,92 @@ sampled, info = generate.memory_benchmark(links, windows, partition, seed=1)
 sampled, info = generate.multilayer_benchmark(layers, partition, seed=1)
 ```
 
-Classic LFR is wrapped too (`generate.lfr(...)`), with retries around
-networkx's flaky convergence. The flow model itself is public as well
-(`generate.flow_matrix`, `generate.ModuleTree`, `generate.cross_R`) for
-callers who want the joint distribution rather than a sample of it.
-Everything here needs the extras:
+The flow model itself is public as well (`generate.flow_matrix`,
+`generate.ModuleTree`, `generate.cross_R`) for callers who want the joint
+distribution rather than a sample of it. Everything here needs the extras:
 `pip install "mapequation-networks[generate]"`.
+
+### The original LFR benchmarks
+
+`generate.lfr(...)` runs the Lancichinetti–Fortunato generators themselves —
+the authors' C++, not a reimplementation — so the classic baseline is one call
+away, in all six of its variants:
+
+```python
+G, part = generate.lfr(1000, 15, 50, mu=0.2, minc=20, maxc=50, seed=1)
+G, part = generate.lfr(1000, 15, 50, mut=0.2, muw=0.1, beta=1.5)   # weighted
+G, part = generate.lfr(1000, 15, 50, mu=0.2, directed=True)        # directed
+G, part = generate.lfr(5000, 20, 100, mu1=0.1, mu2=0.3,            # two planted
+                       minc=10, maxc=100,                          #   levels
+                       min_macro=200, max_macro=1000)
+layers, part = generate.lfr(1000, 20, 50, mu=0.3, layers=10, graphs=3)
+G, cover = generate.lfr(1000, 15, 50, mu=0.2, on=20, om=2)         # overlapping
+```
+
+Which program runs follows from the arguments, and so does the shape that comes
+back: `{node: module}` normally, `{node: (macro, micro)}` for the hierarchical
+variant — the path convention the flow model reads — `{node: (module, ...)}` for
+an overlapping cover, and `({layer: graph}, {(node, layer): module})` for the
+multiplex one, ready for `generate.multilayer_benchmark`. Node labels are
+zero-based, unlike the one-based `.dat` files upstream writes.
+
+**`seed` alone decides the network.** Left to themselves the generators seed
+from the clock; the wrapper writes `time_seed.dat` instead, so the same seed
+gives the same network byte for byte, on any machine, with the pinned upstream
+revision.
+
+The C++ is fetched rather than vendored, and compiled where it runs. That
+keeps one wheel valid on every platform and needs no compiler at install time;
+the price is a download and a build on the first call, both cached next to the
+datasets:
+
+```
+~/.cache/networks/lfr/src/<commit>/     the sources, fetched once
+~/.cache/networks/lfr/bin/<key>/        one binary per variant and toolchain
+```
+
+The first call takes about four seconds — Xcode command line tools on macOS,
+`build-essential` on Linux — and every call after it is milliseconds.
+`generate.lfr_available()` reports whether the sources and a compiler are both
+in place, without downloading anything.
+
+If you would rather not have a compiler in the loop, `generate.lfr_networkx(...)`
+keeps networkx's reimplementation of the undirected unweighted case, with
+retries around its flaky convergence.
+
+#### Which revision, and moving it
+
+Upstream publishes no releases — it is a repository of six source trees, last
+touched in June 2024 — so the pin is a commit hash plus the SHA-256 of its
+archive. `generate.lfr_source()` shows what a run would use:
+
+```python
+print(generate.lfr_source())
+# andrealancichinetti/LFRbenchmarks@ec9a860282d8 (pinned, fetched)
+#   url       https://github.com/.../archive/ec9a8602....tar.gz
+#   sha256    ad13a354c2cfbb1de299dcb13caadd5801243b9041cd0e7e89852b9aeb384f76
+#   sources   ~/.cache/networks/lfr/src/ec9a8602...
+#   compiler  Apple clang version 17.0.0
+#   variants  undirected, weighted, directed, weighted_directed, hierarchical, multiplex
+```
+
+To move it, in a checkout of this repository:
+
+```bash
+python scripts/update_lfr_pin.py --check   # has upstream moved? exit 1 if so
+python scripts/update_lfr_pin.py           # download, verify, rewrite the pin
+python scripts/update_lfr_pin.py --commit <sha>   # pin something specific
+```
+
+The script asks GitHub what the default branch points at, downloads that
+archive, refuses to pin one that is missing any of the six generators, and
+rewrites `COMMIT` and `SHA256` in `src/networks/generate/_lfr/_sources.py`.
+Bumping the pin is a real change rather than housekeeping: these generators are
+random, so a different revision can give a different network for the same seed.
+Run `pytest tests/test_lfr.py` after, and say so in the commit message.
+
+To try a revision without moving the pin, point `NETWORKS_LFR_DIR` at a
+checkout — the wrapper builds from there and skips the download entirely.
 
 ### Comparing partitions as flow models
 
@@ -492,6 +572,10 @@ Downloads are published with an atomic rename and coordinated by a lock file,
 so concurrent processes asking for the same dataset cannot corrupt it or each
 other. An interrupted download leaves no partial file behind.
 
+`lfr/` sits beside the dataset sources and holds the LFR generators — the
+fetched C++ and the binaries built from it. Deleting it costs one download and
+a few seconds of compilation.
+
 ## Keeping the catalog current
 
 The bundled catalog is a snapshot. To pick up datasets SNAP has published
@@ -539,6 +623,18 @@ carries the reference SNAP asks for — and cite the collection itself:
 
 > Jure Leskovec and Andrej Krevl. *SNAP Datasets: Stanford Large Network
 > Dataset Collection.* <https://snap.stanford.edu/data>, 2014.
+
+`generate.lfr` runs Andrea Lancichinetti and Santo Fortunato's own programs,
+downloaded on demand from
+[their MIT-licensed repository](https://github.com/andrealancichinetti/LFRbenchmarks).
+If you publish LFR results, cite them:
+
+> Andrea Lancichinetti, Santo Fortunato and Filippo Radicchi. *Benchmark graphs
+> for testing community detection algorithms.* Phys. Rev. E 78, 046110 (2008).
+
+> Andrea Lancichinetti and Santo Fortunato. *Benchmarks for testing community
+> detection algorithms on directed and weighted graphs with overlapping
+> communities.* Phys. Rev. E 80, 016118 (2009).
 
 ## License
 
