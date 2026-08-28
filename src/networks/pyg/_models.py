@@ -44,6 +44,17 @@ class Dataset:
     directed: bool | None = None
     domains: tuple[str, ...] = ()
     paper: str = ""
+    #: Why this dataset cannot be constructed, when a measuring pass found out.
+    #: Only *structural* failures are recorded -- a constructor argument we do not
+    #: supply, or a name PyG refuses in the mode we use. Network errors and missing
+    #: optional dependencies are environmental and deliberately not baked in, since
+    #: they say nothing about the dataset.
+    load_error: str = ""
+
+    @property
+    def supported(self) -> bool:
+        """Whether :func:`~networks.pyg.load` is known to be able to build this."""
+        return not self.load_error
 
     @property
     def url(self) -> str:
@@ -67,6 +78,7 @@ class Dataset:
             "directed": self.directed,
             "domains": list(self.domains),
             "paper": self.paper,
+            "load_error": self.load_error,
         }
 
     @classmethod
@@ -83,6 +95,7 @@ class Dataset:
             directed=data.get("directed"),
             domains=tuple(data.get("domains", ())),
             paper=data.get("paper", ""),
+            load_error=data.get("load_error", ""),
         )
 
 

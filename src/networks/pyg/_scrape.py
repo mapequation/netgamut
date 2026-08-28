@@ -154,7 +154,11 @@ def parse_stats(cls: str, source: str) -> tuple[list[Entry], bool]:
     return entries, collection
 
 
-_NAME_ARG = re.compile(r"^\s*name \(str\):(.*?)(?=\n\s*\w+ \(|\n\s*\*\*|\Z)", re.S | re.M)
+# Older docstrings write "name (str):", newer ones just "name:".
+_NAME_ARG = re.compile(
+    r"^\s*name(?: \([^)]*\))?:(.*?)(?=\n\s*\w+(?: \([^)]*\))?:|\n\s*\*\*|\Z)",
+    re.S | re.M,
+)
 _QUOTED = re.compile(r":obj:`\"([^\"]+)\"`|:obj:`'([^']+)'`")
 
 

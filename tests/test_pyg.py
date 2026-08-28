@@ -129,6 +129,34 @@ def test_dataset_names_survive_rst_markup() -> None:
     assert _scrape.parse_names("Planetoid", SINGLE) == ["Cora", "CiteSeer", "PubMed"]
 
 
+UNTYPED_ARG = '''
+class Airports(InMemoryDataset):
+    r"""Airport networks.
+
+    Args:
+        root: Root directory.
+        name: The name of the dataset (:obj:`"USA"`, :obj:`"Brazil"`,
+            :obj:`"Europe"`).
+        transform: A transform.
+    """
+'''
+
+
+def test_names_parse_whether_or_not_the_arg_is_type_annotated() -> None:
+    """Newer PyG docstrings write ``name:`` where older ones write ``name (str):``.
+
+    Requiring the annotation silently reduced Airports to one nameless entry that
+    could not load at all, since the class requires a name.
+    """
+    assert _scrape.parse_names("Airports", UNTYPED_ARG) == ["USA", "Brazil", "Europe"]
+
+
+def test_classes_needing_a_name_are_catalogued_with_their_children() -> None:
+    """A nameless entry for a class that requires ``name=`` is an unloadable row."""
+    airports = {d.name for d in pyg.datasets() if d.cls == "Airports"}
+    assert airports == {"Airports/USA", "Airports/Brazil", "Airports/Europe"}
+
+
 def test_multi_class_import_lines_are_all_resolved() -> None:
     """``from .citation_full import CitationFull, CoraFull`` defines two classes."""
     mapping = _scrape.module_of(
@@ -162,17 +190,80 @@ def test_an_ambiguous_bare_name_is_an_error_not_a_guess() -> None:
         pyg.info("Cora")
 
 
-def test_unpublished_sizes_are_absent_rather_than_assumed() -> None:
-    """PyG's cheatsheet is a work in progress; a missing size must not read as small."""
-    chameleon = pyg.info("WikipediaNetwork/chameleon")
-    assert chameleon.nodes is None
-    assert chameleon not in pyg.search(max_nodes=10**9)
-    assert pyg.info("Planetoid/Cora") in pyg.search(max_nodes=10**9)
+def test_unsized_datasets_are_excluded_from_size_filters_not_assumed_small() -> None:
+    """PyG's cheatsheet is a work in progress; a missing size must not read as small.
+
+    Named by property rather than by dataset, since a ``--with-direction`` pass fills
+    sizes in and any specific example goes stale.
+    """
+    unsized = [d for d in pyg.datasets() if d.nodes is None]
+    assert unsized, "expected some datasets with no published or measured size"
+    matched = {d.name for d in pyg.search(max_nodes=10**9)}
+    assert not (matched & {d.name for d in unsized})
+    assert "Planetoid/Cora" in matched
 
 
 def test_every_catalogued_dataset_names_a_class() -> None:
     for dataset in pyg.datasets():
         assert dataset.cls, f"{dataset.name} names no class"
+
+
+def test_pyg_is_not_an_undirected_only_collection() -> None:
+    """The assumption its docs invite, and it is wrong.
+
+    PyG never states direction, so it is easy to conclude there is none. WebKB, Actor,
+    the Airports networks and the JODIE interaction graphs are all directed.
+    """
+    directed = {d.name for d in pyg.search(directed=True)}
+    undirected = {d.name for d in pyg.search(directed=False)}
+    assert "WebKB/Cornell" in directed
+    assert "Actor" in directed
+    assert "Planetoid/Cora" in undirected
+    assert len(directed) > 15 and len(undirected) > 15
+
+
+def test_the_same_network_can_differ_by_the_class_that_serves_it() -> None:
+    """Cora is undirected through Planetoid and directed through AttributedGraph.
+
+    Which is the argument for measuring direction rather than attaching it to a name:
+    the preprocessing, not the network, decides.
+    """
+    assert pyg.info("Planetoid/Cora").directed is False
+    assert pyg.info("AttributedGraphDataset/Cora").directed is True
+
+
+def test_unmeasured_direction_is_excluded_not_assumed() -> None:
+    """A dataset nobody has loaded has no direction, and must not default to either."""
+    unmeasured = [d for d in pyg.datasets() if d.directed is None]
+    assert unmeasured, "expected some unmeasured datasets in the vendored catalog"
+    names = {d.name for d in pyg.search(directed=True)} | {
+        d.name for d in pyg.search(directed=False)
+    }
+    assert not (names & {d.name for d in unmeasured})
+
+
+def test_structurally_unloadable_datasets_are_marked_and_refused() -> None:
+    """Some PyG classes need arguments the loader does not supply.
+
+    Recording that is the difference between a catalog row that explains itself and
+    one that fails with a TypeError from deep inside PyG.
+    """
+    broken = pyg.info("GraphLandDataset/city-roads-M")
+    assert broken.supported is False
+    assert "split" in broken.load_error
+    with pytest.raises(LookupError, match="cannot be built"):
+        pyg.load("GraphLandDataset/city-roads-M")
+    assert pyg.info("Planetoid/Cora").supported is True
+
+
+def test_environmental_failures_are_not_baked_into_the_catalog() -> None:
+    """An unreachable mirror or a missing rdflib says nothing about the dataset.
+
+    Recording those would permanently mark datasets unloadable because one machine
+    could not resolve a hostname on one afternoon.
+    """
+    for name in ("Twitch/DE", "LastFMAsia", "Entities/AIFB"):
+        assert pyg.info(name).supported is True, f"{name} was wrongly marked unloadable"
 
 
 # ---------------------------------------------------------------------------- #
