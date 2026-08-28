@@ -24,6 +24,7 @@ from typing import IO, Any
 from .cache import file_lock, write_atomic
 from .download import extract_gzip
 from .models import DataFile, DatasetLike
+from .nodes import NodeTable
 
 __all__ = ["Network"]
 
@@ -73,6 +74,10 @@ class Network:
     #: Netzschleuder's ``csv.zip`` contains ``edges.csv`` alongside node and
     #: graph properties. ``None`` when the download is a single file.
     member: str | None = None
+    #: Which ``networks.<source>`` produced this handle. :meth:`nodes` uses it to
+    #: reach the reader that understands this source's metadata layout, since the
+    #: four sources keep node attributes in four different places.
+    source: str = ""
 
     # -- paths -----------------------------------------------------------
     @property
@@ -114,14 +119,24 @@ class Network:
         return self.archive_path
 
     def _extract_member(self) -> Path:
-        """Pull the designated member out of its bundle, once."""
+        """Pull the designated member out of its bundle, once.
+
+        A member may itself be compressed -- OGB ships ``raw/edge.csv.gz`` inside a
+        ``.zip`` -- so a gzipped member is decompressed on the way out and the ``.gz``
+        dropped from the extracted name. Callers then get a plain text file whatever
+        the source nested.
+        """
         assert self.member is not None
         stem = self.archive_path.name.split(".")[0]
-        target = self.archive_path.parent / f"{stem}-{Path(self.member).name}"
+        name = Path(self.member).name
+        gzipped = name.lower().endswith(".gz")
+        target = self.archive_path.parent / f"{stem}-{name[:-3] if gzipped else name}"
         if target.is_file():
             return target
         with zipfile.ZipFile(self.archive_path) as archive:
             payload = archive.read(self.member)
+        if gzipped:
+            payload = gzip.decompress(payload)
         write_atomic(target, payload)
         return target
 
@@ -241,22 +256,43 @@ class Network:
                 if any(fields):
                     yield tuple(fields)
 
-    def labels(self, *, cast: Callable[[str], Any] | None = None) -> dict[Any, str]:
-        """Read a node-label ground truth into ``{node: label}``.
+    def nodes(self) -> NodeTable:
+        """Read this network's per-node metadata, in the shape every source uses.
 
-        Some SNAP datasets give their reference partition as one ``node label``
-        pair per line rather than as community lists -- ``email-Eu-core``
-        labels each person with their department. Unlike
-        :meth:`communities`, this is a hard partition, so it can be scored
-        directly against an Infomap run with NMI or AMI.
+        Where the attributes live differs completely by source -- a separate SNAP
+        artifact, a member of a Netzschleuder bundle, OGB's ``raw/`` and ``mapping/``
+        folders, a materialised PyG table -- so the reading is delegated to the
+        source. What comes back is always a :class:`~networks._core.nodes.NodeTable`::
+
+            nodes = networks.load("ogbn-arxiv").nodes()
+            nodes.columns                       # ('arxiv_category', 'year', 'paper')
+            nodes["arxiv_category"]             # {node: 'arxiv cs na', ...}
+            nodes.partition("arxiv_category")   # {node: 0..k-1}, for AMI/NMI/D
+
+        Sources that keep metadata in a separate artifact download it here, on the
+        same cache-once terms as :func:`load`.
+
+        Node metadata is not ground truth for community structure: a partition that
+        disagrees with an attribute is not thereby wrong. See
+        :mod:`networks._core.nodes`.
+
+        Raises:
+            LookupError: The source publishes no per-node metadata, or this dataset
+                ships none.
         """
-        mapping: dict[Any, str] = {}
-        for fields in self.rows():
-            if len(fields) < 2:
-                continue
-            node = fields[0] if cast is None else cast(fields[0])
-            mapping[node] = fields[1]
-        return mapping
+        import importlib
+
+        if not self.source:
+            raise LookupError(
+                f"{self.dataset.name!r} was built without a source tag, so its node "
+                "metadata cannot be located."
+            )
+        module = importlib.import_module(f"networks.{self.source}")
+        reader = getattr(module, "node_table", None)
+        if reader is None:
+            raise LookupError(f"networks.{self.source} publishes no per-node metadata.")
+        table: NodeTable = reader(self)
+        return table
 
     def communities(self, *, cast: Callable[[str], Any] | None = None) -> Iterator[tuple[Any, ...]]:
         """Stream communities from a SNAP ground-truth file.

@@ -2,15 +2,17 @@
 
 Browse, download and cache network datasets from Python.
 
-Three sources are indexed, each in its own subpackage:
+Five sources are indexed, each in its own subpackage:
 
 | Source | Datasets | Strength |
 |---|---|---|
 | [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
 | [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
+| [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
+| [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 97 | the graph-learning corpus: citation, web, social, heterophilous |
 | `networks.paths` | 2 | curated path data (flight itineraries, navigation trails) for memory networks |
 
-Metadata for all three **ships inside the package**, so you can explore every
+Metadata for all five **ships inside the package**, so you can explore every
 dataset — domains, sizes, statistics, citations — without downloading anything.
 When you do ask for data it lands in a shared user-level cache, so a dataset is
 fetched once per machine no matter how many projects, notebooks or virtualenvs
@@ -297,6 +299,102 @@ net.extract()  # nodes.csv and gprops.csv too
 Metadata is read from a JSON API rather than scraped, so this subpackage is
 markedly less fragile than the SNAP one.
 
+## Node metadata, in one shape
+
+Every source stores node attributes somewhere different — a separate SNAP artifact,
+a member of a Netzschleuder bundle, OGB's `raw/` and `mapping/` folders, a
+materialised PyG table. `Network.nodes()` reads all of them the same way:
+
+```python
+nodes = networks.load("ogbn-arxiv").nodes()
+
+nodes.columns                       # ('arxiv_category', 'year', 'paper')
+nodes["arxiv_category"]             # {0: 'arxiv cs cr', ...}  decoded where named
+nodes.partition("arxiv_category")   # {0: 6, ...}  contiguous 0..k-1, for AMI/NMI/D
+nodes.categories("arxiv_category")  # ('arxiv cs ai', ...)  categories[i] names module i
+```
+
+`partition` and `categories` are two halves of one answer: the first is what you score
+a detected partition against, the second is what lets you say *which* category a module
+lines up with. They always agree —
+`categories(c)[partition(c)[node]]` is that node's value.
+
+The same four calls, whatever the source:
+
+```python
+networks.load("email-Eu-core").nodes()["department"]        # SNAP
+networks.load("karate", source="netzschleuder").nodes()["groups"]
+networks.load("ogbn-arxiv").nodes()["arxiv_category"]       # OGB
+networks.load("Planetoid/Cora", source="pyg").nodes()["label"]
+```
+
+Column names come from the source, so a figure legend can use them as they are. Values
+are decoded to names **where the source ships names** — OGB does, PyG does not:
+`Data.y` is an integer tensor and PyG's API has no `class_names` anywhere, so
+`categories("label")` returns the codes and their meaning lives in the originating
+paper. Nodes with no value are absent from `partition` rather than pooled into a
+module of their own, which would invent a community the source never claimed.
+
+Overlapping ground-truth communities are a different thing and stay where they were —
+`snap.load_ground_truth(...)` and `Network.communities()` — because a cover is not a
+column.
+
+> **Node metadata is not ground truth for community structure.** A partition that
+> disagrees with an attribute is not thereby wrong; scoring against `partition(col)`
+> measures agreement with an attribute, which is a finding about the attribute as much
+> as about the algorithm. See Peel, Larremore & Clauset, *Science Advances* **3**,
+> e1602548 (2017).
+
+## Graph-learning benchmarks
+
+`networks.ogb` and `networks.pyg` index the datasets the graph-neural-network
+literature is benchmarked on — which is where most empirical networks *with node
+labels* now live.
+
+**OGB** needs no extra dependency at all. Its archives are plain zips of `csv.gz`, and
+it is the only source that ships names for its codes:
+
+```python
+ogb.describe("ogbn-arxiv")
+ogb.search(supported=True, domain="Biological")
+```
+
+Not everything it publishes is loadable, and the catalog says so rather than omitting
+it: the 15 `ogbg-*` molecule collections are not indexed at all (a `Network` is one
+graph), while heterogeneous datasets and the two stored as `data.npz` are listed and
+refused with their reason. Node and edge counts are read out of each archive's own
+`num-node-list.csv.gz`, so the ones too large to download stay `None` rather than
+being guessed.
+
+**PyG** catalogues 97 single-graph datasets across 38 classes; the collections of
+thousands of molecules or meshes are omitted, with `pyg.omitted()` giving the reason
+for every class left out. Browsing needs nothing installed:
+
+```python
+pyg.search(domain="Informational", max_nodes=50_000)
+pyg.describe("WikipediaNetwork/chameleon")
+```
+
+Loading materialises once: the first call needs `pip install
+"mapequation-networks[pyg]"`, runs PyG's own downloader, and writes `edges.csv.gz` and
+`nodes.csv.gz` into the cache. **Every call after that reads those files and never
+imports torch** — the heavy dependency is a one-time cost, and the result is a plain,
+archivable network like any other. The dense feature matrix is deliberately not
+written: Cora's raw PyG directory is ~16 MB, almost all of it the 1,433-dimensional
+bag-of-words matrix, against ~44 KB materialised. Use `pyg.from_pyg(data)` when you
+want a `Data` object you already have — including one this package does not catalogue.
+
+Both catalogs are regenerated from upstream's own registry:
+
+```bash
+python scripts/regenerate_ogb_catalog.py [--with-stats]
+python scripts/regenerate_pyg_catalog.py [--show-omitted]
+```
+
+Neither needs torch: OGB publishes `master.csv`, and PyG's statistics live in its class
+docstrings, which is what its documentation cheatsheet is generated from. That
+cheatsheet is a work in progress upstream, so 18 of the 97 PyG datasets have no
+published size and are excluded from `max_nodes` filters rather than assumed small.
 ## Generating benchmarks
 
 The `generate` subpackage turns any network in the pool into a synthetic
@@ -624,6 +722,13 @@ carries the reference SNAP asks for — and cite the collection itself:
 > Jure Leskovec and Andrej Krevl. *SNAP Datasets: Stanford Large Network
 > Dataset Collection.* <https://snap.stanford.edu/data>, 2014.
 
+OGB and PyG are other people's collections too. Cite them if you use them:
+
+> Weihua Hu et al. *Open Graph Benchmark: Datasets for Machine Learning on Graphs.*
+> NeurIPS 2020. — and the paper behind each individual dataset.
+
+> Matthias Fey and Jan Eric Lenssen. *Fast Graph Representation Learning with PyTorch
+> Geometric.* ICLR Workshop on Representation Learning on Graphs and Manifolds, 2019.
 `generate.lfr` runs Andrea Lancichinetti and Santo Fortunato's own programs,
 downloaded on demand from
 [their MIT-licensed repository](https://github.com/andrealancichinetti/LFRbenchmarks).

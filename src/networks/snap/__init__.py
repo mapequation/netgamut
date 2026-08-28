@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from .._core.cache import (
     CACHE_ENV_VAR,
@@ -41,6 +42,7 @@ from .._core.cache import dataset_dir as _dataset_dir
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
 from .._core.network import Network
+from .._core.nodes import NodeTable
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
 from ._models import Category, DataFile, Dataset
 from ._scrape import INDEX_URL, SNAP_BASE_URL
@@ -69,6 +71,7 @@ __all__ = [
     "is_cached",
     "load",
     "load_ground_truth",
+    "node_table",
     "refresh",
     "search",
     "set_cache_dir",
@@ -226,7 +229,7 @@ def load(
         progress=progress,
         max_bytes=max_bytes,
     )
-    return Network(dataset=dataset, file=artifact, archive_path=target)
+    return Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
 
 
 def load_ground_truth(
@@ -254,7 +257,51 @@ def load_ground_truth(
     artifact = dataset.community_file(variant)
     target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
-    return Network(dataset=dataset, file=artifact, archive_path=target)
+    return Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
+
+
+def node_table(network: Network) -> NodeTable:
+    """Read a SNAP dataset's per-node metadata into the shared shape.
+
+    SNAP keeps node attributes in a *separate* artifact rather than beside the edge
+    list, so this downloads it on the same cache-once terms as :func:`load`. Only
+    ``email-Eu-core`` publishes one today -- each person's department -- which is why
+    the column is named after the file rather than from a schema SNAP does not have.
+
+    Overlapping ground-truth communities are a different thing and stay on
+    :func:`load_ground_truth` and :meth:`Network.communities`: a cover is not a column.
+
+    Raises:
+        LookupError: This dataset ships no node-label artifact.
+    """
+    dataset = network.dataset if isinstance(network.dataset, Dataset) else info(network.name)
+    artifact = next(
+        (item for item in dataset.files if "label" in Path(item.name).name.lower()), None
+    )
+    if artifact is None:
+        extra = (
+            " It does publish ground-truth communities: snap.load_ground_truth(...)."
+            if dataset.has_ground_truth
+            else ""
+        )
+        raise LookupError(f"{dataset.name!r} ships no node-label file.{extra}")
+
+    target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
+    _download_file(artifact.url, target, progress=False)
+    handle = Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
+
+    # Node ids are cast so they match the integers the edge list uses; the attribute
+    # value stays exactly as SNAP wrote it, and NodeTable orders it naturally.
+    values: dict[Any, Any] = {}
+    for fields in handle.rows():
+        if len(fields) >= 2:
+            node = int(fields[0]) if fields[0].lstrip("-").isdigit() else fields[0]
+            values[node] = fields[1]
+
+    # "email-Eu-core-department-labels.txt.gz" -> "department"
+    stem = Path(artifact.name).name.split(".")[0].lower()
+    column = stem.removeprefix(dataset.name.lower()).strip("-").removesuffix("-labels") or "label"
+    return NodeTable(values={column: values}, origin=f"snap/{Path(artifact.name).name}")
 
 
 def is_cached(name: str, *, file: str | None = None) -> bool:

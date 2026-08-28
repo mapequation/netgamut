@@ -1,0 +1,1515 @@
+{
+  "schema": 1,
+  "source": "pyg-team/pytorch_geometric",
+  "retrieved": "2026-08-28T14:10:55Z",
+  "omitted": {
+    "AQSOL": "a collection of many graphs, which one Network cannot hold",
+    "AirfRANS": "a collection of many graphs, which one Network cannot hold",
+    "BitcoinOTC": "a collection of many graphs, which one Network cannot hold",
+    "BrcaTcga": "a collection of many graphs, which one Network cannot hold",
+    "CWQDataset": "no statistics table, and not on the allowlist",
+    "CoMA": "a collection of many graphs, which one Network cannot hold",
+    "DynamicFAUST": "no statistics table, and not on the allowlist",
+    "FAUST": "a collection of many graphs, which one Network cannot hold",
+    "FB15k_237": "no statistics table, and not on the allowlist",
+    "GDELT": "no statistics table, and not on the allowlist",
+    "GEDDataset": "a collection of many graphs, which one Network cannot hold",
+    "GNNBenchmarkDataset": "a collection of many graphs, which one Network cannot hold",
+    "GeometricShapes": "a collection of many graphs, which one Network cannot hold",
+    "GitMolDataset": "no statistics table, and not on the allowlist",
+    "HydroNet": "no statistics table, and not on the allowlist",
+    "ICEWS18": "no statistics table, and not on the allowlist",
+    "InstructMolDataset": "no statistics table, and not on the allowlist",
+    "LRGBDataset": "a collection of many graphs, which one Network cannot hold",
+    "MD17": "a collection of many graphs, which one Network cannot hold",
+    "MNISTSuperpixels": "a collection of many graphs, which one Network cannot hold",
+    "MalNetTiny": "no statistics table, and not on the allowlist",
+    "MedShapeNet": "no statistics table, and not on the allowlist",
+    "ModelNet": "a collection of many graphs, which one Network cannot hold",
+    "MoleculeGPTDataset": "no statistics table, and not on the allowlist",
+    "MoleculeNet": "a collection of many graphs, which one Network cannot hold",
+    "NeuroGraphDataset": "no statistics table, and not on the allowlist",
+    "OMDB": "no statistics table, and not on the allowlist",
+    "PCPNetDataset": "no statistics table, and not on the allowlist",
+    "PCQM4Mv2": "no statistics table, and not on the allowlist",
+    "PPI": "a collection of many graphs, which one Network cannot hold",
+    "PascalPF": "no statistics table, and not on the allowlist",
+    "PascalVOCKeypoints": "no statistics table, and not on the allowlist",
+    "ProteinMPNNDataset": "no statistics table, and not on the allowlist",
+    "QM7b": "a collection of many graphs, which one Network cannot hold",
+    "QM9": "a collection of many graphs, which one Network cannot hold",
+    "S3DIS": "no statistics table, and not on the allowlist",
+    "SHREC2016": "no statistics table, and not on the allowlist",
+    "SNAPDataset": "duplicates networks.snap, which catalogs SNAP properly",
+    "ShapeNet": "a collection of many graphs, which one Network cannot hold",
+    "SuiteSparseMatrixCollection": "sparse matrices, not networks with metadata",
+    "TAGDataset": "no statistics table, and not on the allowlist",
+    "TOSCA": "no statistics table, and not on the allowlist",
+    "TUDataset": "a collection of many graphs, which one Network cannot hold",
+    "Teeth3DS": "no statistics table, and not on the allowlist",
+    "UPFD": "no statistics table, and not on the allowlist",
+    "WILLOWObjectClass": "no statistics table, and not on the allowlist",
+    "WebQSPDataset": "no statistics table, and not on the allowlist",
+    "Wikidata5M": "a knowledge base dump; the loader needs its own entity handling",
+    "WordNet18": "no statistics table, and not on the allowlist",
+    "WordNet18RR": "no statistics table, and not on the allowlist",
+    "ZINC": "a collection of many graphs, which one Network cannot hold"
+  },
+  "datasets": [
+    {
+      "name": "Actor",
+      "cls": "Actor",
+      "dataset": "",
+      "description": "",
+      "nodes": 7600,
+      "edges": 30019,
+      "features": 932,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Airports",
+      "cls": "Airports",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Amazon/Computers",
+      "cls": "Amazon",
+      "dataset": "Computers",
+      "description": "",
+      "nodes": 13752,
+      "edges": 491722,
+      "features": 767,
+      "num_classes": 10,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Amazon/Photo",
+      "cls": "Amazon",
+      "dataset": "Photo",
+      "description": "",
+      "nodes": 7650,
+      "edges": 238162,
+      "features": 745,
+      "num_classes": 8,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AmazonProducts",
+      "cls": "AmazonProducts",
+      "dataset": "",
+      "description": "",
+      "nodes": 1569960,
+      "edges": 264339468,
+      "features": 200,
+      "num_classes": 107,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/BlogCatalog",
+      "cls": "AttributedGraphDataset",
+      "dataset": "BlogCatalog",
+      "description": "",
+      "nodes": 5196,
+      "edges": 343486,
+      "features": 8189,
+      "num_classes": 6,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/CiteSeer",
+      "cls": "AttributedGraphDataset",
+      "dataset": "CiteSeer",
+      "description": "",
+      "nodes": 3312,
+      "edges": 4715,
+      "features": 3703,
+      "num_classes": 6,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/Cora",
+      "cls": "AttributedGraphDataset",
+      "dataset": "Cora",
+      "description": "",
+      "nodes": 2708,
+      "edges": 5429,
+      "features": 1433,
+      "num_classes": 7,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/Facebook",
+      "cls": "AttributedGraphDataset",
+      "dataset": "Facebook",
+      "description": "",
+      "nodes": 4039,
+      "edges": 88234,
+      "features": 1283,
+      "num_classes": 193,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/Flickr",
+      "cls": "AttributedGraphDataset",
+      "dataset": "Flickr",
+      "description": "",
+      "nodes": 7575,
+      "edges": 479476,
+      "features": 12047,
+      "num_classes": 9,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/MAG",
+      "cls": "AttributedGraphDataset",
+      "dataset": "MAG",
+      "description": "",
+      "nodes": 59249719,
+      "edges": 978147253,
+      "features": 2000,
+      "num_classes": 100,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/PPI",
+      "cls": "AttributedGraphDataset",
+      "dataset": "PPI",
+      "description": "",
+      "nodes": 56944,
+      "edges": 1612348,
+      "features": 50,
+      "num_classes": 121,
+      "directed": null,
+      "domains": [
+        "Biological"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/PubMed",
+      "cls": "AttributedGraphDataset",
+      "dataset": "PubMed",
+      "description": "",
+      "nodes": 19717,
+      "edges": 44338,
+      "features": 500,
+      "num_classes": 3,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/TWeibo",
+      "cls": "AttributedGraphDataset",
+      "dataset": "TWeibo",
+      "description": "",
+      "nodes": 2320895,
+      "edges": 9840066,
+      "features": 1657,
+      "num_classes": 8,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "AttributedGraphDataset/Wiki",
+      "cls": "AttributedGraphDataset",
+      "dataset": "Wiki",
+      "description": "",
+      "nodes": 2405,
+      "edges": 17981,
+      "features": 4973,
+      "num_classes": 17,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CitationFull/CiteSeer",
+      "cls": "CitationFull",
+      "dataset": "CiteSeer",
+      "description": "",
+      "nodes": 4230,
+      "edges": 10674,
+      "features": 602,
+      "num_classes": 6,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CitationFull/Cora",
+      "cls": "CitationFull",
+      "dataset": "Cora",
+      "description": "",
+      "nodes": 19793,
+      "edges": 126842,
+      "features": 8710,
+      "num_classes": 70,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CitationFull/Cora_ML",
+      "cls": "CitationFull",
+      "dataset": "Cora_ML",
+      "description": "",
+      "nodes": 2995,
+      "edges": 16316,
+      "features": 2879,
+      "num_classes": 7,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CitationFull/DBLP",
+      "cls": "CitationFull",
+      "dataset": "DBLP",
+      "description": "",
+      "nodes": 17716,
+      "edges": 105734,
+      "features": 1639,
+      "num_classes": 4,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CitationFull/PubMed",
+      "cls": "CitationFull",
+      "dataset": "PubMed",
+      "description": "",
+      "nodes": 19717,
+      "edges": 88648,
+      "features": 500,
+      "num_classes": 3,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CityNetwork/la",
+      "cls": "CityNetwork",
+      "dataset": "la",
+      "description": "",
+      "nodes": 240587,
+      "edges": 341523,
+      "features": 37,
+      "num_classes": 10,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CityNetwork/london",
+      "cls": "CityNetwork",
+      "dataset": "london",
+      "description": "",
+      "nodes": 568795,
+      "edges": 756502,
+      "features": 37,
+      "num_classes": 10,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CityNetwork/paris",
+      "cls": "CityNetwork",
+      "dataset": "paris",
+      "description": "",
+      "nodes": 114127,
+      "edges": 182511,
+      "features": 37,
+      "num_classes": 10,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CityNetwork/shanghai",
+      "cls": "CityNetwork",
+      "dataset": "shanghai",
+      "description": "",
+      "nodes": 183917,
+      "edges": 262092,
+      "features": 37,
+      "num_classes": 10,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Coauthor/CS",
+      "cls": "Coauthor",
+      "dataset": "CS",
+      "description": "",
+      "nodes": 18333,
+      "edges": 163788,
+      "features": 6805,
+      "num_classes": 15,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Coauthor/Physics",
+      "cls": "Coauthor",
+      "dataset": "Physics",
+      "description": "",
+      "nodes": 34493,
+      "edges": 495924,
+      "features": 8415,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "CoraFull",
+      "cls": "CoraFull",
+      "dataset": "",
+      "description": "",
+      "nodes": 19793,
+      "edges": 126842,
+      "features": 8710,
+      "num_classes": 70,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "DGraphFin",
+      "cls": "DGraphFin",
+      "dataset": "",
+      "description": "",
+      "nodes": 3700550,
+      "edges": 4300999,
+      "features": 17,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "DeezerEurope",
+      "cls": "DeezerEurope",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "EllipticBitcoinDataset",
+      "cls": "EllipticBitcoinDataset",
+      "dataset": "",
+      "description": "",
+      "nodes": 203769,
+      "edges": 234355,
+      "features": 165,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "EllipticBitcoinTemporalDataset",
+      "cls": "EllipticBitcoinTemporalDataset",
+      "dataset": "",
+      "description": "",
+      "nodes": 203769,
+      "edges": 234355,
+      "features": 165,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "EmailEUCore",
+      "cls": "EmailEUCore",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Entities/AIFB",
+      "cls": "Entities",
+      "dataset": "AIFB",
+      "description": "",
+      "nodes": 8285,
+      "edges": 58086,
+      "features": 0,
+      "num_classes": 4,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Entities/AM",
+      "cls": "Entities",
+      "dataset": "AM",
+      "description": "",
+      "nodes": 1666764,
+      "edges": 11976642,
+      "features": 0,
+      "num_classes": 11,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Entities/BGS",
+      "cls": "Entities",
+      "dataset": "BGS",
+      "description": "",
+      "nodes": 333845,
+      "edges": 1832398,
+      "features": 0,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Entities/MUTAG",
+      "cls": "Entities",
+      "dataset": "MUTAG",
+      "description": "",
+      "nodes": 23644,
+      "edges": 148454,
+      "features": 0,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "FacebookPagePage",
+      "cls": "FacebookPagePage",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Flickr",
+      "cls": "Flickr",
+      "dataset": "",
+      "description": "",
+      "nodes": 89250,
+      "edges": 899756,
+      "features": 500,
+      "num_classes": 7,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GDELTLite",
+      "cls": "GDELTLite",
+      "dataset": "",
+      "description": "",
+      "nodes": 8831,
+      "edges": 1912909,
+      "features": 413,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GemsecDeezer/HR",
+      "cls": "GemsecDeezer",
+      "dataset": "HR",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GemsecDeezer/HU",
+      "cls": "GemsecDeezer",
+      "dataset": "HU",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GemsecDeezer/RO",
+      "cls": "GemsecDeezer",
+      "dataset": "RO",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GitHub",
+      "cls": "GitHub",
+      "dataset": "",
+      "description": "",
+      "nodes": 37700,
+      "edges": 578006,
+      "features": 0,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/artnet-exp",
+      "cls": "GraphLandDataset",
+      "dataset": "artnet-exp",
+      "description": "",
+      "nodes": 50405,
+      "edges": 560696,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/artnet-views",
+      "cls": "GraphLandDataset",
+      "dataset": "artnet-views",
+      "description": "",
+      "nodes": 50405,
+      "edges": 560696,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/avazu-ctr",
+      "cls": "GraphLandDataset",
+      "dataset": "avazu-ctr",
+      "description": "",
+      "nodes": 76269,
+      "edges": 21968154,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/city-reviews",
+      "cls": "GraphLandDataset",
+      "dataset": "city-reviews",
+      "description": "",
+      "nodes": 148801,
+      "edges": 2330830,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/city-roads-L",
+      "cls": "GraphLandDataset",
+      "dataset": "city-roads-L",
+      "description": "",
+      "nodes": 142257,
+      "edges": 279062,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/city-roads-M",
+      "cls": "GraphLandDataset",
+      "dataset": "city-roads-M",
+      "description": "",
+      "nodes": 57073,
+      "edges": 132571,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Transportation"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/hm-categories",
+      "cls": "GraphLandDataset",
+      "dataset": "hm-categories",
+      "description": "",
+      "nodes": 46563,
+      "edges": 21461990,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/hm-prices",
+      "cls": "GraphLandDataset",
+      "dataset": "hm-prices",
+      "description": "",
+      "nodes": 46563,
+      "edges": 21461990,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/pokec-regions",
+      "cls": "GraphLandDataset",
+      "dataset": "pokec-regions",
+      "description": "",
+      "nodes": 1632803,
+      "edges": 30622564,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/tolokers-2",
+      "cls": "GraphLandDataset",
+      "dataset": "tolokers-2",
+      "description": "",
+      "nodes": 11758,
+      "edges": 1038000,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/twitch-views",
+      "cls": "GraphLandDataset",
+      "dataset": "twitch-views",
+      "description": "",
+      "nodes": 168114,
+      "edges": 13595114,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/web-fraud",
+      "cls": "GraphLandDataset",
+      "dataset": "web-fraud",
+      "description": "",
+      "nodes": 2890331,
+      "edges": 12895369,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/web-topics",
+      "cls": "GraphLandDataset",
+      "dataset": "web-topics",
+      "description": "",
+      "nodes": 2890331,
+      "edges": 12895369,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "GraphLandDataset/web-traffic",
+      "cls": "GraphLandDataset",
+      "dataset": "web-traffic",
+      "description": "",
+      "nodes": 2890331,
+      "edges": 12895369,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "HeterophilousGraphDataset/Amazon-ratings",
+      "cls": "HeterophilousGraphDataset",
+      "dataset": "Amazon-ratings",
+      "description": "",
+      "nodes": 24492,
+      "edges": 93050,
+      "features": 300,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "HeterophilousGraphDataset/Minesweeper",
+      "cls": "HeterophilousGraphDataset",
+      "dataset": "Minesweeper",
+      "description": "",
+      "nodes": 10000,
+      "edges": 39402,
+      "features": 7,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "HeterophilousGraphDataset/Questions",
+      "cls": "HeterophilousGraphDataset",
+      "dataset": "Questions",
+      "description": "",
+      "nodes": 48921,
+      "edges": 153540,
+      "features": 301,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "HeterophilousGraphDataset/Roman-empire",
+      "cls": "HeterophilousGraphDataset",
+      "dataset": "Roman-empire",
+      "description": "",
+      "nodes": 22662,
+      "edges": 32927,
+      "features": 300,
+      "num_classes": 18,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "HeterophilousGraphDataset/Tolokers",
+      "cls": "HeterophilousGraphDataset",
+      "dataset": "Tolokers",
+      "description": "",
+      "nodes": 11758,
+      "edges": 519000,
+      "features": 10,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "JODIEDataset/LastFM",
+      "cls": "JODIEDataset",
+      "dataset": "LastFM",
+      "description": "",
+      "nodes": 1980,
+      "edges": 1293103,
+      "features": 2,
+      "num_classes": 1,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "JODIEDataset/MOOC",
+      "cls": "JODIEDataset",
+      "dataset": "MOOC",
+      "description": "",
+      "nodes": 7144,
+      "edges": 411749,
+      "features": 4,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "JODIEDataset/Reddit",
+      "cls": "JODIEDataset",
+      "dataset": "Reddit",
+      "description": "",
+      "nodes": 6509,
+      "edges": 25470,
+      "features": 172,
+      "num_classes": 1,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "JODIEDataset/Wikipedia",
+      "cls": "JODIEDataset",
+      "dataset": "Wikipedia",
+      "description": "",
+      "nodes": 9227,
+      "edges": 157474,
+      "features": 172,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "KarateClub",
+      "cls": "KarateClub",
+      "dataset": "",
+      "description": "",
+      "nodes": 34,
+      "edges": 156,
+      "features": 34,
+      "num_classes": 4,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/amherst41",
+      "cls": "LINKXDataset",
+      "dataset": "amherst41",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/cornell5",
+      "cls": "LINKXDataset",
+      "dataset": "cornell5",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/genius",
+      "cls": "LINKXDataset",
+      "dataset": "genius",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/johnshopkins55",
+      "cls": "LINKXDataset",
+      "dataset": "johnshopkins55",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/penn94",
+      "cls": "LINKXDataset",
+      "dataset": "penn94",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LINKXDataset/reed98",
+      "cls": "LINKXDataset",
+      "dataset": "reed98",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "LastFMAsia",
+      "cls": "LastFMAsia",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "MyketDataset/Myket",
+      "cls": "MyketDataset",
+      "dataset": "Myket",
+      "description": "",
+      "nodes": 17988,
+      "edges": 694121,
+      "features": 33,
+      "num_classes": 1,
+      "directed": null,
+      "domains": [
+        "Economic"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "NELL",
+      "cls": "NELL",
+      "dataset": "",
+      "description": "",
+      "nodes": 65755,
+      "edges": 251550,
+      "features": 61278,
+      "num_classes": 186,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Planetoid/CiteSeer",
+      "cls": "Planetoid",
+      "dataset": "CiteSeer",
+      "description": "",
+      "nodes": 3327,
+      "edges": 9104,
+      "features": 3703,
+      "num_classes": 6,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Planetoid/Cora",
+      "cls": "Planetoid",
+      "dataset": "Cora",
+      "description": "",
+      "nodes": 2708,
+      "edges": 10556,
+      "features": 1433,
+      "num_classes": 7,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Planetoid/PubMed",
+      "cls": "Planetoid",
+      "dataset": "PubMed",
+      "description": "",
+      "nodes": 19717,
+      "edges": 88648,
+      "features": 500,
+      "num_classes": 3,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "PolBlogs",
+      "cls": "PolBlogs",
+      "dataset": "",
+      "description": "",
+      "nodes": 1490,
+      "edges": 19025,
+      "features": 0,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Reddit",
+      "cls": "Reddit",
+      "dataset": "",
+      "description": "",
+      "nodes": 232965,
+      "edges": 114615892,
+      "features": 602,
+      "num_classes": 41,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Reddit2",
+      "cls": "Reddit2",
+      "dataset": "",
+      "description": "",
+      "nodes": 232965,
+      "edges": 23213838,
+      "features": 602,
+      "num_classes": 41,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "RelLinkPredDataset",
+      "cls": "RelLinkPredDataset",
+      "dataset": "",
+      "description": "",
+      "nodes": 14541,
+      "edges": 544230,
+      "features": 0,
+      "num_classes": 0,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/DE",
+      "cls": "Twitch",
+      "dataset": "DE",
+      "description": "",
+      "nodes": 9498,
+      "edges": 315774,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/EN",
+      "cls": "Twitch",
+      "dataset": "EN",
+      "description": "",
+      "nodes": 7126,
+      "edges": 77774,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/ES",
+      "cls": "Twitch",
+      "dataset": "ES",
+      "description": "",
+      "nodes": 4648,
+      "edges": 123412,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/FR",
+      "cls": "Twitch",
+      "dataset": "FR",
+      "description": "",
+      "nodes": 6551,
+      "edges": 231883,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/PT",
+      "cls": "Twitch",
+      "dataset": "PT",
+      "description": "",
+      "nodes": 1912,
+      "edges": 64510,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Twitch/RU",
+      "cls": "Twitch",
+      "dataset": "RU",
+      "description": "",
+      "nodes": 4385,
+      "edges": 78993,
+      "features": 128,
+      "num_classes": 2,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WebKB/Cornell",
+      "cls": "WebKB",
+      "dataset": "Cornell",
+      "description": "",
+      "nodes": 183,
+      "edges": 298,
+      "features": 1703,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WebKB/Texas",
+      "cls": "WebKB",
+      "dataset": "Texas",
+      "description": "",
+      "nodes": 183,
+      "edges": 325,
+      "features": 1703,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WebKB/Wisconsin",
+      "cls": "WebKB",
+      "dataset": "Wisconsin",
+      "description": "",
+      "nodes": 251,
+      "edges": 515,
+      "features": 1703,
+      "num_classes": 5,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WikiCS",
+      "cls": "WikiCS",
+      "dataset": "",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WikipediaNetwork/chameleon",
+      "cls": "WikipediaNetwork",
+      "dataset": "chameleon",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WikipediaNetwork/crocodile",
+      "cls": "WikipediaNetwork",
+      "dataset": "crocodile",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "WikipediaNetwork/squirrel",
+      "cls": "WikipediaNetwork",
+      "dataset": "squirrel",
+      "description": "",
+      "nodes": null,
+      "edges": null,
+      "features": null,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Informational"
+      ],
+      "paper": ""
+    },
+    {
+      "name": "Yelp",
+      "cls": "Yelp",
+      "dataset": "",
+      "description": "",
+      "nodes": 716847,
+      "edges": 13954819,
+      "features": 300,
+      "num_classes": null,
+      "directed": null,
+      "domains": [
+        "Social"
+      ],
+      "paper": ""
+    }
+  ]
+}
