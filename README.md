@@ -351,6 +351,32 @@ callers who want the joint distribution rather than a sample of it.
 Everything here needs the extras:
 `pip install "mapequation-networks[generate]"`.
 
+### Comparing partitions as flow models
+
+The same flow model compares two partitions of one network: each becomes a
+joint distribution over node pairs, and the **generative map distance** is the
+Jensen–Shannon distance between them — a metric in `[0, 1]` that scores a
+disagreement by how much flow it misroutes, not by how many labels it moves:
+
+```python
+D = generate.gmd(G, partA, partB)         # distance, 0 when flow-equivalent
+S = generate.gms(G, partA, partB)         # similarity, 1 - D
+D, per_node = generate.gmd(G, partA, partB, element=True)   # D^2 = sum_i p_i d_i^2
+```
+
+`generate.agmd` / `generate.agms` are the adjusted pair, a Steinhaus transform
+against the one-module null partition (`generate.null_partition`) that puts the
+trivial partition at distance 1 from anything carrying flow structure — the
+zero-at-trivial convention of chance-corrected label measures, without a random
+model. Its base point is network-specific, so adjusted values compare partitions
+of one network, not partitions across networks.
+
+Evaluation is blockwise over the meet cells of the two partitions,
+`O(cells^2 + n + m^2)`, so it never materialises the `n x n` matrices. Either
+partition may be hierarchical (`{node: path tuple}`), directed or weighted, and
+nodes carrying no flow carry no weight: two partitions that differ only in where
+they put isolated nodes are flow-equivalent, at `D = 0` exactly.
+
 ## Path data and memory networks
 
 Edge lists forget where flow came from; path data does not have to. The

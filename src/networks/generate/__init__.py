@@ -36,7 +36,10 @@ inside its layer.
 
 The flow model is public too -- :class:`ModuleTree`, :func:`flow_matrix`,
 :func:`cross_R` and the flow-model distances -- for callers that want the
-joint distribution ``P`` rather than a sample of it.
+joint distribution ``P`` rather than a sample of it.  Comparing two partitions
+*as* flow models is :func:`gmd` (the generative map distance) with its
+similarity :func:`gms`, and the adjusted pair :func:`agmd` / :func:`agms`
+calibrated against the one-module null partition.
 
 Everything here needs numpy and networkx (Infomap only when no partition is
 given, scipy only for :func:`fit_families`)::
@@ -78,6 +81,15 @@ __all__ = [
     "S_dist",
     "element_distances",
     "jsd",
+    # partition distances built on the flow model (GMD/GMS and adjusted AGMD/AGMS)
+    "D_adjusted",
+    "D_blockwise",
+    "D_null",
+    "agmd",
+    "agms",
+    "gmd",
+    "gms",
+    "null_partition",
     # samplers and repair passes, for callers that drive them directly
     "connect_components",
     "pair_stubs",
@@ -103,6 +115,10 @@ _REEXPORTS = {
         "sample_benchmark", "sample_multinomial", "sample_stub_matching",
         "sample_stub_matching_directed", "stationary_flows",
         "D_dist", "S_dist", "element_distances", "jsd",
+    )},
+    **{name: "_partdist" for name in (
+        "D_adjusted", "D_blockwise", "D_null", "agmd", "agms", "gmd", "gms",
+        "null_partition",
     )},
     **{name: "_higher_order" for name in (
         "memory_benchmark", "multilayer_benchmark", "sample_state_links",
