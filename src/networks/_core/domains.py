@@ -121,6 +121,7 @@ def domains_for_snap(name: str, categories: tuple[str, ...]) -> tuple[str, ...]:
 _PATHS_DATASET_DOMAINS: dict[str, tuple[str, ...]] = {
     "wikispeedia": ("Informational",),
     "db1b-coupon": ("Transportation",),
+    "db1b-city": ("Transportation",),
 }
 
 

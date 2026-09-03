@@ -62,6 +62,50 @@ def _db1b_archive(directory: Path) -> Path:
     return archive
 
 
+# Airport and city-market columns side by side, as the real header has them.
+# JFK/LGA share city market 31703, ORD/MDW 30977, OAK/SFO 32457.
+DB1B_CITY_HEADER = (
+    "ItinID,MktID,SeqNum,Coupons,Year,OriginCityMarketID,Origin,DestCityMarketID,Dest,Passengers,"
+)
+DB1B_CITY_ROWS = (
+    "1,m,2,2,2019,30977,MDW,31703,LGA,4.00,",  # airport change in Chicago on the way back
+    "3,m,1,1,2019,32457,OAK,32457,SFO,1.00,",  # one coupon inside a single city market
+    "1,m,1,2,2019,31703,JFK,30977,ORD,4.00,",
+    "2,m,2,2,2019,32457,SFO,32101,LAX,2.00,",
+    "2,m,1,2,2019,32457,OAK,32457,SFO,2.00,",  # a same-city hop before flying on
+)
+
+
+def _db1b_city_archive(directory: Path) -> Path:
+    archive = directory / "Origin_and_Destination_Survey_DB1BCoupon_2019_1.zip"
+    body = DB1B_CITY_HEADER + "\n" + "\n".join(DB1B_CITY_ROWS) + "\n"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("Origin_and_Destination_Survey_DB1BCoupon_2019_1.csv", body)
+    return archive
+
+
+# OpenFlights airports.dat: header-less, IATA in the fifth field, \N when absent.
+AIRPORTS_DAT = (
+    '3453,"Metropolitan Oakland International Airport","Oakland","United States","OAK",'
+    '"KOAK",37.721298,-122.221001,9,-8,"A","America/Los_Angeles","airport","OurAirports"\n'
+    '3484,"Los Angeles International Airport","Los Angeles","United States","LAX","KLAX",'
+    '33.94250107,-118.4079971,125,-8,"A","America/Los_Angeles","airport","OurAirports"\n'
+    '9999,"Some Heliport","Nowhere","United States",\\N,"KXXX",1.0,2.0,0,-8,"A","UTC",'
+    '"airport","OurAirports"\n'
+    '9998,"Duplicate Code","Elsewhere","United States","LAX","XXXX",0.0,0.0,0,0,"A","UTC",'
+    '"airport","OurAirports"\n'
+    '9997,"Two Letter","Odd","United States","XY","XXXY",0.0,0.0,0,0,"A","UTC",'
+    '"airport","OurAirports"\n'
+)
+
+CITY_MARKET_LOOKUP = (
+    "Code,Description\n"
+    '"30977","Chicago, IL"\n'
+    '"31703","New York City, NY (Metropolitan Area)"\n'
+    '"32457","San Francisco, CA (Metropolitan Area)"\n'
+)
+
+
 def _handle(name: str, archive: Path) -> PathData:
     dataset = paths.info(name)
     return PathData(
@@ -76,7 +120,7 @@ def test_source_is_registered_everywhere() -> None:
     assert "paths" in networks.sources()
     assert networks.domains()  # must not KeyError on the new source's domains
     found = networks.search(domain="Transportation", source="paths")
-    assert [match.name for match in found] == ["db1b-coupon"]
+    assert [match.name for match in found] == ["db1b-coupon", "db1b-city"]
     assert found[0].key == "paths/db1b-coupon"
 
 
@@ -86,6 +130,11 @@ def test_catalog_entries_are_complete() -> None:
         assert dataset.files, dataset.name
         assert dataset.domains, dataset.name
         assert dataset.citations, dataset.name
+        for role, item in dataset.metadata:
+            assert role and item.name and item.url.startswith("https://"), dataset.name
+        if dataset.shares_download_with:
+            shared = paths.info(dataset.shares_download_with)
+            assert shared.files == dataset.files and shared.url_template == dataset.url_template
 
 
 def test_wikispeedia_is_ambiguous_across_sources() -> None:
@@ -295,6 +344,105 @@ def test_db1b_memory_network(tmp_path: Path) -> None:
     assert net.links[(source, target)] == 2.0
 
 
+# -- db1b city view -------------------------------------------------------------
+
+
+def test_db1b_city_itineraries_collapse_repeated_markets(tmp_path: Path) -> None:
+    archive = _db1b_city_archive(tmp_path)
+    cities = list(_handle("db1b-city", archive).paths())
+    assert cities == [
+        (("31703", "30977", "31703"), 4.0),  # MDW after ORD is still Chicago
+        (("32457", "32101"), 2.0),  # OAK -> SFO -> LAX starts with one Bay Area node
+        # itinerary 3 never leaves its city market, so it is no path at all
+    ]
+    # The airport view of the same archive keeps every airport, as before.
+    airports = list(_handle("db1b-coupon", archive).paths())
+    assert airports == [
+        (("JFK", "ORD", "MDW", "LGA"), 4.0),
+        (("OAK", "SFO", "LAX"), 2.0),
+        (("OAK", "SFO"), 1.0),
+    ]
+    assert archive.with_name(archive.stem + ".paths.tsv").is_file()
+    assert archive.with_name(archive.stem + ".city-paths.tsv").is_file()
+
+
+def test_db1b_city_missing_columns_fail_loudly(tmp_path: Path) -> None:
+    # The airport-only fixture header has no city market columns.
+    handle = _handle("db1b-city", _db1b_archive(tmp_path))
+    with pytest.raises(LookupError, match="OriginCityMarketID, DestCityMarketID"):
+        list(handle.paths())
+    assert not handle.archive_path.with_name(handle.archive_path.stem + ".city-paths.tsv").exists()
+
+
+def test_db1b_city_names_from_the_bts_lookup(tmp_path: Path) -> None:
+    archive = _db1b_city_archive(tmp_path)
+    (tmp_path / "L_CITY_MARKET_ID.csv").write_text(CITY_MARKET_LOOKUP, encoding="utf-8")
+    handle = _handle("db1b-city", archive)
+    names = handle.names()
+    assert names["31703"] == "New York City, NY (Metropolitan Area)"
+    assert set(names) == {"30977", "31703", "32457"}
+    with pytest.raises(LookupError, match="no 'names' table"):
+        _handle("db1b-coupon", archive).names()
+
+
+def test_bts_error_page_is_not_read_as_an_empty_lookup(tmp_path: Path) -> None:
+    (tmp_path / "L_CITY_MARKET_ID.csv").write_text("<!DOCTYPE html><html>...", encoding="utf-8")
+    handle = _handle("db1b-city", _db1b_city_archive(tmp_path))
+    with pytest.raises(LookupError, match="Code,Description"):
+        handle.names()
+
+
+# -- airport coordinates --------------------------------------------------------
+
+
+def test_coordinates_come_from_openflights(tmp_path: Path) -> None:
+    archive = _db1b_archive(tmp_path)
+    (tmp_path / "airports.dat").write_text(AIRPORTS_DAT, encoding="utf-8")
+    where = _handle("db1b-coupon", archive).coordinates()
+    assert where == {
+        "OAK": (37.721298, -122.221001),
+        "LAX": (33.94250107, -118.4079971),  # first row wins over the duplicate code
+    }
+    # Only db1b-coupon's nodes are IATA codes; the other entries ship no table.
+    with pytest.raises(LookupError, match="no 'coordinates' table"):
+        _handle("db1b-city", archive).coordinates()
+    with pytest.raises(LookupError, match="no 'coordinates' table"):
+        _handle("wikispeedia", _wikispeedia_bundle(tmp_path)).coordinates()
+
+
+def test_side_tables_are_fetched_once_next_to_the_download(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from networks.paths import _models
+
+    archive = _db1b_archive(tmp_path)
+    fetched: list[str] = []
+    real_download = _models._download_file
+
+    def fake_download(url: str, target: Path, **kwargs: Any) -> Path:
+        fetched.append(url)
+        target.write_text(AIRPORTS_DAT, encoding="utf-8")
+        return target
+
+    monkeypatch.setattr(_models, "_download_file", fake_download)
+    handle = _handle("db1b-coupon", archive)
+    assert "OAK" in handle.coordinates()
+    assert fetched == [paths.info("db1b-coupon").metadata_file("coordinates").url]
+    assert (archive.parent / "airports.dat").is_file()
+
+    # The real downloader is a no-op on a cached file, so this stays offline.
+    monkeypatch.setattr(_models, "_download_file", real_download)
+    assert "LAX" in handle.coordinates()
+
+
+def test_describe_lists_side_tables(capsys: pytest.CaptureFixture[str]) -> None:
+    text = paths.describe("db1b-coupon")
+    assert "+ airports.dat  [coordinates]" in text
+    text = paths.describe("db1b-city")
+    assert "+ L_CITY_MARKET_ID.csv  [names]" in text
+    assert "shared with db1b-coupon" in text
+
+
 # -- load(), cache and CLI ----------------------------------------------------
 
 
@@ -331,6 +479,22 @@ def test_load_builds_quarterly_urls(offline_paths: dict[str, Any]) -> None:
     assert offline_paths["urls"][-1].endswith("DB1BCoupon_2023_3.zip")
     assert paths.is_cached("db1b-coupon", year=2023, quarter=3)
     assert not paths.is_cached("db1b-coupon", year=2024, quarter=4)
+
+
+def test_db1b_city_shares_the_coupon_download(offline_paths: dict[str, Any]) -> None:
+    assert paths.info("db1b-city").cache_name == "db1b-coupon"
+    assert not paths.is_cached("db1b-city")
+    airports = paths.load("db1b-coupon")
+    assert paths.is_cached("db1b-city")  # the same archive serves both views
+
+    cities = paths.load("db1b-city")
+    # Same URL resolved to the same cached file, so the real downloader
+    # (a no-op on an existing target) never fetches the archive twice.
+    assert len(set(offline_paths["urls"])) == 1
+    assert cities.archive_path == airports.archive_path
+    assert cities.parser == "db1b-city"
+    assert paths.is_cached("db1b-city", year=2019, quarter=1)
+    assert not paths.is_cached("db1b-city", year=2020, quarter=1)
 
 
 def test_cli_lists_and_describes_the_source(capsys: pytest.CaptureFixture[str]) -> None:

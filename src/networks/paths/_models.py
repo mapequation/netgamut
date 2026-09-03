@@ -12,9 +12,11 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from itertools import islice
+from pathlib import Path
 from typing import Any
 
 from .._core.domains import domains_for_paths
+from .._core.download import download as _download_file
 from .._core.models import DataFile
 from .._core.network import Network
 from .._core.state_network import StateNetwork
@@ -33,6 +35,15 @@ class Dataset:
     #: Which recipe turns the download into paths; a key in ``_parsers.PARSERS``.
     parser: str = ""
     files: tuple[DataFile, ...] = ()
+    #: Small side tables fetched on demand rather than with the download, as
+    #: ``(role, file)`` pairs. Roles are what the handle's accessors look up:
+    #: ``"coordinates"`` for :meth:`PathData.coordinates`, ``"names"`` for
+    #: :meth:`PathData.names`.
+    metadata: tuple[tuple[str, DataFile], ...] = ()
+    #: Another entry whose cache directory holds this one's downloads. Two views
+    #: of one archive -- ``db1b-city`` reads the same coupon file as
+    #: ``db1b-coupon`` -- then share a single copy of it.
+    shares_download_with: str = ""
     #: The dataset's page, for humans.
     url: str = ""
     #: For quarterly collections: a format string with ``{year}`` and ``{quarter}``.
@@ -71,6 +82,23 @@ class Dataset:
         """Whether this dataset is one download per year and quarter."""
         return bool(self.url_template)
 
+    @property
+    def cache_name(self) -> str:
+        """The dataset directory in the cache; another entry's when downloads are shared."""
+        return self.shares_download_with or self.name
+
+    def metadata_file(self, role: str) -> DataFile:
+        """The side table filling *role*, e.g. ``"coordinates"``.
+
+        Raises:
+            LookupError: This dataset ships no such table.
+        """
+        for current, item in self.metadata:
+            if current == role:
+                return item
+        available = ", ".join(current for current, _ in self.metadata) or "none"
+        raise LookupError(f"{self.name!r} ships no {role!r} table. Available: {available}.")
+
     def file_for(self, *, year: int | None = None, quarter: int | None = None) -> DataFile:
         """The artifact to download, resolving *year*/*quarter* for quarterly data.
 
@@ -102,6 +130,8 @@ class Dataset:
             "description": self.description,
             "parser": self.parser,
             "files": [item.to_dict() for item in self.files],
+            "metadata": {role: item.to_dict() for role, item in self.metadata},
+            "shares_download_with": self.shares_download_with,
             "url": self.url,
             "url_template": self.url_template,
             "default_year": self.default_year,
@@ -119,6 +149,10 @@ class Dataset:
             description=data.get("description", ""),
             parser=data.get("parser", ""),
             files=tuple(DataFile.from_dict(item) for item in data.get("files", [])),
+            metadata=tuple(
+                (role, DataFile.from_dict(item)) for role, item in data.get("metadata", {}).items()
+            ),
+            shares_download_with=data.get("shares_download_with", ""),
             url=data.get("url", ""),
             url_template=data.get("url_template", ""),
             default_year=data.get("default_year"),
@@ -244,6 +278,46 @@ class PathData(Network):
         return StateNetwork.from_paths(
             self.paths(max_paths=max_paths, max_nodes=max_nodes), order=order
         )
+
+    # -- side tables -------------------------------------------------------
+    def coordinates(self) -> dict[str, tuple[float, float]]:
+        """Node label -> ``(latitude, longitude)``, for plotting.
+
+        Read from the dataset's ``"coordinates"`` table, fetched once into the
+        same cache directory as the download. For the DB1B airport itineraries
+        this is the OpenFlights airports table, keyed by three-letter IATA
+        code, so ``coordinates().get(airport)`` positions a node -- a few small
+        airfields in DB1B have no OpenFlights entry and come back ``None``.
+
+        Raises:
+            LookupError: This dataset ships no coordinates table.
+        """
+        from ._parsers import openflights_coordinates
+
+        return openflights_coordinates(self._metadata_path("coordinates"))
+
+    def names(self) -> dict[str, str]:
+        """Node label -> human-readable name, from the dataset's ``"names"`` table.
+
+        The DB1B city itineraries are labelled by BTS city-market id; this maps
+        ``"31703"`` to ``"New York City, NY (Metropolitan Area)"`` via the BTS
+        ``L_CITY_MARKET_ID`` lookup, fetched once next to the download.
+
+        Raises:
+            LookupError: This dataset ships no names table.
+        """
+        from ._parsers import code_descriptions
+
+        return code_descriptions(self._metadata_path("names"))
+
+    def _metadata_path(self, role: str) -> Path:
+        """Fetch the side table with *role* on cache-once terms and return its path."""
+        if not isinstance(self.dataset, Dataset):
+            raise LookupError(f"{self.name!r} carries no paths metadata record.")
+        artifact = self.dataset.metadata_file(role)
+        target = self.archive_path.parent / Path(artifact.name).name
+        _download_file(artifact.url, target, progress=False)
+        return target
 
     def edges(self, *, cast: Callable[[str], Any] | None = None) -> Iterator[tuple[Any, Any]]:
         """Stream the first-order projection: consecutive pairs of every path.

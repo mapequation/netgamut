@@ -18,6 +18,15 @@ With order 2, every observed trigram ``i -> j -> k`` adds a link from state
 gives the plain directed network from the same paths, so first-order versus
 second-order comparisons are a one-argument change.
 
+The flight itineraries come in two views of one download -- ``db1b-coupon``
+between airports, ``db1b-city`` between metropolitan areas -- and carry the
+side tables a plot needs::
+
+    flights = paths.load("db1b-coupon")
+    where = flights.coordinates()        # {"LAX": (33.94, -118.41), ...}
+    cities = paths.load("db1b-city")     # same archive, no second download
+    cities.names()["31703"]              # 'New York City, NY (Metropolitan Area)'
+
 The collection is curated here rather than scraped from a site, which is what
 guarantees every entry is downloadable without registration and ships with a
 parser that knows its quirks (Wikispeedia's back clicks, DB1B's scattered
@@ -128,7 +137,7 @@ def describe(name: str) -> str:
         lines.append(f"Summary     {dataset.description[:400]}")
     lines.append(f"Page        {dataset.url}")
 
-    if dataset.files:
+    if dataset.files or dataset.metadata:
         lines.append("")
         lines.append("Files")
         for index, item in enumerate(dataset.files):
@@ -136,7 +145,14 @@ def describe(name: str) -> str:
             lines.append(f"  {marker} {item.name}")
             if item.description:
                 lines.append(f"    {item.description}")
-        lines.append("  (* downloaded by default)")
+        for role, item in dataset.metadata:
+            lines.append(f"  + {item.name}  [{role}]")
+            if item.description:
+                lines.append(f"    {item.description}")
+        legend = "* downloaded by default" + (", + fetched on demand" if dataset.metadata else "")
+        lines.append(f"  ({legend})")
+    if dataset.shares_download_with:
+        lines.append(f"Download    shared with {dataset.shares_download_with}")
 
     if dataset.citations:
         lines.append("")
@@ -162,17 +178,23 @@ def load(
 
     The handle adds :meth:`~networks.paths.PathData.paths` and
     :meth:`~networks.paths.PathData.to_state_network` on top of the usual
-    :class:`~networks.Network` interface.
+    :class:`~networks.Network` interface, plus
+    :meth:`~networks.paths.PathData.coordinates` and
+    :meth:`~networks.paths.PathData.names` for the entries that ship those
+    side tables. Entries that are views of one archive (``db1b-city`` reads
+    ``db1b-coupon``'s file) share its cache directory, so the download
+    happens once.
 
     Args:
         name: Entry name, case-insensitive.
-        year: For quarterly collections (``db1b-coupon``): which year to
-            fetch. Defaults to the dataset's verified default quarter.
+        year: For quarterly collections (``db1b-coupon``, ``db1b-city``):
+            which year to fetch. Defaults to the dataset's verified default
+            quarter.
         quarter: 1-4, together with *year*.
     """
     dataset = info(name)
     artifact = dataset.file_for(year=year, quarter=quarter)
-    target = _dataset_dir(SOURCE, dataset.name) / Path(artifact.name).name
+    target = _dataset_dir(SOURCE, dataset.cache_name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
     return PathData(
         dataset=dataset,
@@ -189,4 +211,4 @@ def is_cached(name: str, *, year: int | None = None, quarter: int | None = None)
         artifact = dataset.file_for(year=year, quarter=quarter)
     except (KeyError, LookupError, ValueError):
         return False
-    return (_dataset_dir(SOURCE, dataset.name) / Path(artifact.name).name).is_file()
+    return (_dataset_dir(SOURCE, dataset.cache_name) / Path(artifact.name).name).is_file()

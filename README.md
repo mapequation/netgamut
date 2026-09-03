@@ -10,7 +10,7 @@ Six sources are indexed, each in its own subpackage:
 | [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
 | [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
 | [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
-| `networks.paths` | 2 | curated path data (flight itineraries, navigation trails) for memory networks |
+| `networks.paths` | 3 | curated path data (flight itineraries, navigation trails) for memory networks |
 | [`networks.ahorn`](https://ahorn.rwth-aachen.de) | 83 | higher-order data: hypergraphs, simplicial complexes, revision-pinned |
 
 Metadata for all six **ships inside the package**, so you can explore every
@@ -634,6 +634,24 @@ shell:
 ```bash
 networks get db1b-coupon --year 2023 --quarter 3
 ```
+
+The same itineraries exist at the level of metropolitan areas, and airports
+have coordinates for plotting:
+
+```python
+flights = paths.load("db1b-coupon")
+where = flights.coordinates()          # {'LAX': (33.94, -118.41), ...} from OpenFlights
+cities = paths.load("db1b-city")       # same archive, shared cache, no second download
+for markets, passengers in cities.paths():  # ('31703', '30977', ...) BTS CityMarketIDs
+    ...
+cities.names()["31703"]                # 'New York City, NY (Metropolitan Area)'
+```
+
+`db1b-city` names each node by its BTS `CityMarketID`, so JFK, LGA and EWR
+are one node and an airport change inside a city collapses to one visit; the
+labels stay ids (stable, and joinable with BTS's own tables) and `names()`
+fetches the `L_CITY_MARKET_ID` lookup for the descriptions. Both side tables
+are small and land in the cache next to the download on first use.
 
 Two parsing choices to be aware of, both deliberate: Wikispeedia back clicks
 (`<`, in ~17% of trails) are resolved against the browsing history, so paths

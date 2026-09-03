@@ -14,6 +14,8 @@
      "description": "Navigation paths and the article hyperlink graph (9.5 MB)"
     }
    ],
+   "metadata": {},
+   "shares_download_with": "",
    "url": "https://snap.stanford.edu/data/wikispeedia.html",
    "url_template": "",
    "default_year": null,
@@ -28,7 +30,7 @@
   },
   {
    "name": "db1b-coupon",
-   "description": "US airline itineraries from the BTS Origin and Destination Survey (DB1B), the flight data family behind Rosvall et al. 2014 'Memory in network flows'. A 10% sample of tickets; each itinerary is a sequence of airports and its weight is the sampled passengers. One quarter per download (~200 MB zip, ~2 GB CSV); pass year= and quarter= to load() for other quarters.",
+   "description": "US airline itineraries from the BTS Origin and Destination Survey (DB1B), the flight data family behind Rosvall et al. 2014 'Memory in network flows'. A 10% sample of tickets; each itinerary is a sequence of airports (IATA codes) and its weight is the sampled passengers. One quarter per download (~200 MB zip, ~2 GB CSV); pass year= and quarter= to load() for other quarters. Airport coordinates for plotting come from the OpenFlights airports table via .coordinates(); see db1b-city for the same itineraries between metropolitan areas.",
    "parser": "db1b-coupon",
    "files": [
     {
@@ -37,6 +39,44 @@
      "description": "Itinerary coupons for 2019 Q1, the default quarter (~202 MB zip)"
     }
    ],
+   "metadata": {
+    "coordinates": {
+     "name": "airports.dat",
+     "url": "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat",
+     "description": "OpenFlights airports table: IATA code, latitude and longitude for ~6,000 airports worldwide (1 MB, Open Database License). Fetched by .coordinates()."
+    }
+   },
+   "shares_download_with": "",
+   "url": "https://www.transtats.bts.gov/PREZIP/",
+   "url_template": "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BCoupon_{year}_{quarter}.zip",
+   "default_year": 2019,
+   "default_quarter": 1,
+   "nodes": null,
+   "num_paths": null,
+   "citations": [
+    "Bureau of Transportation Statistics, US Department of Transportation. Origin and Destination Survey DB1BCoupon. https://transtats.bts.gov"
+   ],
+   "license": "US government work, public domain (17 U.S.C. § 105)."
+  },
+  {
+   "name": "db1b-city",
+   "description": "The DB1B airline itineraries (see db1b-coupon) at the level of BTS city markets: each node is a metropolitan area's CityMarketID, so JFK, LGA and EWR are one node, and an airport change inside a city collapses to one visit. Reads the very same quarterly coupon archive as db1b-coupon -- the ~200 MB download is shared -- and derives its own path file. Node labels are the ids as strings; .names() maps them to the BTS descriptions, e.g. 31703 -> 'New York City, NY (Metropolitan Area)'.",
+   "parser": "db1b-city",
+   "files": [
+    {
+     "name": "Origin_and_Destination_Survey_DB1BCoupon_2019_1.zip",
+     "url": "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BCoupon_2019_1.zip",
+     "description": "Itinerary coupons for 2019 Q1, the default quarter (~202 MB zip)"
+    }
+   ],
+   "metadata": {
+    "names": {
+     "name": "L_CITY_MARKET_ID.csv",
+     "url": "https://www.transtats.bts.gov/Download_Lookup.asp?Y11x72=Y_PVgl_ZNeXRg_VQ",
+     "description": "BTS lookup table L_CITY_MARKET_ID: city market ids and descriptions (Code,Description CSV, ~180 kB; the link's token is BTS's obfuscated table id). Fetched by .names()."
+    }
+   },
+   "shares_download_with": "db1b-coupon",
    "url": "https://www.transtats.bts.gov/PREZIP/",
    "url_template": "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BCoupon_{year}_{quarter}.zip",
    "default_year": 2019,
