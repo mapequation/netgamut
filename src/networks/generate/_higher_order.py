@@ -217,11 +217,16 @@ def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None,
 def memory_benchmark(links, windows, partition, rng=None, seed=None, topup=True):
     """Sample a memory-network benchmark from a state-level blueprint.
 
-    A second-order state ``s`` stands for a path window ``(i, j)``: its out-links leave
-    the current node ``windows[s][-1]`` and its in-links arrive at the remembered
-    predecessor ``windows[s][0]``, so a link ``(i,j) -> (j,k)`` matches at the physical
-    junction ``j``.  Higher orders work unchanged -- only the two ends of the window are
-    used.
+    A state ``s`` stands for a path window of ``m`` physical nodes, oldest first.  A link
+    ``a -> b`` is realizable iff the two windows overlap in ``m - 1`` nodes,
+    ``windows[a][1:] == windows[b][:-1]``: the walker drops its oldest node and appends a
+    new one.  That overlap is the type, so out-stubs of ``a`` carry ``windows[a][1:]`` and
+    in-stubs of ``b`` carry ``windows[b][:-1]``, and pairing happens within each overlap
+    class.  At order 2 the overlap is the single physical junction ``j`` of
+    ``(i,j) -> (j,k)``; at order ``m`` it is the whole ``(m-1)``-window, which is why the
+    type cannot be reduced to the window's last and first node -- doing so let every
+    order-3 link pair across incompatible windows (measured 1731 of 1731 invalid on an
+    order-3 Wikispeedia blueprint, 2026-09-18), while order 2 was unaffected.
 
     Args:
         links: ``{(state, state): weight}`` blueprint state links.
@@ -236,8 +241,8 @@ def memory_benchmark(links, windows, partition, rng=None, seed=None, topup=True)
     """
     return sample_state_links(
         links, partition,
-        out_type={s: w[-1] for s, w in windows.items()},
-        in_type={s: w[0] for s, w in windows.items()},
+        out_type={s: tuple(w[1:]) for s, w in windows.items()},
+        in_type={s: tuple(w[:-1]) for s, w in windows.items()},
         rng=rng, seed=seed, topup=topup)
 
 
@@ -247,7 +252,15 @@ def multilayer_benchmark(layers, partition, rng=None, seed=None, **kwargs):
     Intra-layer links pair within their layer, so each layer is resampled on its own
     with the state partition restricted to it -- typed stub matching with the layer as
     the type.  Inter-layer coupling is not sampled: in a multiplex it is supplied by the
-    relax rate at analysis time, not by links in the data.
+    relax rate at analysis time, not by links in the data, so the benchmark object is the
+    pair (intra-layer link lists, relax rate) and the rate must travel with the data.
+
+    Each layer is sampled as a simple unweighted graph, so a *weighted* layer keeps its
+    link count and its flow-degree sequence but not its total weight (London multiplex:
+    441 of 441 links, weight 503 -> 441, and the one weighted layer is the only one with a
+    nonzero degree divergence, 0.073 bits against 0.000 for the two unweighted ones;
+    2026-09-18).  Sample a weighted multiplex layer by layer through
+    :func:`~networks.generate.weighted_benchmark` instead.
 
     Args:
         layers: ``{layer: networkx graph}`` or ``{layer: {(u, v): weight}}``.

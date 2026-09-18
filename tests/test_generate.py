@@ -833,3 +833,31 @@ def test_top_up_keyword_is_gone() -> None:
     G, partition = blueprint()
     with pytest.raises(TypeError):
         generate.benchmark(G, partition, rng=np.random.default_rng(1), topup=True)
+
+
+def test_memory_benchmark_overlaps_windows_at_order_three() -> None:
+    """A state link is only realizable when the windows overlap in m-1 nodes.
+
+    At order 2 that is the single physical junction, which the sampler used to encode as
+    the window's last and first node -- correct there and wrong at every higher order (an
+    order-3 Wikispeedia blueprint came out with 1731 of 1731 links pairing incompatible
+    windows).  The type is the whole (m-1)-window.
+    """
+    np = pytest.importorskip("numpy")
+    # order-3 windows over a 4-node cycle: every 3-path along 0->1->2->3->0
+    cyc = [0, 1, 2, 3]
+    windows = {}
+    for a in range(4):
+        b, c = (a + 1) % 4, (a + 2) % 4
+        windows[(a, b, c)] = (a, b, c)
+    links = {}
+    for w in windows:
+        nxt = (w[1], w[2], (w[2] + 1) % 4)
+        links[(w, nxt)] = 2.0
+    partition = {s: (i % 2,) for i, s in enumerate(sorted(windows))}
+    sampled, info = generate.memory_benchmark(links, windows, partition, seed=5)
+    assert info["dropped_stubs"] == 0
+    assert sampled, "no links realized"
+    for (a, b) in sampled:
+        assert windows[a][1:] == windows[b][:-1], (a, b)
+    assert len(cyc) == 4                      # the fixture is the 4-cycle, unchanged
