@@ -161,9 +161,55 @@ def _draw_from_family(family, params, size, rng, support_min=1):
     return out + (support_min - 1)
 
 
+def fit_clustering_profile(G, min_degree=2):
+    """Fit the local-clustering profile ``c(k) = c0 * k^-alpha`` by least squares on
+    ``log c`` over the nodes of degree ``>= min_degree`` with ``c_u > 0``.
+
+    The fingerprint's clustering component, in the same spirit as the degree and
+    module-size families: a blueprint reduces to two numbers instead of its own triangle
+    counts, so the parametric generator can be handed a clustering target without a
+    blueprint at sampling time.  Returns ``{"c0", "alpha", "n_fit", "c_mean"}``, and
+    ``c(k)`` as the callable :func:`clustering_profile` builds from it.
+
+    ``c0`` is the fitted clustering of a degree-1 node, which the power law extrapolates;
+    the returned callable clips ``c(k)`` to ``[0, 1]`` so a steep fit cannot ask for more
+    triangles than a node's degree allows.
+    """
+    import networkx as nx
+
+    U = nx.Graph(G) if G.is_directed() else G
+    cl = nx.clustering(U)
+    ks, cs = [], []
+    for u, c in cl.items():
+        k = U.degree(u)
+        if k >= min_degree and c > 0:
+            ks.append(float(k))
+            cs.append(float(c))
+    c_mean = float(np.mean(list(cl.values()))) if cl else 0.0
+    if len(ks) < 3:                       # nothing to fit: a flat profile at the mean
+        return dict(c0=c_mean, alpha=0.0, n_fit=len(ks), c_mean=c_mean)
+    x = np.log(np.asarray(ks))
+    y = np.log(np.asarray(cs))
+    A = np.vstack([np.ones_like(x), x]).T
+    (b0, b1), *_ = np.linalg.lstsq(A, y, rcond=None)
+    return dict(c0=float(np.exp(b0)), alpha=float(-b1), n_fit=len(ks), c_mean=c_mean)
+
+
+def clustering_profile(fit):
+    """The callable ``c(k)`` of a :func:`fit_clustering_profile` result, clipped to
+    ``[0, 1]``; ``raise_clustering`` turns it into per-node triangle targets."""
+    c0, alpha = float(fit["c0"]), float(fit["alpha"])
+
+    def c(k):
+        k = max(int(k), 1)
+        return float(min(max(c0 * k ** (-alpha), 0.0), 1.0))
+
+    return c
+
+
 def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
                        min_size=2, connect=True, k_mean=None, k_max=None,
-                       size_max=None):
+                       size_max=None, clustering_fit=None, clustering_kwargs=None):
     """Generate a two-level benchmark purely from fitted parameters -- the
     generalized-LFR generator.  Draw module sizes and degrees from their
     families, per-module mixing from the Beta (or delta), then stub-match
@@ -235,6 +281,16 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
     if connect:
         H, rep = fg.connect_components(H, rng, partition=partition)   # module-aware repair
         info["connect"] = rep
+    if clustering_fit is not None:
+        # The same pass the blueprint sampler runs, driven by the fitted profile c(k)
+        # instead of the blueprint's own triangle counts: LFR's absence of clustering is
+        # the case c == 0.  It preserves every degree, every module's internal and
+        # boundary link counts and connectivity, so the components repaired above stay
+        # repaired.
+        H, cinfo = fg.raise_clustering(H, partition, rng,
+                                       targets=clustering_profile(clustering_fit),
+                                       **(clustering_kwargs or {}))
+        info["clustering"] = cinfo
     return H, partition, info
 
 

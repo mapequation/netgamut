@@ -861,3 +861,44 @@ def test_memory_benchmark_overlaps_windows_at_order_three() -> None:
     for (a, b) in sampled:
         assert windows[a][1:] == windows[b][:-1], (a, b)
     assert len(cyc) == 4                      # the fixture is the 4-cycle, unchanged
+
+
+def test_parametric_runs_the_clustering_pass_from_a_fitted_profile() -> None:
+    """The parametric generator takes the same two post-passes as the blueprint sampler.
+
+    Connectivity repair is on by default; the clustering pass is opt-in and driven by a
+    profile c(k) instead of a blueprint's triangle counts, so a parametric sample can be
+    given clustering with no blueprint at sampling time.  A flat target c = 0.6 stands in
+    for the fitted profile here, because a power law fitted on a small fixture is
+    dominated by its degree-2 nodes and can ask for *less* clustering than stub matching
+    already produces.
+    """
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    pytest.importorskip("scipy")
+    deg = generate.fit_families([4] * 60)
+    size = generate.fit_families([10] * 6, support_min=2)
+    mix = {"family": "delta", "mu": 0.2}
+    plain, _, info0 = generate.parametric(60, deg, size, mix, seed=4)
+    flat = {"c0": 0.6, "alpha": 0.0, "n_fit": 0, "c_mean": 0.6}
+    withc, _, info1 = generate.parametric(60, deg, size, mix, seed=4, clustering_fit=flat)
+    assert "connect" in info0 and "connect" in info1        # repair on by default for both
+    assert "clustering" not in info0 and info1["clustering"]["swaps"] > 0
+    assert nx.average_clustering(withc) > nx.average_clustering(plain) + 0.1
+    assert sorted(d for _, d in withc.degree()) == sorted(d for _, d in plain.degree())
+    assert (nx.number_connected_components(withc)
+            == nx.number_connected_components(plain) == 1)
+
+
+def test_fit_clustering_profile_recovers_a_flat_profile() -> None:
+    """A graph whose nodes all have the same local clustering fits alpha = 0."""
+    pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G = nx.Graph()
+    for m in range(12):                                     # disjoint triangles: c = 1 everywhere
+        b = 3 * m
+        G.add_edges_from([(b, b + 1), (b + 1, b + 2), (b, b + 2)])
+    fit = generate.fit_clustering_profile(G)
+    assert fit["c_mean"] == pytest.approx(1.0)
+    assert fit["alpha"] == pytest.approx(0.0, abs=1e-9)
+    assert fit["c0"] == pytest.approx(1.0, abs=1e-9)

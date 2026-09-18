@@ -63,6 +63,7 @@ __all__ = [
     # high-level generation
     "benchmark",
     "detect",
+    "fit_clustering_profile",
     "fit_families",
     "fit_mixing_beta",
     "LfrSource",
@@ -317,6 +318,8 @@ def parametric(
     k_mean: float | None = None,
     k_max: int | None = None,
     size_max: int | None = None,
+    clustering_fit: dict[str, Any] | None = None,
+    clustering_kwargs: dict[str, Any] | None = None,
     rng: Any = None,
     seed: int | None = None,
 ) -> tuple[Any, dict[Any, Any], dict[str, Any]]:
@@ -339,6 +342,12 @@ def parametric(
             mixing as ``{"family": "delta", "mu": 0.15}``.
         min_size: Smallest allowed module.
         connect: Repair connectivity with degree-preserving swaps.
+        clustering_fit: A :func:`fit_clustering_profile` result. Given, the
+            sample runs the same clustering pass as the blueprint sampler,
+            driven by the fitted profile ``c(k)`` instead of a blueprint's
+            triangle counts (LFR's absence of clustering is ``c == 0``).
+        clustering_kwargs: Extra arguments for that pass, e.g.
+            ``{"time_cap": 120}``.
         k_mean: Rescale drawn degrees to this mean.
         k_max: Cap on node degree.
         size_max: Cap on module size.
@@ -369,7 +378,34 @@ def parametric(
         k_mean=k_mean,
         k_max=k_max,
         size_max=size_max,
+        clustering_fit=clustering_fit,
+        clustering_kwargs=clustering_kwargs,
     )
+    return result
+
+
+def fit_clustering_profile(graph: Any, min_degree: int = 2) -> dict[str, Any]:
+    """Fit the local-clustering profile ``c(k) = c0 k**-alpha`` of *graph*.
+
+    The clustering component of a blueprint's fingerprint, so that
+    :func:`parametric` can be given a clustering target without a blueprint
+    at sampling time. Fit by least squares on ``log c`` over the nodes of
+    degree at least *min_degree* with nonzero clustering; a graph with fewer
+    than three such nodes gets a flat profile at its mean clustering.
+
+    Args:
+        graph: A networkx graph (directed input is read undirected).
+        min_degree: Smallest degree entering the fit.
+
+    Returns:
+        ``{"c0", "alpha", "n_fit", "c_mean"}``, ready to pass to
+        :func:`parametric` as *clustering_fit*.
+
+    Raises:
+        ImportError: networkx is missing.
+    """
+    _, params = _modules()
+    result: dict[str, Any] = params.fit_clustering_profile(graph, min_degree=min_degree)
     return result
 
 
