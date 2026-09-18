@@ -233,7 +233,7 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
     info = dict(n=n_real, realized_E=H.number_of_edges(),
                 dropped_stubs=len(leftover), n_modules=len(sizes))
     if connect:
-        H, rep = fg.connect_components(H, rng)
+        H, rep = fg.connect_components(H, rng, partition=partition)   # module-aware repair
         info["connect"] = rep
     return H, partition, info
 

@@ -722,3 +722,114 @@ def test_zero_flow_nodes_carry_no_weight() -> None:
     # and they stay indistinguishable against any third partition
     N = generate.null_partition(G)
     assert generate.gmd(G, shattered, N) == pytest.approx(generate.gmd(G, absorbed, N), abs=1e-15)
+
+
+# -- sequential pairing, observed split, clustering pass (2026-09-05) --------
+def hub_blueprint() -> tuple[Any, dict[int, int]]:
+    """A hub whose internal demand under a degree-proportional split would exceed its
+    module: module A = 12 nodes where node 0 is adjacent to all 11 others and to 10 nodes of
+    module B (a 20-node ring of cliques).  The old random pairer stranded stubs here; the
+    sequential pairer with the observed per-node split places every one."""
+    nx = pytest.importorskip("networkx")
+    G = nx.Graph()
+    G.add_edges_from((0, v) for v in range(1, 12))
+    G.add_edges_from((u, u + 1) for u in range(1, 11))
+    G.add_edge(11, 1)
+    B = nx.relabel_nodes(nx.connected_caveman_graph(4, 5), lambda u: u + 12)
+    G.add_edges_from(B.edges())
+    G.add_edges_from((0, v) for v in range(12, 22))
+    partition = {u: (0 if u < 12 else 1) for u in G.nodes()}
+    return G, partition
+
+
+def module_edge_counts(G: Any, partition: dict[int, int]) -> tuple[dict, dict]:
+    internal: dict[int, int] = {}
+    boundary: dict[int, int] = {}
+    for u, v in G.edges():
+        if partition[u] == partition[v]:
+            internal[partition[u]] = internal.get(partition[u], 0) + 1
+        else:
+            for w in (u, v):
+                boundary[partition[w]] = boundary.get(partition[w], 0) + 1
+    return internal, boundary
+
+
+def test_sampler_places_every_stub_and_keeps_every_degree() -> None:
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G, partition = hub_blueprint()
+    for seed in range(5):
+        H, info = generate.benchmark(G, partition, rng=np.random.default_rng(seed), connect=False)
+        assert info["realized_E"] == G.number_of_edges()
+        assert info["dropped_stubs"] == 0
+        assert all(H.degree(u) == G.degree(u) for u in G)          # per node, not just sorted
+        assert nx.number_of_selfloops(H) == 0
+        assert module_edge_counts(H, partition) == module_edge_counts(G, partition)
+
+
+def test_directed_sampler_places_every_stub_without_a_top_up() -> None:
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G, partition = hub_blueprint()
+    D = nx.DiGraph()
+    D.add_edges_from(G.edges())
+    D.add_edges_from((v, u) for u, v in G.edges() if (u + v) % 3 == 0)   # some reciprocal arcs
+    for seed in range(3):
+        H, info = generate.benchmark(D, partition, rng=np.random.default_rng(seed), connect=False)
+        assert info["realized_E"] == D.number_of_edges()
+        assert info["dropped_out"] == 0 and info["dropped_in"] == 0
+        assert all(H.out_degree(u) == D.out_degree(u) and H.in_degree(u) == D.in_degree(u) for u in D)
+        assert module_edge_counts(H, partition) == module_edge_counts(D, partition)
+
+
+def test_pair_stubs_respects_tags_and_never_duplicates() -> None:
+    np = pytest.importorskip("numpy")
+    flowgen, _ = generate._modules()
+    rng = np.random.default_rng(3)
+    stubs = [(u, u) for u in range(6) for _ in range(3)] + [(6, 6)] * 6        # hub of 6 among 6 degree-3 nodes: 24 stubs, graphical
+    pairs, leftover = flowgen._pair_stubs(stubs, rng)
+    assert not leftover
+    seen = set()
+    for (a, ta), (b, tb) in pairs:
+        assert a != b and ta != tb
+        key = (min(a, b), max(a, b))
+        assert key not in seen
+        seen.add(key)
+
+
+def test_raise_clustering_matches_the_blueprint_profile_and_keeps_invariants() -> None:
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G = nx.watts_strogatz_graph(200, 6, 0.1, seed=1)        # ring lattice: C ~ 0.45 at k = 6
+    partition = {u: u // 50 for u in G}                       # four ring segments as modules
+    H, _ = generate.benchmark(G, partition, rng=np.random.default_rng(1))
+    flowgen, _ = generate._modules()
+    Hc, info = flowgen.raise_clustering(H, partition, np.random.default_rng(1), blueprint=G)
+    cb, c0, c1 = nx.clustering(G), nx.clustering(H), nx.clustering(Hc)
+    err0 = sum(abs(cb[u] - c0[u]) for u in G) / len(G)
+    err1 = sum(abs(cb[u] - c1[u]) for u in G) / len(G)
+    assert err1 < 0.5 * err0                                # the profile error at least halves
+    assert info["swaps"] > 0
+    assert all(Hc.degree(u) == H.degree(u) for u in G)
+    assert module_edge_counts(Hc, partition) == module_edge_counts(H, partition)
+    assert nx.is_connected(Hc) == nx.is_connected(H)       # no bridge was removed
+    assert nx.number_of_selfloops(Hc) == 0
+
+
+def test_raise_clustering_accepts_a_parametric_profile() -> None:
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G, partition = blueprint()
+    H, _ = generate.benchmark(G, partition, rng=np.random.default_rng(2))
+    flowgen, _ = generate._modules()
+    Hc, info = flowgen.raise_clustering(H, partition, np.random.default_rng(2),
+                                        targets=lambda k: 0.5)
+    assert info["C_after"] > info["C_before"]
+    assert all(Hc.degree(u) == H.degree(u) for u in G)
+
+
+def test_top_up_keyword_is_gone() -> None:
+    np = pytest.importorskip("numpy")
+    G, partition = blueprint()
+    with pytest.raises(TypeError):
+        generate.benchmark(G, partition, rng=np.random.default_rng(1), topup=True)

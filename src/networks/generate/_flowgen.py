@@ -15,8 +15,8 @@ samplers are provided, both **parameter-free** (no temperature):
     Match stubs from the flow statistics: degrees follow visit rates, each module's
     internal/boundary split follows its observed mixing ``mu = q/p`` (exactly the LFR
     mixing parameter), boundary stubs route up the module tree by hierarchical exit
-    rates, and stubs pair uniformly subject to the *non-redundant constraint* (never
-    pair back into the branch just exited).  Preserves the full degree sequence,
+    rates, and stubs pair by a sequential hub-first pairer subject to the *non-redundant
+    constraint* (never pair back into the branch just exited).  Preserves the full degree sequence,
     yields connected simple graphs, handles hierarchy, and reduces to LFR for the
     special case power-law degrees + power-law community sizes + flat ``mu``.
 
@@ -25,14 +25,50 @@ optionally a partition; otherwise Infomap supplies one) and it returns a sample.
 ``mixing_scale`` rescales every module's mixing to sweep detectability from a single
 blueprint.
 
-This module treats networks as **undirected**; directed flow (enter != exit rates)
-is a planned extension.  The maths is documented in the project notebooks
-"Non-redundant map equation - expanded form" and
-"Generative map equation - properties and regularization".
+Directed blueprints get ``sample_stub_matching_directed`` (enter != exit rates, both
+degree sequences preserved, hierarchy routed).  The maths is documented in the project
+notebooks "Non-redundant map equation - expanded form" and "Generative map equation -
+properties and regularization".
+
+What the microcanonical sampler fixes, and how (the specification):
+
+* **degrees** -- ``k_u = apportion(2E, p_u)``: the flow-apportioned degree sequence
+  (equal to the plain degrees of an unweighted blueprint at the same ``E``);
+* **per-module mixing** -- each leaf module's internal/boundary stub totals from
+  ``mu_A = q_A / p_A``; the split *between its nodes* follows each node's **observed**
+  internal share in the blueprint (``_observed_shares``), capped at ``k_u``.  A
+  degree-proportional split hands hubs more internal stubs than their module has other
+  nodes (anybeat: internal demand 3309 for a module of 2827 nodes) and was the source of
+  the residual "saturation" deficits; measured 2026-09-05 (output/sampler_study/joint);
+* **hierarchy** -- boundary stubs stop at the LCA depth read off the blueprint
+  (``routing="observed"``), see :meth:`ModuleTree.escalation_probs`;
+* **pairing** -- stubs pair by a *sequential hub-first* pairer (``_pair_stubs``,
+  ``_pair_bipartite``): the entity with most remaining stubs draws its partners without
+  replacement, proportional to remaining stubs (Bayati, Kim & Saberi 2010; Efraimidis &
+  Spirakis 2006 keys), with a Havel--Hakimi take-all fallback and a bounded edge-split
+  repair.  It places every pool's maximum (checked against an exact max-flow b-matching)
+  where random pairing plus repair sweeps stranded 3-12% of the links and, worse, leaked
+  unpaired internal stubs into the boundary pools (football: 387 within-module edges for
+  a blueprint with 429).  Order bias against an MCMC-uniformised reference: 0.1 sd.
+  Cost ``O((S + n) log n)`` per pool of ``n`` entities and ``S`` stubs (Fenwick trees over
+  remaining stubs and over tags, a lazy max-heap for the hub order): one root pool of
+  ``3 x 10^5`` entities pairs in about a second where the ``O(n)``-per-hub scan it replaced
+  ran for hours.  Verified equal in distribution to that scan on six blueprints x 8 seeds
+  (2026-09-18): deficit, per-node degrees and mixing identical, average clustering and
+  recovery AMI within 2.4 standard errors (largest: football ``C`` -0.004 +- 0.002).
+
+Together these give, on every unweighted blueprint measured (15 networks, 3 seeds): link
+deficit exactly 0, per-node degrees exact, mixing error <= 0.004, no top-up needed.  Weighted
+blueprints are sampled in the flow-degree frame (see ``generate.weighted_benchmark``).
+
+``raise_clustering`` (opt-in via ``sample_benchmark(match_clustering=True)``) then steers
+each node's local clustering coefficient to the blueprint's with degree-, mixing-,
+hierarchy-, block- and connectivity-preserving swaps (numba-compiled when available).
 """
 
 from __future__ import annotations
 
+import heapq
 import math
 from collections import defaultdict
 
@@ -43,6 +79,14 @@ try:
     import infomap
 except ImportError:  # infomap is only needed for the Infomap helpers
     infomap = None
+
+try:  # numba accelerates the pairing kernels and raise_clustering; the pure-Python path is the same code
+    from numba import njit as _njit
+except ImportError:  # pragma: no cover
+    def _njit(*args, **kwargs):
+        if len(args) == 1 and callable(args[0]) and not kwargs:
+            return args[0]
+        return lambda f: f
 
 
 # --------------------------------------------------------------------------- #
@@ -457,43 +501,479 @@ def apportion(total, weights, rng=None):
     return base
 
 
-def _pair_stubs(stubs, rng, max_sweeps=200):
-    """Pair stubs [(node, tag), ...]: tags must differ within a pair, node pairs must not repeat.
+# --------------------------------------------------------------------------- #
+# Sequential hub-first pairing in O((E + n) log n) per pool
+# --------------------------------------------------------------------------- #
+# Weighted sampling without replacement over the *eligible* entities of a pool is done on a
+# Fenwick tree over remaining stubs, with entities laid out in tag-sorted order and a second
+# Fenwick tree over the per-tag totals.  Excluding the hub's own tag (the non-redundant rule)
+# is then one temporary update on the tag tree, and each partner draw is two O(log n)
+# descents -- pick a tag with probability proportional to its remaining eligible stubs, then
+# an entity inside that tag -- so no rejection loop and no O(n_pool) scan.  Successive draws
+# proportional to remaining weight give exactly the distribution of the Efraimidis--Spirakis
+# top-r keys the previous mask implementation used.
+@_njit(cache=True)
+def _fw_build(values):
+    """Fenwick tree (1-indexed array of length ``n + 1``) over ``values`` (int64)."""
+    n = values.shape[0]
+    tree = np.zeros(n + 1, np.int64)
+    for i in range(n):
+        tree[i + 1] = values[i]
+    for i in range(1, n + 1):
+        j = i + (i & (-i))
+        if j <= n:
+            tree[j] += tree[i]
+    return tree
 
-    Conflicts fixed by random swaps; unfixable pairs dissolve into leftovers.
-    Each unordered node pair arises in exactly one pool, so per-pool dedup is global dedup.
+
+@_njit(cache=True)
+def _fw_add(tree, i, delta):
+    """Add ``delta`` at 0-based position ``i``."""
+    n = tree.shape[0] - 1
+    i += 1
+    while i <= n:
+        tree[i] += delta
+        i += i & (-i)
+
+
+@_njit(cache=True)
+def _fw_prefix(tree, i):
+    """Sum of the first ``i`` entries (0-based positions ``0 .. i-1``)."""
+    s = 0
+    while i > 0:
+        s += tree[i]
+        i -= i & (-i)
+    return s
+
+
+@_njit(cache=True)
+def _fw_find(tree, target):
+    """Smallest 0-based position ``j`` with ``prefix(j + 1) > target``, for
+    ``0 <= target < total``."""
+    n = tree.shape[0] - 1
+    pos = 0
+    step = 1
+    while step * 2 <= n:
+        step *= 2
+    while step > 0:
+        nxt = pos + step
+        if nxt <= n and tree[nxt] <= target:
+            pos = nxt
+            target -= tree[nxt]
+        step //= 2
+    return pos
+
+
+@_njit(cache=True)
+def _zero_entity(tree, ttree, rem, tag, i):
+    """Remove entity ``i`` from both trees (its stubs are placed or stranded)."""
+    w = rem[i]
+    if w > 0:
+        _fw_add(tree, i, -w)
+        _fw_add(ttree, tag[i], -w)
+        rem[i] = 0
+
+
+@_njit(cache=True)
+def _draw_partners(tree, ttree, rem, tag, tstart, excl, excl_tag, r, urand, picks):
+    """Draw up to ``r`` distinct partner entities without replacement, each with probability
+    proportional to its remaining stubs, among the entities with stubs left whose tag is not
+    ``excl_tag`` (``-1``: no tag excluded) and which are not listed in ``excl`` (distinct
+    indices: the hub's own node and the nodes already adjacent to it).
+
+    ``tree`` is the Fenwick tree over ``rem`` in tag-sorted entity order, ``ttree`` the tree
+    over the tag totals, ``tstart`` the tag offsets, ``urand`` ``r`` uniforms.  Picked entities
+    lose one stub in ``rem`` and both trees.  Returns the number picked; fewer than ``r`` only
+    when the eligible weight ran out (the Havel--Hakimi take-all case).
+    """
+    for k in range(excl.shape[0]):                    # exclusions: temporarily zero
+        j = excl[k]
+        w = rem[j]
+        if w > 0:
+            _fw_add(tree, j, -w)
+            _fw_add(ttree, tag[j], -w)
+    wt = 0
+    if excl_tag >= 0:
+        wt = _fw_prefix(ttree, excl_tag + 1) - _fw_prefix(ttree, excl_tag)
+        if wt > 0:
+            _fw_add(ttree, excl_tag, -wt)
+    T = ttree.shape[0] - 1
+    W = _fw_prefix(ttree, T)
+    cnt = 0
+    for d in range(r):
+        if W <= 0:
+            break
+        target = np.int64(urand[d] * W)
+        if target >= W:
+            target = W - 1
+        g = _fw_find(ttree, target)                     # tag, proportional to eligible stubs
+        resid = target - _fw_prefix(ttree, g)
+        j = _fw_find(tree, _fw_prefix(tree, tstart[g]) + resid)   # entity inside the tag
+        picks[cnt] = j
+        cnt += 1
+        w = rem[j]
+        _fw_add(tree, j, -w)                            # not drawn twice for this hub
+        _fw_add(ttree, g, -w)
+        W -= w
+    for k in range(cnt):                                # picks return with one stub less
+        j = picks[k]
+        rem[j] -= 1
+        if rem[j] > 0:
+            _fw_add(tree, j, rem[j])
+            _fw_add(ttree, tag[j], rem[j])
+    if wt > 0:
+        _fw_add(ttree, excl_tag, wt)
+    for k in range(excl.shape[0]):                      # exclusions return in full
+        j = excl[k]
+        w = rem[j]
+        if w > 0:
+            _fw_add(tree, j, w)
+            _fw_add(ttree, tag[j], w)
+    return cnt
+
+
+def _heap_top(heap, rem):
+    """Entity with the most remaining stubs (ties broken by the random key stored in the heap),
+    or ``-1`` when none has stubs left.  Entries are ``(-stubs, key, index)``; stale entries
+    (stubs decreased since the push) are refreshed lazily, so the heap costs ``O(log n)`` per
+    decrement instead of an ``O(n)`` argmax per hub."""
+    while heap:
+        negr, key, i = heap[0]
+        r = int(rem[i])
+        if r == 0:
+            heapq.heappop(heap)
+        elif -negr != r:
+            heapq.heapreplace(heap, (-r, key, i))
+        else:
+            return i
+    return -1
+
+
+def _pool_layout(stubs, rng, tagid):
+    """Aggregate stubs ``[(node, tag), ...]`` into entities with a remaining count, shuffled
+    (random tie-breaking) and then stably sorted by tag id so every tag is a contiguous block.
+    ``tagid`` is extended in place (shared across the two sides of a bipartite pool).
+
+    Returns ``(ents, tag, rem, pos_of)``."""
+    cnt = defaultdict(int)
+    for st in stubs:
+        cnt[st] += 1
+    ents = list(cnt)
+    rng.shuffle(ents)
+    for e in ents:
+        tagid.setdefault(e[1], len(tagid))
+    ents.sort(key=lambda e: tagid[e[1]])
+    n = len(ents)
+    tag = np.fromiter((tagid[e[1]] for e in ents), np.int64, n)
+    rem = np.fromiter((cnt[e] for e in ents), np.int64, n)
+    pos_of = defaultdict(list)
+    for j, e in enumerate(ents):
+        pos_of[e[0]].append(j)
+    return ents, tag, rem, pos_of
+
+
+def _pool_trees(tag, rem, rng, n_tags):
+    """Fenwick trees over the entities and the tags, the tag offsets, and the hub heap."""
+    tstart = np.searchsorted(tag, np.arange(n_tags + 1)).astype(np.int64)
+    tree = _fw_build(rem)
+    ttree = _fw_build(np.bincount(tag, weights=rem, minlength=n_tags).astype(np.int64))
+    heap = list(zip((-rem).tolist(), rng.permutation(len(rem)).tolist(), range(len(rem))))
+    heapq.heapify(heap)
+    return tree, ttree, tstart, heap
+
+
+_NO_EXCL = np.empty(0, np.int64)
+
+
+def _excl_array(indices):
+    return np.fromiter(indices, np.int64, len(indices)) if indices else _NO_EXCL
+
+
+def _pair_stubs(stubs, rng, repair_tries=200):
+    """Pair stubs ``[(node, tag), ...]`` into links: tags must differ within a pair (a tag
+    is the node itself for internal stubs, the branch just exited for boundary stubs -- the
+    non-redundant constraint), node pairs must not repeat, no self-pairs.
+
+    Sequential hub-first pairing: aggregate stubs into entities ``(node, tag)`` with a
+    remaining count; repeatedly take the entity with the most remaining stubs and draw its
+    partners without replacement from the eligible entities (other node, other tag, not yet
+    adjacent, stubs left) with probability proportional to their remaining stubs.  When
+    fewer entities are eligible than stubs, take them all (Havel--Hakimi) and strand the
+    rest; a bounded repair then places stranded pairs by splitting an existing pair
+    ``(x, y) -> (u, x), (u', y)``, which keeps every degree.
+
+    Cost ``O((S + n) log n)`` for a pool of ``n`` entities and ``S`` stubs (Fenwick trees and
+    a lazy heap, see :func:`_draw_partners`), so one giant root pool -- the parametric mode
+    plants a two-level partition and routes every boundary stub to the root -- costs seconds
+    where the ``O(n)``-per-hub mask scan took hours (web graph, ``n = 3 x 10^5``: killed
+    after 5 h 20 min on 2026-09-06).  Same distribution as that scan (successive weighted
+    draws without replacement are the Efraimidis--Spirakis top-``r`` keys); the change of
+    random stream moves individual samples, not the ensemble.
+
+    Returns ``(pairs, leftover)``.  Each unordered node pair arises in exactly one pool, so
+    per-pool dedup is global dedup.  Verified pool-optimal against an exact max-flow
+    b-matching on the pools where any stub strands (2026-09-05).
     """
     stubs = list(stubs)
-    rng.shuffle(stubs)
-    leftover = []
-    if len(stubs) % 2:
-        leftover.append(stubs.pop())
-    pairs = [(stubs[2 * k], stubs[2 * k + 1]) for k in range(len(stubs) // 2)]
-
-    def find_bad(pairs):
-        seen, bad = set(), []
-        for k, (a, b) in enumerate(pairs):
-            key = (a[0], b[0]) if a[0] <= b[0] else (b[0], a[0])
-            if a[1] == b[1] or key in seen:
-                bad.append(k)
-            else:
-                seen.add(key)
-        return bad
-
-    for _ in range(max_sweeps):
-        bad = find_bad(pairs)
-        if not bad or len(pairs) < 2:
+    if not stubs:
+        return [], []
+    tagid = {}
+    ents, tag, rem, pos_of = _pool_layout(stubs, rng, tagid)
+    tree, ttree, tstart, heap = _pool_trees(tag, rem, rng, len(tagid))
+    adj = defaultdict(set)
+    pairs, leftover = [], []
+    while True:
+        i = _heap_top(heap, rem)
+        if i < 0:
             break
-        for k in bad:
-            j = int(rng.integers(len(pairs)))
-            if j != k:
-                (a, b), (c, d) = pairs[k], pairs[j]
-                pairs[k], pairs[j] = (a, d), (c, b)
-    bad = set(find_bad(pairs))
-    good = [pr for k, pr in enumerate(pairs) if k not in bad]
-    for k in bad:
-        leftover.extend(pairs[k])
-    return good, leftover
+        u = ents[i][0]
+        r = int(rem[i])
+        ex = {j for v in adj[u] for j in pos_of[v]}
+        ex.update(j for j in pos_of[u] if j != i)
+        picks = np.empty(r, np.int64)
+        got = _draw_partners(tree, ttree, rem, tag, tstart, _excl_array(ex), int(tag[i]),
+                             r, rng.random(r), picks)
+        for j in picks[:got].tolist():
+            v = ents[j][0]
+            pairs.append((ents[i], ents[j]))
+            adj[u].add(v)
+            adj[v].add(u)
+        if got < r:                                    # Havel-Hakimi: eligible weight ran out
+            leftover.extend([ents[i]] * (r - got))
+        _zero_entity(tree, ttree, rem, tag, i)
+    if len(leftover) >= 2:
+        leftover = _repair_undirected(pairs, leftover, adj, rng, repair_tries)
+    return pairs, leftover
+
+
+def _repair_undirected(pairs, leftover, adj, rng, tries):
+    """Place leftover stubs two at a time, directly or by splitting an existing pair of this
+    pool ``(x, y) -> (a, x), (b, y)``: degrees of ``x``, ``y`` unchanged, tags stay
+    consistent because only pairs of the same pool are split.  Bounded tries."""
+    def ok(a, b):
+        return a[0] != b[0] and a[1] != b[1] and b[0] not in adj[a[0]]
+    rest = []
+    rng.shuffle(leftover)
+    while len(leftover) >= 2 and pairs:
+        a, b = leftover.pop(), leftover.pop()
+        if ok(a, b):
+            pairs.append((a, b))
+            adj[a[0]].add(b[0])
+            adj[b[0]].add(a[0])
+            continue
+        done = False
+        for _ in range(tries):
+            k = int(rng.integers(len(pairs)))
+            x, y = pairs[k]
+            for (p, q) in ((x, y), (y, x)):
+                if ok(a, p) and ok(b, q) and not (a[0] == b[0] and p[0] == q[0]):
+                    adj[x[0]].discard(y[0])
+                    adj[y[0]].discard(x[0])
+                    pairs[k] = (a, p)
+                    pairs.append((b, q))
+                    adj[a[0]].add(p[0]); adj[p[0]].add(a[0])
+                    adj[b[0]].add(q[0]); adj[q[0]].add(b[0])
+                    done = True
+                    break
+            if done:
+                break
+        if not done:
+            rest.append(a)
+            leftover.insert(0, b)                      # retry b with another partner
+            if len(rest) > 4 * tries:                  # everything is stuck
+                break
+    return rest + leftover
+
+
+class _ArcSet:
+    """The arcs realized so far, with successor/predecessor maps so eligibility checks in
+    :func:`_pair_bipartite` are ``O(deg)``.  Shared across the pools of one directed sample
+    so no directed edge is realized twice."""
+
+    __slots__ = ("succ", "pred", "n")
+
+    def __init__(self):
+        self.succ, self.pred, self.n = defaultdict(set), defaultdict(set), 0
+
+    def add(self, o, i):
+        self.succ[o].add(i)
+        self.pred[i].add(o)
+        self.n += 1
+
+    def discard(self, o, i):
+        self.succ[o].discard(i)
+        self.pred[i].discard(o)
+        self.n -= 1
+
+    def __contains__(self, arc):
+        return arc[1] in self.succ.get(arc[0], ())
+
+    def __len__(self):
+        return self.n
+
+
+def _pair_bipartite(out_stubs, in_stubs, rng, forbid_same_group=False, used=None, repair_tries=200):
+    """Pair out-stubs ``[(node, group), ...]`` to in-stubs into arcs, forbidding self-loops,
+    duplicate arcs (via the shared :class:`_ArcSet` ``used``) and, with ``forbid_same_group``,
+    same-group pairs (the non-redundant boundary rule).
+
+    Sequential hub-first over both sides: the entity with the most remaining stubs, out or
+    in, draws its partners from the other side without replacement, proportional to their
+    remaining stubs; Havel--Hakimi take-all fallback; then a bounded repair places leftover
+    ``(u, g), (v, h)`` directly or by splitting an arc of this pool ``(x, y) -> (u, y), (x, v)``
+    (``x`` keeps its out-degree, ``y`` its in-degree).  Each side has its own Fenwick trees
+    and heap, so the cost is ``O((S + n) log n)`` like :func:`_pair_stubs`.
+
+    Returns ``(edges, leftover_out, leftover_in, used)``.
+    """
+    used = _ArcSet() if used is None else used
+    out_stubs, in_stubs = list(out_stubs), list(in_stubs)
+    if not out_stubs or not in_stubs:
+        return [], out_stubs, in_stubs, used
+    gid = {}
+    oe, ogrp, orem, opos = _pool_layout(out_stubs, rng, gid)
+    ie, igrp, irem, ipos = _pool_layout(in_stubs, rng, gid)
+    otree, ottree, ostart, oheap = _pool_trees(ogrp, orem, rng, len(gid))
+    itree, ittree, istart, iheap = _pool_trees(igrp, irem, rng, len(gid))
+
+    edges, lo, li = [], [], []
+    while True:
+        a, b = _heap_top(oheap, orem), _heap_top(iheap, irem)
+        if a < 0 or b < 0:
+            break
+        if orem[a] >= irem[b]:                         # out-hub draws in-partners
+            u, r = oe[a][0], int(orem[a])
+            ex = set(ipos.get(u, ()))
+            for v in used.succ.get(u, ()):
+                ex.update(ipos.get(v, ()))
+            picks = np.empty(r, np.int64)
+            got = _draw_partners(itree, ittree, irem, igrp, istart, _excl_array(ex),
+                                 int(ogrp[a]) if forbid_same_group else -1, r, rng.random(r), picks)
+            for j in picks[:got].tolist():
+                v = ie[j][0]
+                edges.append((u, v))
+                used.add(u, v)
+            if got < r:
+                lo.extend([oe[a]] * (r - got))
+            _zero_entity(otree, ottree, orem, ogrp, a)
+        else:                                          # in-hub draws out-partners
+            v, r = ie[b][0], int(irem[b])
+            ex = set(opos.get(v, ()))
+            for o in used.pred.get(v, ()):
+                ex.update(opos.get(o, ()))
+            picks = np.empty(r, np.int64)
+            got = _draw_partners(otree, ottree, orem, ogrp, ostart, _excl_array(ex),
+                                 int(igrp[b]) if forbid_same_group else -1, r, rng.random(r), picks)
+            for j in picks[:got].tolist():
+                o = oe[j][0]
+                edges.append((o, v))
+                used.add(o, v)
+            if got < r:
+                li.extend([ie[b]] * (r - got))
+            _zero_entity(itree, ittree, irem, igrp, b)
+    for j in np.flatnonzero(orem).tolist():            # the other side ran out first
+        lo.extend([oe[j]] * int(orem[j]))
+    for j in np.flatnonzero(irem).tolist():
+        li.extend([ie[j]] * int(irem[j]))
+    if lo and li and edges:
+        og = {e[0]: e[1] for e in oe}
+        ig = {e[0]: e[1] for e in ie}
+        lo, li = _repair_directed(edges, lo, li, used, forbid_same_group, og, ig, rng, repair_tries)
+    return edges, lo, li, used
+
+
+def _repair_directed(edges, lo, li, used, forbid, og, ig, rng, tries):
+    """Place a leftover out-stub ``(u, g)`` with a leftover in-stub ``(v, h)`` directly, or by
+    splitting an arc of this pool ``(x, y) -> (u, y), (x, v)``.  ``og``/``ig``: node -> group
+    on the out/in side of this pool.  Bounded tries."""
+    def ok(u, g, v, h):
+        return u != v and (not forbid or g != h) and v not in used.succ[u]
+    rng.shuffle(lo)
+    rng.shuffle(li)
+    rest_o = []
+    while lo and li and edges:
+        (u, g), (v, h) = lo.pop(), li.pop()
+        if ok(u, g, v, h):
+            edges.append((u, v))
+            used.add(u, v)
+            continue
+        done = False
+        for _ in range(tries):
+            k = int(rng.integers(len(edges)))
+            x, y = edges[k]
+            if ok(u, g, y, ig[y]) and ok(x, og[x], v, h):
+                used.discard(x, y)
+                edges[k] = (u, y)
+                edges.append((x, v))
+                used.add(u, y)
+                used.add(x, v)
+                done = True
+                break
+        if not done:
+            rest_o.append((u, g))
+            li.insert(0, (v, h))
+            if len(rest_o) > 4 * tries:
+                break
+    return rest_o + lo, li
+
+
+def _capped_apportion(total, weights, caps, rng):
+    """Largest-remainder apportion of ``total`` by ``weights`` that never exceeds ``caps``;
+    what a capped node cannot take is redistributed among nodes with spare capacity."""
+    w = np.asarray(weights, float).copy()
+    caps = np.asarray(caps, int)
+    alloc = np.zeros(len(w), int)
+    remaining = int(total)
+    for _ in range(50):
+        if remaining <= 0:
+            break
+        active = (alloc < caps) & (w > 0)
+        if not active.any():
+            break
+        a = np.minimum(apportion(remaining, w[active], rng), caps[active] - alloc[active])
+        alloc[active] += a
+        remaining -= int(a.sum())
+    if remaining > 0:                                  # weights exhausted: fill where room is left
+        active = np.flatnonzero(alloc < caps)
+        if len(active):
+            a = np.minimum(apportion(remaining, np.ones(len(active)), rng), caps[active] - alloc[active])
+            alloc[active] += a
+    return alloc
+
+
+def _observed_shares(G, tree):
+    """Per node, the blueprint's strength inside its own leaf module and outside it (out- and
+    in-side for directed blueprints; identical for undirected).  These shares decide how a
+    module's internal/boundary stub totals are split between its nodes, so a hub keeps its
+    observed boundary share instead of a degree-proportional one."""
+    paths, directed = tree.paths, G.is_directed()
+    out_int, out_bnd, in_int, in_bnd = (defaultdict(float) for _ in range(4))
+    for u, v, w in G.edges(data="weight", default=1.0):
+        if u == v:
+            continue
+        if paths[u] == paths[v]:
+            out_int[u] += w
+            in_int[v] += w
+            if not directed:
+                out_int[v] += w
+        else:
+            out_bnd[u] += w
+            in_bnd[v] += w
+            if not directed:
+                out_bnd[v] += w
+    if not directed:
+        in_int, in_bnd = out_int, out_bnd
+    return dict(out_int=out_int, out_bnd=out_bnd, in_int=in_int, in_bnd=in_bnd)
+
+
+def _split_by_shares(us, ks, total, shares, rng):
+    """Distribute ``total`` stubs of one kind over nodes ``us`` with sampled degrees ``ks``,
+    proportional to ``k_u * share_u`` and capped at ``k_u``."""
+    ks = np.asarray(ks, int)
+    w = np.array([k * shares[u] for u, k in zip(us, ks)], float)
+    if w.sum() <= 0:
+        w = ks.astype(float)
+    return _capped_apportion(total, w, ks, rng)
 
 
 def _route_stubs(tree, per_node, kind, rng, routing="observed"):
@@ -544,15 +1024,22 @@ def sample_stub_matching(G, partition, E=None, rng=None, degree_noise=False,
     k = np.maximum(k, min_degree)
     k_of = {u: int(k[i]) for i, u in enumerate(nodes)}
 
-    # 2. internal/boundary split per module (mixing mu_A = q_A / p_A), apportioned by degree
+    # 2. internal/boundary split: module totals from the mixing mu_A = q_A / p_A, distributed
+    #    over the module's nodes by each node's observed internal share (capped at k_u)
+    obs = _observed_shares(G, tree)
     internal, boundary = {}, {}
     for A in tree.leaves:
+        us = tree.nodes_in[A]
         mu = tree.q[A] / tree.flow[A] if tree.flow[A] > 0 else 0.0
         mu = min(mu * boundary_scale, 1.0)
-        ks = np.array([k_of[u] for u in tree.nodes_in[A]])
+        ks = np.array([k_of[u] for u in us])
         I_A = min(int(round(ks.sum() * (1.0 - mu) / 2.0)) * 2, int(ks.sum()))
-        ints = np.minimum(apportion(I_A, ks, rng), ks)
-        for u, ki, ii in zip(tree.nodes_in[A], ks, ints):
+        share = {}
+        for u in us:
+            tot = obs["out_int"][u] + obs["out_bnd"][u]
+            share[u] = obs["out_int"][u] / tot if tot > 0 else 1.0 - mu
+        ints = _split_by_shares(us, ks, I_A, share, rng)
+        for u, ki, ii in zip(us, ks, ints):
             internal[u], boundary[u] = int(ii), int(ki - ii)
 
     # 3. route boundary stubs to stop levels (hierarchical exit rates), apportioned
@@ -608,62 +1095,22 @@ def directed_mixing_stats(G, partition, hierarchical=False):
             for A in keys}
 
 
-def _pair_bipartite(out_stubs, in_stubs, rng, forbid_same_group=False, used=None, max_sweeps=200):
-    """Pair out-stubs [(node, group), ...] to in-stubs, forbidding self-loops, duplicate directed
-    edges (via a shared `used` set) and optionally same-group pairs (non-redundant boundary rule).
-
-    Returns (edges, leftover_out, leftover_in, used).
-    """
-    out_stubs, in_stubs = list(out_stubs), list(in_stubs)
-    rng.shuffle(out_stubs)
-    rng.shuffle(in_stubs)
-    used = set() if used is None else used
-    n = min(len(out_stubs), len(in_stubs))
-    leftover_out, leftover_in = out_stubs[n:], in_stubs[n:]
-    out_stubs, in_stubs = out_stubs[:n], in_stubs[:n]
-
-    def bad_at(i):
-        o, ii = out_stubs[i], in_stubs[i]
-        return (o[0] == ii[0] or (forbid_same_group and o[1] == ii[1])
-                or (o[0], ii[0]) in used)
-
-    for _ in range(max_sweeps):
-        bad = [i for i in range(n) if bad_at(i)]
-        if not bad:
-            break
-        for i in bad:
-            j = int(rng.integers(n))
-            in_stubs[i], in_stubs[j] = in_stubs[j], in_stubs[i]
-
-    edges = []
-    for i in range(n):
-        if bad_at(i):
-            leftover_out.append(out_stubs[i])
-            leftover_in.append(in_stubs[i])
-        else:
-            used.add((out_stubs[i][0], in_stubs[i][0]))
-            edges.append((out_stubs[i][0], in_stubs[i][0]))
-    return edges, leftover_out, leftover_in, used
-
-
 def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale=1.0,
-                                  min_degree=1, topup=True, routing="observed"):
+                                  min_degree=1, routing="observed"):
     """Directed microcanonical benchmark sampler from a blueprint's directed modular flow.
 
-    Preserves the in- and out-degree sequences (up to a few dropped stubs), reproduces each
-    module's directed mixing ``mu^exit`` and ``mu^enter`` separately, and enforces the
-    non-redundant boundary rule (a module's exit stubs never re-enter that module).
+    Preserves the in- and out-degree sequences exactly (every unweighted blueprint measured;
+    weighted blueprints are sampled in the flow-degree frame), reproduces each module's
+    directed mixing ``mu^exit`` and ``mu^enter`` separately, and enforces the non-redundant
+    boundary rule (a module's exit stubs never re-enter that module).  The split of a module's
+    boundary stubs between its nodes follows each node's observed boundary share
+    (:func:`_observed_shares`); pairing is the sequential pairer of :func:`_pair_bipartite`.
 
     **Hierarchical**: boundary stubs route up the module tree by the hierarchical exit
     rates (out-stubs) and enter rates (in-stubs), pair inside the pool of the internal
     node they stopped at, and escalate to the parent pool when they cannot be placed --
     the directed counterpart of :func:`sample_stub_matching`.  A two-level partition
     reduces to a single root pool, i.e. to the flat sampler.
-
-    With ``topup`` (default), leftover stubs that the non-redundant boundary pass could not
-    place (mostly hub stubs blocked by the same-branch or duplicate-arc constraint) get one
-    more pairing pass with the same-branch rule relaxed, recovering the link count and the
-    hub degrees at the cost of a few extra within-module arcs.
 
     ``routing`` selects the hierarchical escalation rule -- ``"observed"`` (default),
     ``"boundary"`` or ``"model"``, see :meth:`ModuleTree.escalation_probs`.
@@ -690,7 +1137,9 @@ def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale
     kout_of = {u: int(kout[idx[u]]) for u in nodes}
     kin_of = {u: int(kin[idx[u]]) for u in nodes}
 
-    # 1. internal/boundary split per leaf module, from its directed mixing
+    # 1. internal/boundary split per leaf module: totals from its directed mixing, distributed
+    #    over its nodes by each node's observed boundary share (out and in separately)
+    obs = _observed_shares(G, tree)
     iout, bout, iin, bin_ = {}, {}, {}, {}
     for A in tree.leaves:
         us = tree.nodes_in[A]
@@ -698,8 +1147,14 @@ def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale
         mi = min(tree.mu_in(A) * boundary_scale, 1.0)
         ko = np.array([kout_of[u] for u in us])
         ki = np.array([kin_of[u] for u in us])
-        bo = np.minimum(apportion(min(int(round(ko.sum() * mo)), int(ko.sum())), ko, rng), ko)
-        bi = np.minimum(apportion(min(int(round(ki.sum() * mi)), int(ki.sum())), ki, rng), ki)
+        so, si = {}, {}
+        for u in us:
+            t = obs["out_int"][u] + obs["out_bnd"][u]
+            so[u] = obs["out_bnd"][u] / t if t > 0 else mo
+            t = obs["in_int"][u] + obs["in_bnd"][u]
+            si[u] = obs["in_bnd"][u] / t if t > 0 else mi
+        bo = _split_by_shares(us, ko, min(int(round(ko.sum() * mo)), int(ko.sum())), so, rng)
+        bi = _split_by_shares(us, ki, min(int(round(ki.sum() * mi)), int(ki.sum())), si, rng)
         for u, k, b in zip(us, ko, bo):
             bout[u], iout[u] = int(b), int(k - b)
         for u, k, b in zip(us, ki, bi):
@@ -710,7 +1165,7 @@ def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale
     pools_in = _route_stubs(tree, bin_, "in", rng, routing)
 
     # 3a. internal arcs: pair within each leaf module; leftovers escalate to its parent
-    used, edges = set(), []
+    used, edges = _ArcSet(), []
     for A in tree.leaves:
         us = tree.nodes_in[A]
         o = [(u, A) for u in us for _ in range(iout[u])]
@@ -722,7 +1177,7 @@ def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale
 
     # 3b. boundary pools, deepest first, so leftovers escalate upward (dropped at the root)
     depth = max([len(nu) for nu in pools_out] + [len(nu) for nu in pools_in], default=0)
-    dropped_before, root_lo, root_li = 0, [], []
+    root_lo, root_li = [], []
     for d in range(depth, -1, -1):
         for nu in sorted(set(k for k in pools_out if len(k) == d)
                          | set(k for k in pools_in if len(k) == d)):
@@ -730,76 +1185,104 @@ def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale
                                               rng, forbid_same_group=True, used=used)
             edges.extend(e)
             if nu == ():
-                dropped_before, root_lo, root_li = len(lo), lo, li
+                root_lo, root_li = lo, li
             else:
                 pools_out[nu[:-1]].extend((u, nu) for u, _ in lo)
                 pools_in[nu[:-1]].extend((u, nu) for u, _ in li)
-
-    # 4. top-up: place what the non-redundant rule could not, same-branch allowed
-    if topup and root_lo and root_li:
-        e2, root_lo, root_li, used = _pair_bipartite(root_lo, root_li, rng,
-                                                     forbid_same_group=False, used=used)
-        edges.extend(e2)
 
     H = nx.DiGraph()
     H.add_nodes_from(nodes)
     H.add_edges_from(edges)
     return H, {"target_E": E, "realized_E": H.number_of_edges(),
                "dropped_out": len(root_lo), "dropped_in": len(root_li),
-               "dropped_before_topup": dropped_before,
                "levels": max(len(A) for A in tree.leaves), "routing": routing}
 
 
-def connect_components(H, rng, max_passes=12):
+def connect_components(H, rng, partition=None, max_passes=12, tries=200):
     """Merge components with degree-preserving double-edge swaps (directed or undirected).
 
-    Each non-giant component is joined to the giant by one swap
-    (a->b),(c->d) -> (a->d),(c->b); isolated singletons are attached by splitting a giant edge
-    (a small, controlled degree perturbation). Passes repeat until a single component remains or
-    no further progress is made. Modifies H in place.
+    Each non-giant component is joined to the giant by one swap ``(a->b),(c->d) -> (a->d),(c->b)``.
+    With ``partition`` given (as the samplers do), the swap is chosen **module-aware**: ``c`` is
+    drawn from the giant's edges with ``comm[c] == comm[a]`` and ``comm[d] == comm[b]``, so the two
+    new links have exactly the module pairs of the two removed ones and every module's internal and
+    boundary link counts -- hence every ``mu_A`` and every module-pair count -- are unchanged.  Only
+    when no such giant edge exists after ``tries`` draws does it fall back to an unconstrained swap.
+    Isolated nodes are attached by splitting a giant edge, preferably one inside their own module
+    (a small, controlled degree perturbation).  Passes repeat until one component remains or no
+    progress is made.  Modifies ``H`` in place.
+
+    Why module-aware: on sparse blueprints the repair is not rare -- the 209-link interactome sample
+    needs ~20 merges under a two-level partition -- and module-blind swaps turned internal links
+    into boundary links, moving the mean per-module mixing from 0.18 to 0.28 (2026-09-05).
     """
     directed = H.is_directed()
     comp_fn = nx.weakly_connected_components if directed else nx.connected_components
-    nbrs_fn = H.successors if directed else H.neighbors
-    info = {"merges": 0, "singletons_attached": 0}
+    comm = as_paths(partition) if partition is not None else None
+    info = {"merges": 0, "merges_module_aware": 0, "singletons_attached": 0}
 
-    def random_edge(pool):                             # a random edge with tail in `pool`
-        for _ in range(200):
-            c = pool[int(rng.integers(len(pool)))]
-            nb = list(nbrs_fn(c))
-            if nb:
-                return c, nb[int(rng.integers(len(nb)))]
-        return None
+    def ok_swap(a, b, c, d):
+        return a != d and c != b and not H.has_edge(a, d) and not H.has_edge(c, b)
 
     for _ in range(max_passes):
         comps = sorted(comp_fn(H), key=len, reverse=True)
         if len(comps) <= 1:
             break
-        giant = list(comps[0])
+        giant = set(comps[0])
+        giant_edges = [(u, v) for u, v in H.edges() if u in giant]
+        by_pair = defaultdict(list)
+        if comm is not None:
+            for c, d in giant_edges:
+                by_pair[(comm[c], comm[d])].append((c, d))
+                if not directed:
+                    by_pair[(comm[d], comm[c])].append((d, c))
         progressed = False
         for small in comps[1:]:
             small = list(small)
-            es, eg = random_edge(small), random_edge(giant)
+            small_edges = [(u, v) for u, v in H.edges(small) if u in small] if directed else \
+                          [(u, v) for u, v in H.edges(small)]
             done = False
-            if es and eg:
-                for _ in range(20):
-                    a, b = es
-                    c, d = eg
-                    if a != d and c != b and not H.has_edge(a, d) and not H.has_edge(c, b):
+            if small_edges and giant_edges:
+                # module-aware attempts first, then unconstrained
+                for attempt in range(tries):
+                    a, b = small_edges[int(rng.integers(len(small_edges)))]
+                    if not directed and rng.random() < 0.5:
+                        a, b = b, a
+                    cands = by_pair.get((comm[a], comm[b])) if comm is not None else None
+                    if cands:
+                        c, d = cands[int(rng.integers(len(cands)))]
+                        aware = True
+                    else:
+                        c, d = giant_edges[int(rng.integers(len(giant_edges)))]
+                        if not directed and rng.random() < 0.5:
+                            c, d = d, c
+                        aware = False
+                    if ok_swap(a, b, c, d):
                         H.remove_edge(a, b); H.remove_edge(c, d)
                         H.add_edge(a, d); H.add_edge(c, b)
                         info["merges"] += 1
+                        info["merges_module_aware"] += aware
                         done = True
                         break
-                    es, eg = random_edge(small), random_edge(giant)
-            if not done and eg:                        # singleton: split a giant edge to attach it
-                iso, (c, d) = small[0], eg
-                if iso not in (c, d) and not H.has_edge(c, iso) and not H.has_edge(iso, d):
-                    H.remove_edge(c, d); H.add_edge(c, iso); H.add_edge(iso, d)
-                    info["singletons_attached"] += 1
-                    done = True
+            if not done and len(small) == 1 and giant_edges:      # isolated node: split a giant edge
+                iso = small[0]
+                cands = by_pair.get((comm[iso], comm[iso])) if comm is not None else None
+                pool = cands if cands else giant_edges
+                for attempt in range(tries):
+                    c, d = pool[int(rng.integers(len(pool)))]
+                    if iso not in (c, d) and not H.has_edge(c, iso) and not H.has_edge(iso, d):
+                        H.remove_edge(c, d); H.add_edge(c, iso); H.add_edge(iso, d)
+                        info["singletons_attached"] += 1
+                        done = True
+                        break
             if done:
-                giant.extend(small)
+                giant.update(small)
+                giant_edges = [(u, v) for u, v in H.edges() if u in giant]
+                if comm is not None:
+                    by_pair = defaultdict(list)
+                    for c, d in giant_edges:
+                        by_pair[(comm[c], comm[d])].append((c, d))
+                        if not directed:
+                            by_pair[(comm[d], comm[c])].append((d, c))
                 progressed = True
         if not progressed:
             break
@@ -808,85 +1291,378 @@ def connect_components(H, rng, max_passes=12):
     return H, info
 
 
-def raise_clustering(H, partition, rng, target=None, swap_factor=25):
-    """Raise clustering by closing open wedges with within-module degree-preserving swaps.
+@_njit(cache=True)
+def _cl_has(indptr, nbrs, u, v):
+    lo, hi = indptr[u], indptr[u + 1]
+    while lo < hi:
+        mid = (lo + hi) >> 1
+        if nbrs[mid] < v:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo < indptr[u + 1] and nbrs[lo] == v
 
-    For an open wedge b--a--c (a adjacent to both, b not adjacent to c), pick edges (b,x) and
-    (c,y) inside the same module and rewire remove (b,x),(c,y) -> add (b,c),(x,y): this closes the
-    wedge into triangle a-b-c while preserving every node's degree. Keeping all endpoints inside
-    one module preserves each module's boundary flow (mixing) and every cross-module edge, so only
-    the within-module wiring changes. A swap is kept only if it does not lower the triangle count.
 
-    ``target`` is a global transitivity ($3T/W$) to stop at; ``swap_factor`` bounds the attempts
-    at ``swap_factor`` times the internal-edge count. Undirected only. Returns (nx.Graph, info).
-    Partial by nature: it typically closes part of the gap to a real network's clustering, more on
-    denser blueprints, and adds runtime---so it is opt-in (see ``sample_benchmark``).
-    """
-    comm = as_paths(partition)
-    adj = {u: set(H.neighbors(u)) for u in H}
-    mod_nodes = defaultdict(list)
-    for u in H:
-        mod_nodes[comm[u]].append(u)
-    n_int = sum(1 for u, v in H.edges() if comm[u] == comm[v])
-    mods = [m for m in mod_nodes if len(mod_nodes[m]) >= 3]
-    if not mods or n_int == 0:
-        return H, {"swaps": 0, "attempts": 0}
-    sizes = np.array([len(mod_nodes[m]) for m in mods], float)
-    cum = np.cumsum(sizes) / sizes.sum()
+@_njit(cache=True)
+def _cl_replace(indptr, nbrs, u, old, new):
+    """In u's sorted neighbour row replace ``old`` by ``new`` and keep the row sorted."""
+    st, en = indptr[u], indptr[u + 1]
+    lo, hi = st, en
+    while lo < hi:
+        mid = (lo + hi) >> 1
+        if nbrs[mid] < old:
+            lo = mid + 1
+        else:
+            hi = mid
+    j = lo
+    if new > old:
+        while j + 1 < en and nbrs[j + 1] < new:
+            nbrs[j] = nbrs[j + 1]
+            j += 1
+    else:
+        while j - 1 >= st and nbrs[j - 1] > new:
+            nbrs[j] = nbrs[j - 1]
+            j -= 1
+    nbrs[j] = new
 
-    W = sum(k * (k - 1) // 2 for k in (len(adj[u]) for u in adj))
-    T = sum(len(adj[u] & adj[v]) for u, v in H.edges()) // 3
-    T_target = None if target is None else target * W / 3.0
 
-    def common(x, y):
-        return len(adj[x] & adj[y])
+@_njit(cache=True)
+def _cl_common(indptr, nbrs, u, v, out):
+    """Common neighbours of u and v (sorted-row merge) into ``out``; returns their number."""
+    i, ie = indptr[u], indptr[u + 1]
+    j, je = indptr[v], indptr[v + 1]
+    k = 0
+    while i < ie and j < je:
+        a, b = nbrs[i], nbrs[j]
+        if a == b:
+            out[k] = a
+            k += 1
+            i += 1
+            j += 1
+        elif a < b:
+            i += 1
+        else:
+            j += 1
+    return k
 
-    def same_mod_nbrs(u, A):
-        return [w for w in adj[u] if comm[w] == A]
 
-    swaps, attempts = 0, swap_factor * n_int
-    for _ in range(attempts):
-        A = mods[int(np.searchsorted(cum, rng.random()))]
-        nodes = mod_nodes[A]
-        a = nodes[int(rng.integers(len(nodes)))]
-        na = same_mod_nbrs(a, A)
-        if len(na) < 2:
-            continue
-        b = na[int(rng.integers(len(na)))]
-        c = na[int(rng.integers(len(na)))]
-        if b == c or c in adj[b]:                    # need an OPEN wedge b--a--c
-            continue
-        nb = [x for x in same_mod_nbrs(b, A) if x not in (a, c) and x not in adj[c]]
-        nc = [y for y in same_mod_nbrs(c, A) if y not in (a, b)]
-        if not nb or not nc:
-            continue
-        x = nb[int(rng.integers(len(nb)))]
-        y = nc[int(rng.integers(len(nc)))]
-        if x == y or y in adj[x] or x in adj[c] or y in adj[b]:
-            continue
-        # rewire remove (b,x),(c,y) -> add (b,c),(x,y); exact triangle delta while mutating
-        dT = -common(b, x); adj[b].discard(x); adj[x].discard(b)
-        dT -= common(c, y); adj[c].discard(y); adj[y].discard(c)
-        dT += common(b, c); adj[b].add(c); adj[c].add(b)
-        dT += common(x, y); adj[x].add(y); adj[y].add(x)
-        if dT <= 0:                                  # revert non-improving swaps
-            adj[b].discard(c); adj[c].discard(b)
-            adj[x].discard(y); adj[y].discard(x)
-            adj[b].add(x); adj[x].add(b)
-            adj[c].add(y); adj[y].add(c)
-            continue
-        T += dT
-        swaps += 1
-        if T_target is not None and swaps % max(n_int // 4, 1) == 0 and T >= T_target:
+@_njit(cache=True)
+def _cl_triangles(indptr, nbrs, t, buf):
+    n = len(t)
+    for u in range(n):
+        c = 0
+        for i in range(indptr[u], indptr[u + 1]):
+            c += _cl_common(indptr, nbrs, u, nbrs[i], buf)
+        t[u] = c // 2
+
+
+@_njit(cache=True)
+def _cl_reach(indptr, nbrs, src, dst, hop_limit, stamp, stampval, queue):
+    """Breadth-first search from ``src``; True if ``dst`` is within ``hop_limit`` hops."""
+    if src == dst:
+        return True
+    head, tail = 0, 0
+    queue[tail] = src
+    tail += 1
+    stamp[src] = stampval
+    level_end, hops = tail, 0
+    while head < tail and hops < hop_limit:
+        u = queue[head]
+        head += 1
+        for i in range(indptr[u], indptr[u + 1]):
+            v = nbrs[i]
+            if v == dst:
+                return True
+            if stamp[v] != stampval:
+                stamp[v] = stampval
+                queue[tail] = v
+                tail += 1
+        if head == level_end:
+            hops += 1
+            level_end = tail
+    return False
+
+
+@_njit(cache=True)
+def _cl_refresh(indptr, t, tgt, cum):
+    """Apex-sampling weights: a node's triangle deficit plus a floor, zero below degree 2."""
+    n = len(t)
+    base, cnt = 0.0, 0
+    for u in range(n):
+        if indptr[u + 1] - indptr[u] >= 2:
+            d = tgt[u] - t[u]
+            if d > 0:
+                base += d
+                cnt += 1
+    base = 0.1 * base / cnt if cnt > 0 else 1.0
+    total = 0.0
+    for u in range(n):
+        if indptr[u + 1] - indptr[u] >= 2:
+            d = tgt[u] - t[u]
+            total += (d if d > 0 else 0.0) + base
+        cum[u] = total
+    return total
+
+
+@_njit(cache=True)
+def _cl_pick(indptr, nbrs, u, want_comm, comm, excl1, excl2, k):
+    """The k-th neighbour of u (0-based) whose module is ``want_comm`` and that is not excl1/excl2;
+    -1 when there is none.  With k < 0 returns the count of such neighbours."""
+    c = 0
+    for i in range(indptr[u], indptr[u + 1]):
+        v = nbrs[i]
+        if comm[v] == want_comm and v != excl1 and v != excl2:
+            if c == k:
+                return v
+            c += 1
+    return -1 if k >= 0 else c
+
+
+@_njit(cache=True)
+def _cl_kernel(indptr, nbrs, comm, t, tgt, w, cum, dt, mark, touched, buf, stamp, queue,
+               istate, fstate, chunk, max_attempts, stall_window, hop_limit, refresh_every, seed):
+    """Run up to ``chunk`` swap attempts.  istate = [swaps, attempts, last_accept, stop, stampval,
+    mark_epoch, seeded]; fstate = [D, C, total_weight].  stop: 0 running, 1 budget, 2 stall."""
+    n = len(t)
+    if istate[6] == 0:
+        np.random.seed(seed)
+        istate[6] = 1
+        fstate[2] = _cl_refresh(indptr, t, tgt, cum)
+    swaps, attempts, last_accept = istate[0], istate[1], istate[2]
+    done = 0
+    while done < chunk:
+        if attempts >= max_attempts:
+            istate[3] = 1
             break
+        if attempts - last_accept > stall_window:
+            istate[3] = 2
+            break
+        attempts += 1
+        done += 1
+        if attempts % refresh_every == 0:
+            fstate[2] = _cl_refresh(indptr, t, tgt, cum)
+        if fstate[2] <= 0.0:
+            istate[3] = 2
+            break
+        a = np.searchsorted(cum, np.random.random() * fstate[2])
+        if a >= n:
+            a = n - 1
+        sa, ea = indptr[a], indptr[a + 1]
+        if ea - sa < 2:
+            continue
+        i = sa + np.random.randint(0, ea - sa)
+        j = sa + np.random.randint(0, ea - sa)
+        if i == j:
+            continue
+        b, c = nbrs[i], nbrs[j]
+        if _cl_has(indptr, nbrs, b, c):
+            continue                                    # wedge already closed
+        A, B = comm[b], comm[c]
+        if A == B:                                      # types 1/2: rewire two internal edges of A
+            nx_ = _cl_pick(indptr, nbrs, b, A, comm, a, c, -1)
+            ny_ = _cl_pick(indptr, nbrs, c, A, comm, a, b, -1)
+        else:                                           # type 3: x in B (c's module), y in A (b's)
+            nx_ = _cl_pick(indptr, nbrs, b, B, comm, a, c, -1)
+            ny_ = _cl_pick(indptr, nbrs, c, A, comm, a, b, -1)
+        if nx_ <= 0 or ny_ <= 0:
+            continue
+        if A == B:
+            x = _cl_pick(indptr, nbrs, b, A, comm, a, c, np.random.randint(0, nx_))
+            y = _cl_pick(indptr, nbrs, c, A, comm, a, b, np.random.randint(0, ny_))
+        else:
+            x = _cl_pick(indptr, nbrs, b, B, comm, a, c, np.random.randint(0, nx_))
+            y = _cl_pick(indptr, nbrs, c, A, comm, a, b, np.random.randint(0, ny_))
+        if x == y or _cl_has(indptr, nbrs, x, y):
+            continue
+        # triangle deltas: removals on the current graph, then rewire, then additions
+        istate[5] += 1
+        epoch = istate[5]
+        nt = 0
+        for (p, q, sgn) in ((b, x, -1), (c, y, -1)):
+            k = _cl_common(indptr, nbrs, p, q, buf)
+            for z in (p, q):
+                if mark[z] != epoch:
+                    mark[z] = epoch
+                    dt[z] = 0
+                    touched[nt] = z
+                    nt += 1
+                dt[z] += sgn * k
+            for m in range(k):
+                z = buf[m]
+                if mark[z] != epoch:
+                    mark[z] = epoch
+                    dt[z] = 0
+                    touched[nt] = z
+                    nt += 1
+                dt[z] += sgn
+        _cl_replace(indptr, nbrs, b, x, c)
+        _cl_replace(indptr, nbrs, x, b, y)
+        _cl_replace(indptr, nbrs, c, y, b)
+        _cl_replace(indptr, nbrs, y, c, x)
+        for (p, q) in ((b, c), (x, y)):
+            k = _cl_common(indptr, nbrs, p, q, buf)
+            for z in (p, q):
+                if mark[z] != epoch:
+                    mark[z] = epoch
+                    dt[z] = 0
+                    touched[nt] = z
+                    nt += 1
+                dt[z] += k
+            for m in range(k):
+                z = buf[m]
+                if mark[z] != epoch:
+                    mark[z] = epoch
+                    dt[z] = 0
+                    touched[nt] = z
+                    nt += 1
+                dt[z] += 1
+        dD = 0.0
+        dC = 0.0
+        for m in range(nt):
+            z = touched[m]
+            dD += w[z] * (abs(t[z] + dt[z] - tgt[z]) - abs(t[z] - tgt[z]))
+            dC += w[z] * dt[z]
+        ok = dD < -1e-12
+        if ok:                                          # connectivity: both removed edges bypassed
+            istate[4] += 1
+            ok = _cl_reach(indptr, nbrs, b, x, hop_limit, stamp, istate[4], queue)
+            if ok:
+                istate[4] += 1
+                ok = _cl_reach(indptr, nbrs, c, y, hop_limit, stamp, istate[4], queue)
+        if not ok:
+            _cl_replace(indptr, nbrs, b, c, x)
+            _cl_replace(indptr, nbrs, x, y, b)
+            _cl_replace(indptr, nbrs, c, b, y)
+            _cl_replace(indptr, nbrs, y, x, c)
+            continue
+        for m in range(nt):
+            z = touched[m]
+            t[z] += dt[z]
+        fstate[0] += dD
+        fstate[1] += dC / n
+        swaps += 1
+        last_accept = attempts
+    istate[0], istate[1], istate[2] = swaps, attempts, last_accept
+    return done
 
+
+def raise_clustering(H, partition, rng, blueprint=None, targets=None, swap_factor=50,
+                     stall_window=None, time_cap=None, hop_limit=4, chunk=20000):
+    """Steer each node's local clustering coefficient toward the blueprint's, preserving
+    everything the sampler fixed.
+
+    Objective: ``D = sum_u w_u |t_u - t_u^*|`` with ``t_u`` the node's triangle count,
+    ``t_u^*`` its target and ``w_u = 1 / C(k_u, 2)``, so ``D`` is the L1 distance between local
+    clustering coefficients and the average clustering ``C`` is matched node by node.  A swap
+    is accepted iff it strictly lowers ``D``.  Targets come from the ``blueprint`` (its own
+    triangle counts; nodes are aligned because the sampler keeps node identities and degrees)
+    or, for parametric samples with no blueprint, from ``targets``: a ``{node: triangles}``
+    dict or a callable ``c(k)`` giving the local clustering of a degree-``k`` node, e.g. the
+    fitted profile ``c(k) = c_0 k^{-alpha}``; ``t_u^* = c(k_u) C(k_u, 2)``.  LFR is the case
+    ``c = 0`` (no pass).  Newman-style edge-disjoint triangle stubs were measured as an
+    alternative and rejected: they can plant at most ``k/2`` triangles per node, which covers
+    11-12% of the deficit on email and HepPh (ideas.tex, 2026-09-05).
+
+    Moves are double-edge swaps ``remove (b,x),(c,y) -> add (b,c),(x,y)`` closing an open
+    wedge ``b--a--c`` (apex ``a`` drawn with probability proportional to its triangle deficit):
+    when ``b, c`` share leaf module ``A`` the two removed edges are internal edges of ``A``
+    (the apex may sit in another module, which creates the two-boundary-edge triangles a
+    within-module pass cannot); when ``b`` in ``B`` and ``c`` in ``C`` differ, ``x`` is a
+    neighbour of ``b`` in ``C`` and ``y`` a neighbour of ``c`` in ``B``, so two ``B--C``
+    boundary edges become two ``B--C`` boundary edges.  Invariants, all exact: every degree,
+    every module's internal and boundary edge counts (hence every ``mu_A``), every LCA-depth
+    histogram (hence the hierarchical routing), every realized module-pair link count, simple
+    graph, and connectivity -- a swap is kept only if both removed edges are bypassed within
+    ``hop_limit`` hops in the new graph, so no bridge is ever removed and no repair pass is
+    needed afterwards.
+
+    Stops at ``swap_factor * E`` attempts, after ``stall_window`` attempts without an accepted
+    swap (default ``max(2000, E)``), or at ``time_cap`` seconds.  Compiled with numba when
+    available (same code otherwise).  Undirected only.  Returns ``(nx.Graph, info)``.
+
+    Measured 2026-09-05 on samples of the sequential sampler (output/sampler_study/
+    clustering_v2): mean |c_u - c_u^bp| polbooks 0.180 -> 0.026, email 0.149 -> 0.017,
+    polblogs 0.147 -> 0.007; recovery AMI unchanged or higher and the number of modules
+    Infomap finds stays at the planted count, where the earlier within-module wedge pass
+    (transitivity target, no per-node profile, no block constraint) inflated it (email 31.5
+    modules for 12 planted).  A global-``C`` target with greedy triangle creation and the
+    unconstrained type-3 move were both rejected on those numbers (ideas.tex, 2026-09-05).
+    """
+    import time
+    if H.is_directed():
+        raise ValueError("raise_clustering is undirected only")
+    t0 = time.time()
+    nodes = sorted(H.nodes())
+    idx = {u: i for i, u in enumerate(nodes)}
+    n = len(nodes)
+    deg = np.array([H.degree(u) for u in nodes], dtype=np.int64)
+    indptr = np.zeros(n + 1, dtype=np.int64)
+    indptr[1:] = np.cumsum(deg)
+    nbrs = np.empty(int(indptr[-1]), dtype=np.int64)
+    for u in nodes:
+        i = idx[u]
+        row = np.fromiter((idx[v] for v in H.neighbors(u)), dtype=np.int64, count=deg[i])
+        row.sort()
+        nbrs[indptr[i]:indptr[i + 1]] = row
+    paths = as_paths(partition)
+    mid = {}
+    comm = np.array([mid.setdefault(paths[u], len(mid)) for u in nodes], dtype=np.int64)
+    if targets is None:
+        if blueprint is None:
+            raise ValueError("raise_clustering needs the blueprint the sample was drawn from, or "
+                             "per-node targets (a {node: triangles} dict or a callable c(k))")
+        U = nx.Graph(blueprint) if blueprint.is_directed() else blueprint
+        if not all(u in U for u in nodes):
+            raise ValueError("blueprint and sample must share their node set (per-node targets)")
+        tb = nx.triangles(U)
+        tgt = np.array([float(tb[u]) for u in nodes])
+    elif callable(targets):                              # parametric: local clustering c(k)
+        tgt = np.array([float(targets(int(k))) * k * (k - 1) / 2.0 for k in deg])
+    else:
+        tgt = np.array([float(targets[u]) for u in nodes])
+    w = np.where(deg >= 2, 2.0 / np.maximum(deg * (deg - 1), 1), 0.0)
+    t = np.zeros(n, dtype=np.int64)
+    kmax = int(deg.max()) if n else 0
+    buf = np.empty(max(kmax, 1), dtype=np.int64)
+    _cl_triangles(indptr, nbrs, t, buf)
+    m = int(indptr[-1]) // 2
+    if m == 0 or kmax < 2:
+        return H.copy(), {"swaps": 0, "attempts": 0, "reason": "nothing to do"}
+    D0 = float(np.sum(w * np.abs(t - tgt)))
+    C0 = float(np.sum(w * t)) / n
+    cum = np.zeros(n)
+    dt = np.zeros(n, dtype=np.int64)
+    mark = np.zeros(n, dtype=np.int64)
+    touched = np.empty(4 * kmax + 4, dtype=np.int64)
+    stamp = np.zeros(n, dtype=np.int64)
+    queue = np.empty(n, dtype=np.int64)
+    istate = np.zeros(7, dtype=np.int64)
+    fstate = np.array([D0, C0, 0.0])
+    max_attempts = int(swap_factor * m)
+    if stall_window is None:
+        stall_window = max(2000, m)
+    seed = int(rng.integers(0, 2**31 - 1))
+    reason = "budget"
+    while True:
+        _cl_kernel(indptr, nbrs, comm, t, tgt, w, cum, dt, mark, touched, buf, stamp, queue,
+                   istate, fstate, int(chunk), max_attempts, int(stall_window), int(hop_limit),
+                   5000, seed)
+        if istate[3] == 1:
+            reason = "budget"
+            break
+        if istate[3] == 2:
+            reason = "stall"
+            break
+        if time_cap is not None and time.time() - t0 > time_cap:
+            reason = "time_cap"
+            break
     Hc = nx.Graph()
-    Hc.add_nodes_from(H.nodes())
-    for u in adj:
-        for v in adj[u]:
-            if u < v:
-                Hc.add_edge(u, v)
-    return Hc, {"swaps": swaps, "attempts": attempts}
+    Hc.add_nodes_from(nodes)
+    Hc.add_edges_from((nodes[u], nodes[nbrs[i]]) for u in range(n)
+                      for i in range(indptr[u], indptr[u + 1]) if u < nbrs[i])
+    return Hc, {"swaps": int(istate[0]), "attempts": int(istate[1]), "reason": reason,
+                "D_before": D0, "D_after": float(fstate[0]), "C_before": C0,
+                "C_after": float(fstate[1]), "seconds": time.time() - t0}
 
 
 # --------------------------------------------------------------------------- #
@@ -975,9 +1751,8 @@ def read_pajek(path):
 # --------------------------------------------------------------------------- #
 def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
                      method="stub", directed=None, connect=True, min_degree=1,
-                     match_clustering=False, clustering_swap_factor=25,
-                     rng=None, degree_noise=False, num_trials=20, seed=1,
-                     routing="observed", topup=True):
+                     match_clustering=False, rng=None, degree_noise=False, num_trials=20,
+                     seed=1, routing="observed"):
     """Generate one benchmark network from a blueprint's modular flow.
 
     Parameters
@@ -999,9 +1774,6 @@ def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
     routing : {"observed", "boundary", "model"}
         Hierarchical boundary-stub escalation rule; see
         :meth:`ModuleTree.escalation_probs`.  Only matters for hierarchical partitions.
-    topup : bool
-        Directed only: place stubs the non-redundant rule could not, recovering the link
-        count and hub degrees at the cost of a few extra within-module arcs.
     directed : bool or None
         Force directed/undirected; defaults to G.is_directed().
     connect : bool
@@ -1009,13 +1781,11 @@ def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
     min_degree : int
         Floor on sampled node degree (avoids isolated nodes).
     match_clustering : bool
-        Opt-in (default False, undirected only): run a within-module, degree- and mixing-preserving
-        wedge-closing pass (``raise_clustering``) toward the blueprint's transitivity. Adds realism
-        (real networks are more clustered than a configuration-model benchmark) at extra runtime; it
-        only partially closes the gap on sparse blueprints. Off by default because of that cost and
-        because it perturbs recovery slightly.
-    clustering_swap_factor : int
-        Attempt budget for the clustering pass (attempts = factor * internal-edge count).
+        Opt-in (default False, undirected only): run :func:`raise_clustering`, which steers every
+        node's local clustering coefficient to the blueprint's with swaps that keep degrees,
+        mixing, hierarchy, block structure and connectivity.  Off by default because it costs
+        more than the sampling itself and because clustering is a blueprint statistic the pass
+        matches, not a property of the flow model.
 
     Returns
     -------
@@ -1039,8 +1809,7 @@ def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
         if directed:
             H, info = sample_stub_matching_directed(G, partition, E=target_edges, rng=rng,
                                                     boundary_scale=mixing_scale,
-                                                    min_degree=min_degree, topup=topup,
-                                                    routing=routing)
+                                                    min_degree=min_degree, routing=routing)
         else:
             H, info = sample_stub_matching(G, partition, E=target_edges, rng=rng,
                                            degree_noise=degree_noise, boundary_scale=mixing_scale,
@@ -1049,15 +1818,12 @@ def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
         raise ValueError(f"unknown method {method!r}")
 
     if connect:
-        H, rep = connect_components(H, rng)
+        H, rep = connect_components(H, rng, partition=partition)   # module-aware: keeps every mu_A
         info["connect"] = rep
 
     if match_clustering:
         if directed:
             raise ValueError("match_clustering is undirected only")
-        H, cinfo = raise_clustering(H, partition, rng, target=nx.transitivity(G),
-                                    swap_factor=clustering_swap_factor)
-        if connect:
-            H, _ = connect_components(H, rng)   # wedge swaps can rarely fragment
+        H, cinfo = raise_clustering(H, partition, rng, blueprint=G)   # connectivity-preserving
         info["clustering"] = cinfo
     return H, info
