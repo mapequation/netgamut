@@ -353,7 +353,7 @@ def test_sampler_default_routing_is_the_documented_one() -> None:
     import inspect
 
     flowgen, _ = generate._modules()
-    expected = "observed"
+    expected = "model"          # re-measured 2026-09-18; the robustness gate selects it
     for fn in (flowgen.sample_stub_matching, flowgen.sample_stub_matching_directed,
                flowgen.sample_benchmark, flowgen._route_stubs):
         assert inspect.signature(fn).parameters["routing"].default == expected, fn.__name__

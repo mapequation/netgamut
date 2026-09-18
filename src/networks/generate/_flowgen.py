@@ -41,7 +41,8 @@ What the microcanonical sampler fixes, and how (the specification):
   nodes (anybeat: internal demand 3309 for a module of 2827 nodes) and was the source of
   the residual "saturation" deficits; measured 2026-09-05 (output/sampler_study/joint);
 * **hierarchy** -- boundary stubs stop at the LCA depth read off the blueprint
-  (``routing="observed"``), see :meth:`ModuleTree.escalation_probs`;
+  (``routing="model"``, the flow model's own escalation probability), see
+  :meth:`ModuleTree.escalation_probs`;
 * **pairing** -- stubs pair by a *sequential hub-first* pairer (``_pair_stubs``,
   ``_pair_bipartite``): the entity with most remaining stubs draws its partners without
   replacement, proportional to remaining stubs (Bayati, Kim & Saberi 2010; Efraimidis &
@@ -308,7 +309,7 @@ class ModuleTree:
         return z
 
     # -- hierarchical boundary routing -------------------------------------- #
-    def escalation_probs(self, A, kind="out", routing="observed"):
+    def escalation_probs(self, A, kind="out", routing="model"):
         """Stop-level distribution for a boundary stub of leaf module *A*.
 
         Returns ``[(nu, tag, prob), ...]``: the walker that left ``A`` re-enters the tree
@@ -321,32 +322,33 @@ class ModuleTree:
         two-level partition, where every boundary stub stops at the root, so only a
         hierarchical blueprint can separate them.
 
-        ``"observed"`` (default) -- the blueprint's own distribution.  A boundary link
-        re-enters the tree at exactly the depth of its endpoints' lowest common
-        ancestor, so this histogram is measured rather than modelled, per leaf module.
-        Measured best over the pool's nine hierarchical blueprints (85 samples each):
-        it is the only rule that never lost a sample's planted structure (0/85 against
-        2/85 and 4/85), and it reproduces the blueprint's hierarchy depth roughly twice
-        as closely as the alternatives (mean absolute error 0.103 against 0.177 and
-        0.196).  On the deepest blueprint, the power grid, that is the difference
-        between level-1 AMI 0.868 and 0.597.
+        ``"model"`` (default) -- the flow model's own escalation probability
+        ``q^exit[nu] / Z(nu, child)``, with the leave-one-out normaliser of
+        :func:`cross_R`, so sampler and joint ``P`` describe the same walk, and the only
+        rule that needs no blueprint at sampling time.
+
+        ``"observed"`` -- the blueprint's own distribution.  A boundary link re-enters the
+        tree at exactly the depth of its endpoints' lowest common ancestor, so this
+        histogram is measured rather than modelled, per leaf module.
 
         ``"boundary"`` -- escalate out of ``nu`` with probability
         ``q[nu] / sum_children q[ch]``, the share of the children's boundary flow that
-        also leaves ``nu``.  A pooled rate rather than a per-module one.  Marginally the
-        best total-variation fidelity to the blueprint's *marginal* distribution over
-        levels (0.054 against 0.059), but the margin does not clear the sample-to-sample
-        spread, and it places boundary links about half a level too deep, which is what
-        costs it the coarse structure.
+        also leaves ``nu``.  A pooled rate rather than a per-module one.
 
-        ``"model"`` -- the flow model's own escalation probability
-        ``q^exit[nu] / Z(nu, child)``, with the leave-one-out normaliser of
-        :func:`cross_R`, so sampler and joint ``P`` describe the same walk.  Attractive
-        in theory and the worst of the three in practice: because it ignores the
-        observed distribution it can invent a hierarchy a blueprint barely has.  On
-        polblogs, where 99.6% of boundary links cross the top-level split, it produced
-        an extra level in 2 of 10 samples and level-1 AMI collapsed from 0.79 to 0.03.
-        Prefer it only when generating from model parameters with no blueprint to read.
+        Re-measured 2026-09-18 on the pool's nine hierarchical blueprints, 85 samples per
+        rule, with the current pairer and split (the earlier comparison, which made
+        ``"observed"`` the default, ran with the random pairer whose within-module failures
+        escalated internal stubs into exactly these pools).  Routing through the tree is
+        what matters and flattening the partition to its leaves is decisively wrong: total
+        variation to the blueprint's distribution of boundary links over levels 0.397
+        flattened against 0.019-0.036 for the three rules, and level-1 AMI 0.00 against
+        0.79-0.90 on the power grid.  Among the three rules no criterion dominates:
+        ``"observed"`` leads on that total variation (0.019 against 0.021 and 0.036) and on
+        the pooled gap to the self-recovery ceiling (0.345 against 0.359 and 0.400),
+        ``"model"`` loses the planted structure in the fewest samples (4/85 against 8/85 and
+        9/85) and has the smallest depth error (0.151 against 0.158 and 0.166), and
+        ``"boundary"`` sits between them throughout.  The default follows the robustness
+        gate declared before the deepest blueprints were run, which selects ``"model"``.
         """
         depth = len(A)
         if routing == "observed":
@@ -976,7 +978,7 @@ def _split_by_shares(us, ks, total, shares, rng):
     return _capped_apportion(total, w, ks, rng)
 
 
-def _route_stubs(tree, per_node, kind, rng, routing="observed"):
+def _route_stubs(tree, per_node, kind, rng, routing="model"):
     """Route each leaf module's boundary stubs to their stop level in the module tree.
 
     ``per_node`` maps node -> number of boundary stubs of that node.  Returns
@@ -1002,7 +1004,7 @@ def _route_stubs(tree, per_node, kind, rng, routing="observed"):
 
 
 def sample_stub_matching(G, partition, E=None, rng=None, degree_noise=False,
-                         boundary_scale=1.0, min_degree=1, routing="observed"):
+                         boundary_scale=1.0, min_degree=1, routing="model"):
     """Microcanonical (LFR-like) benchmark sampler from a blueprint's flow statistics.
 
     ``routing`` selects the hierarchical escalation rule shared with the directed
@@ -1096,7 +1098,7 @@ def directed_mixing_stats(G, partition, hierarchical=False):
 
 
 def sample_stub_matching_directed(G, partition, E=None, rng=None, boundary_scale=1.0,
-                                  min_degree=1, routing="observed"):
+                                  min_degree=1, routing="model"):
     """Directed microcanonical benchmark sampler from a blueprint's directed modular flow.
 
     Preserves the in- and out-degree sequences exactly (every unweighted blueprint measured;
@@ -1803,7 +1805,7 @@ def read_pajek(path):
 def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
                      method="stub", directed=None, connect=True, min_degree=1,
                      match_clustering=False, rng=None, degree_noise=False, num_trials=20,
-                     seed=1, routing="observed"):
+                     seed=1, routing="model"):
     """Generate one benchmark network from a blueprint's modular flow.
 
     Parameters
