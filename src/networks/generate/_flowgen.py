@@ -1214,6 +1214,22 @@ def connect_components(H, rng, partition=None, max_passes=12, tries=200):
     Why module-aware: on sparse blueprints the repair is not rare -- the 209-link interactome sample
     needs ~20 merges under a two-level partition -- and module-blind swaps turned internal links
     into boundary links, moving the mean per-module mixing from 0.18 to 0.28 (2026-09-05).
+
+    A swap joins the two components only if at least one of the removed edges is not a bridge:
+    removing ``(a, b)`` splits a tree-like small component into an ``a``-side and a ``b``-side,
+    and if ``(c, d)`` is a bridge of the giant as well, ``a``-side + ``d``-side becomes a *new*
+    component.  So when ``(a, b)`` is a bridge of its component, the giant edge is drawn from the
+    non-bridge edges (bridges found once per pass, Tarjan); attaching an isolated node never
+    splits anything.  Without this rule each pass manufactured fresh two-node fragments on sparse
+    samples and the loop never converged (60k-node test graph: 4 components left after 40 passes,
+    1 with the rule; 2026-09-18).
+
+    Cost ``O(passes * (n + E))``: the giant's edge list, its per-module-pair index and its bridge
+    set are built once per pass and the lists grown incrementally as components join (a
+    swapped-away edge stays listed and is skipped when drawn, so draws are still uniform over the
+    live edges).  Rebuilding the lists after every merge made the repair quadratic in the number
+    of components -- 37 s for a 20k-node graph with 1.3k components and, on the 1.1M-node road
+    network, hours per sample (2026-09-18).
     """
     directed = H.is_directed()
     comp_fn = nx.weakly_connected_components if directed else nx.connected_components
@@ -1221,7 +1237,25 @@ def connect_components(H, rng, partition=None, max_passes=12, tries=200):
     info = {"merges": 0, "merges_module_aware": 0, "singletons_attached": 0}
 
     def ok_swap(a, b, c, d):
-        return a != d and c != b and not H.has_edge(a, d) and not H.has_edge(c, b)
+        return (a != d and c != b and H.has_edge(c, d)                 # (c, d) may have been swapped away
+                and not H.has_edge(a, d) and not H.has_edge(c, b))
+
+    def index(edges):
+        pairs = defaultdict(list)
+        if comm is not None:
+            for c, d in edges:
+                pairs[(comm[c], comm[d])].append((c, d))
+                if not directed:
+                    pairs[(comm[d], comm[c])].append((d, c))
+        return pairs
+
+    def absorb(new_edges):                                               # the giant grew: extend, never rebuild
+        giant_edges.extend(new_edges)
+        if comm is not None:
+            for c, d in new_edges:
+                by_pair[(comm[c], comm[d])].append((c, d))
+                if not directed:
+                    by_pair[(comm[d], comm[c])].append((d, c))
 
     for _ in range(max_passes):
         comps = sorted(comp_fn(H), key=len, reverse=True)
@@ -1229,60 +1263,77 @@ def connect_components(H, rng, partition=None, max_passes=12, tries=200):
             break
         giant = set(comps[0])
         giant_edges = [(u, v) for u, v in H.edges() if u in giant]
-        by_pair = defaultdict(list)
-        if comm is not None:
-            for c, d in giant_edges:
-                by_pair[(comm[c], comm[d])].append((c, d))
-                if not directed:
-                    by_pair[(comm[d], comm[c])].append((d, c))
+        by_pair = index(giant_edges)
+        Hu = H.to_undirected(as_view=True) if directed else H
+        bridges = set()
+        for u, v in nx.bridges(Hu.subgraph(giant)):
+            bridges.add((u, v)); bridges.add((v, u))
         progressed = False
         for small in comps[1:]:
             small = list(small)
             small_edges = [(u, v) for u, v in H.edges(small) if u in small] if directed else \
                           [(u, v) for u, v in H.edges(small)]
+            small_bridges = set()
+            if len(small) > 1:
+                for u, v in nx.bridges(Hu.subgraph(small)):
+                    small_bridges.add((u, v)); small_bridges.add((v, u))
             done = False
             if small_edges and giant_edges:
-                # module-aware attempts first, then unconstrained
-                for attempt in range(tries):
+                # module-aware attempts first (``tries`` draws), then unconstrained ones
+                for attempt in range(2 * tries):
                     a, b = small_edges[int(rng.integers(len(small_edges)))]
                     if not directed and rng.random() < 0.5:
                         a, b = b, a
+                    ab_bridge = (a, b) in small_bridges
                     cands = by_pair.get((comm[a], comm[b])) if comm is not None else None
-                    if cands:
-                        c, d = cands[int(rng.integers(len(cands)))]
+                    if cands and attempt < tries:
+                        k = int(rng.integers(len(cands)))
+                        c, d = cands[k]
+                        if not H.has_edge(c, d):                # swapped away earlier: purge, redraw
+                            cands[k] = cands[-1]
+                            cands.pop()
+                            continue
                         aware = True
                     else:
                         c, d = giant_edges[int(rng.integers(len(giant_edges)))]
                         if not directed and rng.random() < 0.5:
                             c, d = d, c
                         aware = False
+                    if ab_bridge and (c, d) in bridges:       # would split off a new component
+                        continue
                     if ok_swap(a, b, c, d):
                         H.remove_edge(a, b); H.remove_edge(c, d)
                         H.add_edge(a, d); H.add_edge(c, b)
                         info["merges"] += 1
                         info["merges_module_aware"] += aware
+                        joined = [(a, d), (c, b)] + [e for e in small_edges if e != (a, b) and e != (b, a)]
+                        if ab_bridge:                              # the two new links are bridges too
+                            bridges.update({(a, d), (d, a), (c, b), (b, c)})
+                        bridges.update(small_bridges)
                         done = True
                         break
             if not done and len(small) == 1 and giant_edges:      # isolated node: split a giant edge
                 iso = small[0]
                 cands = by_pair.get((comm[iso], comm[iso])) if comm is not None else None
-                pool = cands if cands else giant_edges
-                for attempt in range(tries):
-                    c, d = pool[int(rng.integers(len(pool)))]
-                    if iso not in (c, d) and not H.has_edge(c, iso) and not H.has_edge(iso, d):
+                for attempt in range(2 * tries):
+                    if cands and attempt < tries:               # inside its own module first
+                        k = int(rng.integers(len(cands)))
+                        c, d = cands[k]
+                        if not H.has_edge(c, d):
+                            cands[k] = cands[-1]
+                            cands.pop()
+                            continue
+                    else:
+                        c, d = giant_edges[int(rng.integers(len(giant_edges)))]
+                    if H.has_edge(c, d) and iso not in (c, d) and not H.has_edge(c, iso) and not H.has_edge(iso, d):
                         H.remove_edge(c, d); H.add_edge(c, iso); H.add_edge(iso, d)
                         info["singletons_attached"] += 1
+                        joined = [(c, iso), (iso, d)]
                         done = True
                         break
             if done:
                 giant.update(small)
-                giant_edges = [(u, v) for u, v in H.edges() if u in giant]
-                if comm is not None:
-                    by_pair = defaultdict(list)
-                    for c, d in giant_edges:
-                        by_pair[(comm[c], comm[d])].append((c, d))
-                        if not directed:
-                            by_pair[(comm[d], comm[c])].append((d, c))
+                absorb(joined)
                 progressed = True
         if not progressed:
             break
