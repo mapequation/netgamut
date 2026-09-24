@@ -50,7 +50,15 @@ def test_domains_are_always_in_canonical_order() -> None:
 
 # -- cross-source API -----------------------------------------------------
 def test_sources_are_registered() -> None:
-    assert networks.sources() == ("snap", "netzschleuder", "ogb", "pyg", "paths", "ahorn")
+    assert networks.sources() == (
+        "snap",
+        "netzschleuder",
+        "konect",
+        "ogb",
+        "pyg",
+        "paths",
+        "ahorn",
+    )
 
 
 def test_domain_counts_sum_across_sources() -> None:
@@ -108,7 +116,7 @@ def test_unknown_domain_is_rejected() -> None:
 
 def test_unknown_source_is_rejected() -> None:
     with pytest.raises(KeyError, match="Unknown source"):
-        networks.search(source="konect")
+        networks.search(source="nope")
 
 
 def test_load_rejects_an_unknown_name() -> None:

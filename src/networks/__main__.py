@@ -49,7 +49,7 @@ def _resolve(name: str, source: str | None) -> tuple[str, Any]:
         if source not in _SOURCES:
             raise KeyError(f"Unknown source {source!r}. Available: {', '.join(_SOURCES)}")
         return source, _SOURCES[source]
-    found = [key for key, module in _SOURCES.items() if name in module.catalog()]
+    found = networks._owners(name)
     if not found:
         raise KeyError(f"No dataset named {name!r} in any source.")
     if len(found) > 1:

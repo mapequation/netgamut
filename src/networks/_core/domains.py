@@ -15,6 +15,7 @@ from __future__ import annotations
 __all__ = [
     "DOMAINS",
     "domains_for_ahorn",
+    "domains_for_konect",
     "domains_for_netzschleuder_tags",
     "domains_for_paths",
     "domains_for_snap",
@@ -139,6 +140,7 @@ def domains_for_netzschleuder_tags(tags: tuple[str, ...]) -> tuple[str, ...]:
     """
     return _ordered({tag for tag in tags if tag in _NETZSCHLEUDER_DOMAIN_TAGS})
 
+
 # AHORN tags its datasets ``domain: <something>`` in a vocabulary of its own,
 # eight labels wide and covering only about four fifths of the catalog. These
 # translate it; the datasets it leaves untagged are handled one by one below.
@@ -210,3 +212,74 @@ def domains_for_ahorn(name: str, tags: tuple[str, ...]) -> tuple[str, ...]:
         if separator and prefix.strip() == "domain":
             found.update(_AHORN_DOMAIN_TAGS.get(value.strip().casefold(), ()))
     return _ordered(found)
+
+
+# KONECT files every network under exactly one of its own categories, which name
+# the kind of relationship rather than the system. Most translate directly. Two
+# follow Netzschleuder's precedent rather than biology's: animal social networks
+# (dolphins, bison dominance) are Social, as Netzschleuder tags the same data.
+# ``Rating`` becomes Economic for the reason AHORN's ``reviews`` does -- the
+# systems are marketplaces -- and ``Feature`` (item-attribute bipartite graphs)
+# Informational. ``Miscellaneous`` names nothing and is resolved per dataset.
+_KONECT_CATEGORY_DOMAINS: dict[str, tuple[str, ...]] = {
+    "Online social": ("Social",),
+    "Human social": ("Social",),
+    "Online contact": ("Social",),
+    "Human contact": ("Social",),
+    "Communication": ("Social",),
+    "Interaction": ("Social",),
+    "Co-authorship": ("Social",),
+    "Authorship": ("Social",),
+    "Affiliation": ("Social",),
+    "Animal": ("Social",),
+    "Citation": ("Informational",),
+    "Co-citation": ("Informational",),
+    "Hyperlink": ("Informational",),
+    "Text": ("Informational",),
+    "Lexical": ("Informational",),
+    "Feature": ("Informational",),
+    "Rating": ("Economic",),
+    "Computer": ("Technological",),
+    "Software": ("Technological",),
+    "Infrastructure": ("Transportation",),
+    "Metabolic": ("Biological",),
+    "Neural": ("Biological",),
+    "Trophic": ("Biological",),
+    "Miscellaneous": (),
+}
+
+# Datasets whose category misfiles the system or names none. KONECT's
+# Infrastructure category holds roads and flights, but also the power grid. Its
+# Miscellaneous entries are mapped as the other sources map the same data:
+# fictional casts are Social, as Netzschleuder files ``lesmis``, and Amazon
+# co-purchasing is Economic, as SNAP's overrides have it.
+_KONECT_DATASET_DOMAINS: dict[str, tuple[str, ...]] = {
+    "opsahl-powergrid": ("Technological",),
+    "gene_fusion": ("Biological",),
+    "moreno_lesmis": ("Social",),
+    "asoiaf": ("Social",),
+    "marvel": ("Social",),
+    "actor-collaboration": ("Social",),
+    # Cities joined by twinning agreements: a relation between institutions.
+    "twin": ("Social",),
+    "dimacs10-polbooks": ("Informational",),
+    "dbpedia-similar": ("Informational",),
+    "dbpedia-all": ("Informational",),
+    # Nodes are images, linked by shared metadata.
+    "flickredges": ("Informational",),
+    "com-amazon": ("Economic",),
+    "amazon0601": ("Economic",),
+}
+
+
+def domains_for_konect(name: str, category: str) -> tuple[str, ...]:
+    """Normalised domains for a KONECT network, from its one category.
+
+    *category* is KONECT's own label without the trailing " network". A
+    per-dataset override wins; an unknown category maps to nothing rather than
+    being guessed at.
+    """
+    override = _KONECT_DATASET_DOMAINS.get(name.casefold())
+    if override is not None:
+        return override
+    return _KONECT_CATEGORY_DOMAINS.get(category, ())

@@ -78,6 +78,15 @@ class Network:
     #: reach the reader that understands this source's metadata layout, since no
     #: two sources keep node attributes in the same place.
     source: str = ""
+    #: For sources whose download needs rewriting before any tool can read it,
+    #: the rewritten edge list. KONECT's files open with a ``%`` header Infomap
+    #: rejects and number the two sides of a bipartite network independently, so
+    #: ``networks.konect`` writes a clean copy and keeps the archive beside it.
+    edge_file: Path | None = None
+    #: Whether a third column, where present, holds weights Infomap accepts.
+    #: False for signed or arbitrary-real weights -- Infomap refuses a negative
+    #: link weight -- so :meth:`to_infomap` reads the first two columns only.
+    weighted_links: bool = True
 
     # -- paths -----------------------------------------------------------
     @property
@@ -88,7 +97,7 @@ class Network:
     def is_bundle(self) -> bool:
         """Whether the download is a multi-file archive on disk."""
         lowered = self.archive_path.name.lower()
-        return lowered.endswith((".tar.gz", ".tgz", ".tar", ".zip"))
+        return lowered.endswith((".tar.gz", ".tgz", ".tar.bz2", ".tar", ".zip"))
 
     @property
     def is_archive(self) -> bool:
@@ -98,7 +107,7 @@ class Network:
         network, so reading works directly even though the download is an
         archive. Use :attr:`is_bundle` to ask about the file itself.
         """
-        return self.is_bundle and self.member is None
+        return self.is_bundle and self.member is None and self.edge_file is None
 
     @property
     def path(self) -> Path:
@@ -109,6 +118,8 @@ class Network:
         member there is no single text file, so this returns the archive; use
         :meth:`extract` instead.
         """
+        if self.edge_file is not None:
+            return self.edge_file
         if self.member is not None:
             return self._extract_member()
         if self.is_archive:
@@ -192,7 +203,7 @@ class Network:
     # -- reading ---------------------------------------------------------
     def open(self) -> IO[str]:
         """Open the network as a text stream, decompressing on the fly."""
-        if self.member is not None:
+        if self.member is not None or self.edge_file is not None:
             return self.path.open(encoding="utf-8", errors="replace")
         if self.is_archive:
             raise ValueError(f"{self.file.name} is an archive. Call .extract() and open a member.")
@@ -376,14 +387,14 @@ class Network:
         kwargs.setdefault("directed", directed)
         instance = Infomap(**kwargs)
 
-        if self.delimiter is None:
+        if self.delimiter is None and self.weighted_links:
             # Fast path: let Infomap's own parser read the file directly.
             instance.read_file(str(self.path))
         else:
-            # Infomap cannot parse CSV, so feed the links in. Only the first
-            # two columns are used: the extra columns on these files are
-            # ratings and timestamps, and SNAP's signed ratings would be
-            # invalid as Infomap link weights.
+            # Infomap cannot parse CSV, nor a negative weight, so feed the links
+            # in. Only the first two columns are used: the extra columns on
+            # these files are ratings and timestamps, and signed ratings would
+            # be invalid as Infomap link weights.
             instance.add_links(self.edges(cast=int))
         return instance
 

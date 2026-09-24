@@ -8,6 +8,10 @@ Each repository lives in its own subpackage:
 * :mod:`networks.netzschleuder` -- networks.skewed.de, 286 networks tagged by
   domain, including the biological, transport and multilayer networks SNAP has
   none of.
+* :mod:`networks.konect` -- KONECT, the Koblenz Network Collection, 300
+  networks described in one fixed vocabulary of format, edge type and loops.
+  A network Netzschleuder or SNAP also holds is listed there but used from the
+  other source here, so nothing is counted twice.
 * :mod:`networks.ogb` -- Open Graph Benchmark, 12 datasets whose node
   categories are *named* rather than left as anonymous codes.
 * :mod:`networks.pyg` -- the PyTorch Geometric corpus, 99 datasets: citation,
@@ -48,7 +52,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from . import ahorn, generate, netzschleuder, ogb, paths, pyg, snap
+from . import ahorn, generate, konect, netzschleuder, ogb, paths, pyg, snap
 from ._core.cache import (
     CACHE_ENV_VAR,
     CachedDataset,
@@ -79,6 +83,7 @@ __all__ = [
     "clear_cache",
     "domains",
     "generate",
+    "konect",
     "load",
     "netzschleuder",
     "ogb",
@@ -96,6 +101,7 @@ __version__ = "0.2.0"
 _SOURCES: dict[str, Any] = {
     "snap": snap,
     "netzschleuder": netzschleuder,
+    "konect": konect,
     "ogb": ogb,
     "pyg": pyg,
     "paths": paths,
@@ -106,6 +112,23 @@ _SOURCES: dict[str, Any] = {
 def sources() -> tuple[str, ...]:
     """The available data sources."""
     return tuple(_SOURCES)
+
+
+def _shadowed(source: str, dataset: Any) -> bool:
+    """Whether cross-source queries skip *dataset* for another source's copy.
+
+    Only KONECT defers: a third of it is Netzschleuder's or SNAP's data. See
+    :func:`networks.konect.duplicates`.
+    """
+    return source == "konect" and dataset.duplicate_of is not None
+
+
+def _owners(name: str) -> list[str]:
+    """The sources holding *name*, leaving out a KONECT copy of another's."""
+    found = [key for key, module in _SOURCES.items() if name in module.catalog()]
+    if len(found) > 1 and "konect" in found and _shadowed("konect", konect.info(name)):
+        found.remove("konect")
+    return found
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +165,18 @@ class Match:
         return self.dataset.directed  # type: ignore[no-any-return]
 
     @property
+    def loops(self) -> bool | None:
+        """Whether any node links to itself, where some source has checked.
+
+        KONECT checks every network; for another source's network, KONECT's
+        check is used when it holds the same edge list. ``None`` means unknown.
+        """
+        value = getattr(self.dataset, "loops", None)
+        if value is not None:
+            return bool(value)
+        return konect.loops_for(self.key)
+
+    @property
     def key(self) -> str:
         """``"<source>/<name>"`` -- unique across sources."""
         return f"{self.source}/{self.name}"
@@ -165,11 +200,14 @@ class Match:
 def domains() -> dict[str, int]:
     """Dataset counts per domain, summed over every source.
 
-    A dataset listed under two domains counts once in each.
+    A dataset listed under two domains counts once in each, and a network held
+    by two sources counts once.
     """
     counts = dict.fromkeys(DOMAINS, 0)
-    for module in _SOURCES.values():
+    for source, module in _SOURCES.items():
         for dataset in module.datasets():
+            if _shadowed(source, dataset):
+                continue
             for domain in dataset.domains:
                 counts[domain] += 1
     return counts
@@ -185,6 +223,7 @@ def search(
     min_nodes: int | None = None,
     max_edges: int | None = None,
     min_edges: int | None = None,
+    loops: bool | None = None,
 ) -> tuple[Match, ...]:
     """Search every source at once, filtering on the shared domain vocabulary.
 
@@ -194,6 +233,11 @@ def search(
 
     Size filters exclude datasets whose size the source does not publish rather than
     assuming anything: most PyG entries and the largest OGB ones have no counts.
+    ``loops`` does the same with datasets no source has checked for self-links
+    (see :attr:`Match.loops`).
+
+    A network held by both KONECT and Netzschleuder or SNAP appears once, from
+    the other source; ``source="konect"`` lists KONECT's copy too.
 
     Raises:
         KeyError: Unknown *domain* or *source*.
@@ -217,6 +261,8 @@ def search(
         if source is not None and name != source:
             continue
         for dataset in module.datasets():
+            if source is None and _shadowed(name, dataset):
+                continue
             if domain is not None and domain not in dataset.domains:
                 continue
             text = f"{dataset.name} {getattr(dataset, 'description', '')}".casefold()
@@ -228,7 +274,10 @@ def search(
                 continue
             if not within(dataset.edges, min_edges, max_edges):
                 continue
-            results.append(Match(source=name, dataset=dataset))
+            match = Match(source=name, dataset=dataset)
+            if loops is not None and match.loops is not loops:
+                continue
+            results.append(match)
 
     return tuple(results)
 
@@ -237,7 +286,8 @@ def load(name: str, *, source: str | None = None, **kwargs: Any) -> Network:
     """Download a dataset by name, searching every source.
 
     Pass *source* to disambiguate. Without it, a name present in more than one
-    source is an error rather than an arbitrary choice.
+    source is an error rather than an arbitrary choice -- except that KONECT's
+    copy of another source's network defers to that source.
 
     Raises:
         KeyError: No source has *name*, or several do and *source* was omitted.
@@ -248,7 +298,7 @@ def load(name: str, *, source: str | None = None, **kwargs: Any) -> Network:
         result: Network = _SOURCES[source].load(name, **kwargs)
         return result
 
-    found = [key for key, module in _SOURCES.items() if name in module.catalog()]
+    found = _owners(name)
     if not found:
         raise KeyError(f"No dataset named {name!r} in any source: {', '.join(_SOURCES)}.")
     if len(found) > 1:

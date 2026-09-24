@@ -2,18 +2,19 @@
 
 Browse, download and cache network datasets from Python.
 
-Six sources are indexed, each in its own subpackage:
+Seven sources are indexed, each in its own subpackage:
 
 | Source | Datasets | Strength |
 |---|---|---|
 | [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
 | [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
+| [`networks.konect`](http://konect.cc) | 300 | one fixed vocabulary of format, edge type and **loops**; signed and temporal |
 | [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
 | [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
 | `networks.paths` | 3 | curated path data (flight itineraries, navigation trails) for memory networks |
 | [`networks.ahorn`](https://ahorn.rwth-aachen.de) | 83 | higher-order data: hypergraphs, simplicial complexes, revision-pinned |
 
-Metadata for all six **ships inside the package**, so you can explore every
+Metadata for all seven **ships inside the package**, so you can explore every
 dataset — domains, sizes, statistics, citations — without downloading anything.
 When you do ask for data it lands in a shared user-level cache, so a dataset is
 fetched once per machine no matter how many projects, notebooks or virtualenvs
@@ -31,7 +32,8 @@ path data — see [`examples/tutorial.ipynb`](examples/tutorial.ipynb).
 
 The sites label things differently — SNAP groups by provenance ("Autonomous
 systems graphs"), Netzschleuder tags by domain, AHORN by a vocabulary of its
-own, OGB and PyG by nothing at all — so all six are mapped onto one vocabulary.
+own, KONECT by kind of relationship, OGB and PyG by nothing at all — so all seven
+are mapped onto one vocabulary.
 That makes it possible to compare methods across *kinds of system* rather than
 kinds of provenance:
 
@@ -42,8 +44,8 @@ networks.domains()
 ```
 
 ```
-{'Social': 283, 'Informational': 133, 'Biological': 46,
- 'Technological': 30, 'Transportation': 26, 'Economic': 80}
+{'Social': 366, 'Informational': 159, 'Biological': 51,
+ 'Technological': 32, 'Transportation': 42, 'Economic': 91}
 ```
 
 ```python
@@ -57,8 +59,8 @@ for match in networks.search(domain="Biological", max_nodes=500):
 net = networks.load("celegans_metabolic")
 ```
 
-Note `Biological: 46` — 36 from Netzschleuder, 5 from OGB, 4 from AHORN, 1 from
-PyG, and none at all from SNAP. That imbalance is why the other sources exist.
+Note `Biological: 51` — 36 from Netzschleuder, 5 each from KONECT and OGB, 4
+from AHORN, 1 from PyG, and none at all from SNAP. That imbalance is why the other sources exist.
 The mapping is deliberately visible in
 `networks/_core/domains.py` rather than buried per source, so it can be argued
 with in one place.
@@ -302,6 +304,63 @@ net.extract()  # nodes.csv and gprops.csv too
 
 Metadata is read from a JSON API rather than scraped, so this subpackage is
 markedly less fragile than the SNAP one.
+
+## KONECT
+
+KONECT describes every network in one fixed vocabulary — a format (`sym`,
+`asym`, `bip`), an edge type (`unweighted`, `positive` for multigraphs,
+`posweighted`, `signed`, ...) and structural checks — and opens every data file
+with the same two codes, `% asym multisigned`. That makes it the one source here
+that says, for every network, whether it contains **loops**:
+
+```python
+from networks import konect
+
+konect.search(loops=True, max_nodes=10_000)  # self-links, by KONECT's own check
+konect.search(signed=True, temporal=True)
+konect.search(bipartite=True, domain="Economic")
+print(konect.describe("chess"))
+```
+
+The loop check also reaches the cross-source search, `networks.search(loops=True)`,
+including for a Netzschleuder or SNAP network whenever KONECT holds the identical
+edge list. Networks no source has checked are left out of either filter.
+
+The catalog is KONECT's downloadable networks minus its per-language Wikimedia
+series — about a thousand edit, hyperlink and talk networks, one per language
+edition — of which only the English editions are kept.
+
+**Overlap.** Netzschleuder imported a third of KONECT, and some of KONECT is
+SNAP's. Such a network stays in `konect.search()`, but the cross-source
+`networks.search`, `networks.domains` and `networks.load` use the other copy, so
+nothing is counted twice. A duplicate is decided on evidence, never on name —
+KONECT's `twitter` is Netzschleuder's `twitter_social`, and Netzschleuder's
+`twitter` is KONECT's `munmun_twitter_social`:
+
+```python
+konect.info("moreno_lesmis").duplicate_of  # 'netzschleuder/lesmis'
+konect.duplicates()  # KONECT name -> the copy used elsewhere
+```
+
+The evidence is either Netzschleuder naming the KONECT network as its upstream,
+or another entry with exactly the same node and edge count. Near-copies — a
+different snapshot, the largest component only — stay separate networks.
+
+**Loading.** The archive is kept as KONECT serves it, and the edge list is
+rewritten once beside it so every tool reads it the same way:
+
+```python
+net = konect.load("brunson_southern-women")
+net.path  # <name>.tsv: '%' comments become '#', which Infomap requires
+net.rows()  # every column kept: weights, signs, timestamps
+net.extract()  # KONECT's README and meta files
+```
+
+KONECT numbers the two sides of a bipartite network independently, so the right
+side is shifted past the left: ids are unique, and right-side nodes start at
+`info(name).left_nodes + 1`. Signed and rating weights stay in the file but are
+not handed to Infomap, which accepts only non-negative weights; `to_infomap()`
+then reads the links unweighted, summing repeated ones.
 
 ## Node metadata, in one shape
 
@@ -862,6 +921,12 @@ carries the reference SNAP asks for — and cite the collection itself:
 
 > Jure Leskovec and Andrej Krevl. *SNAP Datasets: Stanford Large Network
 > Dataset Collection.* <https://snap.stanford.edu/data>, 2014.
+
+KONECT asks you to cite the collection alongside each network's own reference
+(both are in `Dataset.citations`):
+
+> Jérôme Kunegis. *KONECT – The Koblenz Network Collection.* Proc. Int. Conf. on
+> World Wide Web Companion, 1343–1350, 2013.
 
 OGB and PyG are other people's collections too. Cite them if you use them:
 

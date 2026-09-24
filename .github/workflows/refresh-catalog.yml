@@ -1,7 +1,7 @@
 name: Refresh catalogs
 
-# The bundled catalogs are snapshots of snap.stanford.edu, networks.skewed.de
-# and ahorn.rwth-aachen.de. This rebuilds them monthly and opens a pull request
+# The bundled catalogs are snapshots of snap.stanford.edu, networks.skewed.de,
+# konect.cc and ahorn.rwth-aachen.de. This rebuilds them monthly and opens a pull request
 # when a collection has changed, so new datasets reach users without anyone
 # remembering to look.
 on:
@@ -34,6 +34,9 @@ jobs:
       - name: Rebuild the Netzschleuder catalog
         run: uv run python scripts/regenerate_netzschleuder_catalog.py
 
+      - name: Rebuild the KONECT catalog
+        run: uv run python scripts/regenerate_konect_catalog.py
+
       # Needs pyyaml, which the dev group carries and the package does not.
       - name: Rebuild the AHORN catalog
         run: uv run python scripts/regenerate_ahorn_catalog.py
@@ -51,7 +54,8 @@ jobs:
           body: |
             Automated refresh of the vendored catalogs, from
             https://snap.stanford.edu/data/index.html,
-            https://networks.skewed.de/api and
+            https://networks.skewed.de/api,
+            http://konect.cc/networks/ and
             https://github.com/netsci-rwth/ahorn.
 
             The diff shows what changed in the collection: new datasets,
