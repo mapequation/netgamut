@@ -1843,6 +1843,16 @@ def sample_benchmark(G, partition=None, target_edges=None, mixing_scale=1.0,
     Returns
     -------
     (H, info) : the sampled graph and a dict of diagnostics (incl. connectivity repair).
+
+    .. warning::
+       Called without ``partition`` this plants with the RECURSIVE search
+       (``infomap_partition`` passes no ``extra``).  The generative-map-equation project
+       runs the columnar engine (``-C``) on both sides of every plant/re-detect comparison,
+       so a partition-less call there would silently make its recovery numbers measure
+       cross-engine agreement instead.  Every call site in that project passes a partition
+       today (checked 2026-09-19), and the default is left alone because this package is
+       shared with other projects that may rely on it; pass ``partition=`` explicitly, or
+       ``infomap_partition(..., extra="-C")``, when the engine matters.
     """
     if rng is None:
         rng = np.random.default_rng()
