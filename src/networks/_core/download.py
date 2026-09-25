@@ -86,6 +86,16 @@ def fetch_bytes(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> bytes:
     return payload
 
 
+def open_stream(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> Any:
+    """Open *url* for a single streaming read, with the usual retries.
+
+    For build-time archives read once and never cached, where :func:`fetch_bytes`
+    would hold the whole body in memory: KONECT's catalog build lists what each
+    archive holds without keeping it. Use as a context manager.
+    """
+    return _open(url, timeout=timeout)
+
+
 def head(url: str, *, timeout: float = _DEFAULT_TIMEOUT) -> dict[str, str | int | None]:
     """Return size and validators for *url* without downloading its body."""
     try:

@@ -7,6 +7,10 @@ package uses so that metadata lookups need no network.
 
     python scripts/regenerate_konect_catalog.py
 
+Archives up to 100 MB are listed to learn which ship node attributes; a
+listing is reused from the existing catalog while its archive's size and date
+are unchanged, so only the first build downloads them (2.4 GB).
+
 Exits non-zero if the result looks implausible, so a site redesign fails the job
 instead of shipping an empty catalog.
 """
@@ -22,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from networks._core.domains import DOMAINS  # noqa: E402
-from networks.konect._catalog import build_catalog  # noqa: E402
+from networks.konect._catalog import Catalog, build_catalog  # noqa: E402
 
 TARGET = ROOT / "src" / "networks" / "konect" / "catalog.json"
 
@@ -32,6 +36,8 @@ MIN_WITH_SIZE = 250
 MIN_PER_DOMAIN = 5
 # Most pages state the format and edge type; if they stop parsing, fail.
 MIN_WITH_FORMAT = 250
+# Archives listed for their contents; fewer means listing broke.
+MIN_LISTED = 250
 
 
 def main() -> int:
@@ -40,8 +46,11 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
 
+    previous = None
+    if args.output.is_file():
+        previous = Catalog.from_dict(json.loads(args.output.read_text(encoding="utf-8")))
     print("Reading konect.cc ...", file=sys.stderr)
-    catalog = build_catalog(workers=args.workers)
+    catalog = build_catalog(workers=args.workers, previous=previous)
 
     with_size = sum(1 for item in catalog.datasets if item.nodes)
     counts = catalog.domains()
@@ -57,6 +66,17 @@ def main() -> int:
     for domain in DOMAINS:
         if counts.get(domain, 0) < MIN_PER_DOMAIN:
             problems.append(f"domain {domain} has only {counts.get(domain, 0)} networks")
+    listed = [item for item in catalog.datasets if item.members is not None]
+    with_nodes = [item.name for item in listed if item.node_metadata]
+    no_edges = [item.name for item in listed if not item.edge_member]
+    print(
+        f"  {len(listed)} archives listed, {len(with_nodes)} with node attributes", file=sys.stderr
+    )
+    if no_edges:
+        print(f"  warning: no edge list found in {', '.join(no_edges)}", file=sys.stderr)
+    if len(listed) < MIN_LISTED:
+        problems.append(f"only {len(listed)} archives listed (need {MIN_LISTED})")
+
     with_format = sum(1 for item in catalog.datasets if item.format and item.edge_type)
     if with_format < MIN_WITH_FORMAT:
         problems.append(f"only {with_format} have format and edge type (need {MIN_WITH_FORMAT})")

@@ -16,6 +16,12 @@ The catalog is KONECT's downloadable networks minus its per-language Wikimedia
 series (about a thousand edit, hyperlink and talk networks, one per language
 edition), of which only the English editions are kept.
 
+A few networks ship per-node attributes -- names, sexes, roles -- as ``ent.*``
+files in their archive. No KONECT page says which, so the catalog build lists
+every archive up to 100 MB; ``search(node_metadata=True)`` finds those that do,
+and :meth:`Network.nodes` reads them. The larger archives are unlisted, and
+answer ``None``.
+
 Netzschleuder imported a third of KONECT, and some of it is SNAP's. Such a
 network is still listed here, but the cross-source :func:`networks.search`,
 :func:`networks.domains` and :func:`networks.load` use the other copy; see
@@ -26,6 +32,7 @@ Please cite the networks you use; see ``Dataset.citations``.
 
 from __future__ import annotations
 
+import itertools
 import os
 import tarfile
 from collections.abc import Callable, Iterable, Iterator
@@ -38,8 +45,10 @@ from .._core.download import DownloadError
 from .._core.download import download as _download_file
 from .._core.models import DataFile
 from .._core.network import Network
+from .._core.nodes import NodeTable
+from . import _ent
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
-from ._models import EDGE_TYPES, FORMATS, SITE_URL, Dataset
+from ._models import EDGE_TYPES, FORMATS, SITE_URL, Dataset, is_edge_list_header
 
 __all__ = [
     "DOMAINS",
@@ -64,6 +73,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
+    "node_table",
     "refresh",
     "search",
     "set_cache_dir",
@@ -109,6 +119,7 @@ def search(
     signed: bool | None = None,
     temporal: bool | None = None,
     loops: bool | None = None,
+    node_metadata: bool | None = None,
     max_nodes: int | None = None,
     min_nodes: int | None = None,
     max_edges: int | None = None,
@@ -117,7 +128,10 @@ def search(
     """Find networks by domain, KONECT category, size or structural property.
 
     ``loops=True`` finds networks with at least one self-link, by KONECT's own
-    check; networks it has no answer for are excluded from either filter.
+    check. ``node_metadata=True`` finds those whose archive ships per-node
+    attributes, which :func:`node_table` reads. Networks with no answer -- no
+    loop check reported, an archive too large to have been listed -- are
+    excluded from either filter.
     """
     return catalog().search(
         query,
@@ -129,6 +143,7 @@ def search(
         signed=signed,
         temporal=temporal,
         loops=loops,
+        node_metadata=node_metadata,
         max_nodes=max_nodes,
         min_nodes=min_nodes,
         max_edges=max_edges,
@@ -223,6 +238,12 @@ def describe(name: str) -> str:
         lines.append("Temporal    edges carry timestamps")
     if dataset.node_meaning or dataset.edge_meaning:
         lines.append(f"Meaning     nodes: {dataset.node_meaning}; edges: {dataset.edge_meaning}")
+    if dataset.node_attributes is None:
+        lines.append("Node attrs  not known (archive too large to list)")
+    else:
+        lines.append(f"Node attrs  {', '.join(dataset.node_attributes) or 'none'}")
+    if dataset.edge_attributes:
+        lines.append(f"Edge attrs  {', '.join(dataset.edge_attributes)}")
     if dataset.duplicate_of:
         lines.append(f"Also as     {dataset.duplicate_of} (used by networks.search/load)")
     if dataset.description:
@@ -285,11 +306,20 @@ def _write_edge_file(dataset: Dataset, archive_path: Path, target: Path) -> None
             # Stream mode: one pass over the compressed archive, flat memory.
             with tarfile.open(archive_path, "r|*") as archive:
                 for member in archive:
-                    if not (member.isfile() and Path(member.name).name.startswith("out.")):
+                    # The edge list is known by its header, not its name: the
+                    # older layout calls it rel.<relation>, beside per-edge
+                    # attribute files that are also rel.* but have no header.
+                    if not (
+                        member.isfile() and Path(member.name).name.startswith(("out.", "rel."))
+                    ):
                         continue
                     handle = archive.extractfile(member)
                     assert handle is not None
-                    lines = (raw.decode("utf-8", "replace") for raw in handle)
+                    first = handle.readline()
+                    if not is_edge_list_header(first):
+                        continue
+                    raw_lines = itertools.chain([first], handle)
+                    lines = (raw.decode("utf-8", "replace") for raw in raw_lines)
                     rewritten = _normalise(
                         lines, bipartite=dataset.bipartite, left_nodes=dataset.left_nodes
                     )
@@ -297,7 +327,10 @@ def _write_edge_file(dataset: Dataset, archive_path: Path, target: Path) -> None
                         out.writelines(rewritten)
                     break
                 else:
-                    raise LookupError(f"{archive_path.name} holds no out.* edge list.")
+                    raise LookupError(
+                        f"{archive_path.name} holds no edge list (no file opens with "
+                        "a '% sym|asym|bip' header)."
+                    )
             os.replace(partial, target)
         finally:
             partial.unlink(missing_ok=True)
@@ -337,6 +370,46 @@ def load(
         edge_file=edge_file,
         weighted_links=dataset.infomap_weights,
     )
+
+
+def _entity_sides(directory: Path) -> list[str]:
+    """The entity names from KONECT's meta file, left side first."""
+    for meta in directory.rglob("meta.*"):
+        for line in meta.read_text(encoding="utf-8", errors="replace").splitlines():
+            key, _, value = line.partition(":")
+            if key.strip() == "entity-names":
+                return [name.strip() for name in value.split(",") if name.strip()]
+    return []
+
+
+def node_table(network: Network) -> NodeTable:
+    """Read a KONECT network's per-node attributes into the shared shape.
+
+    KONECT keeps them as ``ent.*`` files inside the archive :func:`load` already
+    fetched, so this costs an extraction and no network access. The three file
+    shapes it uses -- one attribute per file, a profile table, a list of labels --
+    come out as named columns, the ones ``info(name).node_attributes`` lists. Node
+    ids are the edge list's, right side of a bipartite network shifted included,
+    so the table and :meth:`Network.edges` agree.
+
+    Few networks ship such files; ``search(node_metadata=True)`` finds them.
+
+    Raises:
+        LookupError: The archive ships no per-node attributes.
+    """
+    dataset = network.dataset
+    assert isinstance(dataset, Dataset)
+    directory = network.extract()
+    files = sorted(path for path in directory.rglob("ent.*") if path.is_file())
+    if not files:
+        raise LookupError(f"{network.name!r} ships no per-node attributes (no ent.* files).")
+    values = _ent.read(
+        files,
+        sides=_entity_sides(directory),
+        left_nodes=dataset.left_nodes,
+        bipartite=dataset.bipartite,
+    )
+    return NodeTable(values=values, origin=f"{SOURCE}/{network.name}/ent.*")
 
 
 def is_cached(name: str) -> bool:

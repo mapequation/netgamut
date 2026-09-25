@@ -362,11 +362,28 @@ side is shifted past the left: ids are unique, and right-side nodes start at
 not handed to Infomap, which accepts only non-negative weights; `to_infomap()`
 then reads the links unweighted, summing repeated ones.
 
+**Node metadata.** 27 networks ship per-node attributes as `ent.*` files — people's
+names and sexes in `moreno_crime`, a whole profile per pet in the petster networks,
+coauthor names in `pajek-erdos`. No KONECT page says which, so the catalog build
+lists every archive up to 100 MB (268 of 300) and records the columns each will
+yield:
+
+```python
+konect.search(node_metadata=True)
+konect.info("petster-hamster").node_attributes  # ('name', 'joined', 'species', ...)
+konect.load("moreno_crime").nodes()["name"]  # {1: 'AbelDennis', ...}
+```
+
+Ids are the edge list's, so in a bipartite network a right-side entity's rows land
+on the shifted ids. The 32 larger archives were not listed and answer `None`, which
+keeps them out of either filter. A refresh re-lists an archive only when its size
+or date has changed; KONECT's last changed in 2017–2018.
+
 ## Node metadata, in one shape
 
 Every source stores node attributes somewhere different — a separate SNAP artifact,
-a member of a Netzschleuder bundle, OGB's `raw/` and `mapping/` folders, a
-materialised PyG table. `Network.nodes()` reads all of them the same way:
+a member of a Netzschleuder bundle, KONECT's `ent.*` files, OGB's `raw/` and
+`mapping/` folders, a materialised PyG table. `Network.nodes()` reads all of them the same way:
 
 ```python
 nodes = networks.load("ogbn-arxiv").nodes()

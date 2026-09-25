@@ -5,13 +5,20 @@ browsing is offline and instant, :func:`refresh` re-reads the live site into the
 user cache, and a refreshed copy takes precedence.
 
 KONECT has no API, so the build reads the network index and then each network's
-page; see :mod:`networks.konect._scrape` for what is parsed and why.
+page; see :mod:`networks.konect._scrape` for what is parsed and why. Whether a
+network ships node attributes is on no page, so the build also lists each archive
+up to 100 MB -- 268 of 300, 2.4 GB -- by streaming it through ``tarfile`` without
+keeping it. The archives last changed in 2017-2018, so a refresh reuses every
+listing whose archive size and ``Last-Modified`` are unchanged, and in practice
+downloads nothing.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import difflib
 import json
+import tarfile
 import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -22,8 +29,9 @@ from typing import Any
 
 from .._core import cache as _cache
 from .._core.domains import DOMAINS
-from .._core.download import fetch_text
-from ._models import SITE_URL, Dataset
+from .._core.download import fetch_text, head, open_stream
+from . import _ent
+from ._models import SITE_URL, Dataset, is_edge_list_header
 from ._scrape import is_series, parse_index, parse_page
 
 __all__ = ["Catalog", "build_catalog", "load_catalog", "refresh"]
@@ -33,6 +41,10 @@ _VENDORED_NAME = "catalog.json"
 INDEX_URL = f"{SITE_URL}/networks/"
 # The site is one person's server; keep the build gentle.
 _REFRESH_WORKERS = 4
+#: Archives up to this size are listed by the build; larger ones stay unlisted.
+LIST_CAP_BYTES = 100_000_000
+# Listing streams the whole archive, so allow far longer than a page fetch.
+_LIST_TIMEOUT = 600.0
 
 _cached: Catalog | None = None
 
@@ -91,6 +103,7 @@ class Catalog:
         signed: bool | None = None,
         temporal: bool | None = None,
         loops: bool | None = None,
+        node_metadata: bool | None = None,
         max_nodes: int | None = None,
         min_nodes: int | None = None,
         max_edges: int | None = None,
@@ -98,8 +111,9 @@ class Catalog:
     ) -> tuple[Dataset, ...]:
         """Filter the catalog by domain, category, size or structural property.
 
-        A ``loops`` filter excludes networks whose loop status KONECT does not
-        report rather than assuming either answer.
+        ``loops`` and ``node_metadata`` exclude networks whose answer is unknown
+        -- no loop check reported, or an archive too large to have been listed --
+        rather than assuming either answer.
         """
         needle = query.casefold().strip()
         results: list[Dataset] = []
@@ -130,6 +144,8 @@ class Catalog:
             if temporal is not None and item.temporal is not temporal:
                 continue
             if loops is not None and item.loops is not loops:
+                continue
+            if node_metadata is not None and item.node_metadata is not node_metadata:
                 continue
             if not within(item.nodes, min_nodes, max_nodes):
                 continue
@@ -208,8 +224,93 @@ def load_catalog(*, reload: bool = False) -> Catalog:
     return _cached
 
 
-def build_catalog(*, workers: int = _REFRESH_WORKERS) -> Catalog:
-    """Read the downloadable, non-series part of KONECT from the live site."""
+def _leading_comments(handle: Any, limit: int = 20) -> list[str]:
+    """The ``%`` lines a member opens with."""
+    lines: list[str] = []
+    for raw in handle:
+        line = raw.decode("utf-8", "replace")
+        if not line.startswith("%") or len(lines) >= limit:
+            break
+        lines.append(line.rstrip("\n"))
+    return lines
+
+
+def list_archive(url: str) -> tuple[tuple[str, ...], str, tuple[str, ...]]:
+    """Every file in a KONECT archive, its edge list, and its node columns.
+
+    Streams the archive once, in memory, and keeps nothing. The edge list is the
+    member whose first line is a ``% <format> <edge type>`` header; see
+    :func:`~networks.konect._models.is_edge_list_header`. The node columns are
+    named from each ``ent.*`` file's name and leading ``%`` lines, as
+    :func:`networks.konect.node_table` will name them.
+    """
+    members: list[str] = []
+    edge_member = ""
+    entity_files: list[tuple[str, list[str]]] = []
+    with (
+        open_stream(url, timeout=_LIST_TIMEOUT) as response,
+        tarfile.open(fileobj=response, mode="r|*") as archive,
+    ):
+        for member in archive:
+            if not member.isfile():
+                continue
+            name = Path(member.name).name
+            members.append(name)
+            if name.startswith("ent."):
+                handle = archive.extractfile(member)
+                entity_files.append((name, _leading_comments(handle) if handle else []))
+            elif not edge_member and name.startswith(("out.", "rel.")):
+                handle = archive.extractfile(member)
+                if handle is not None and is_edge_list_header(handle.readline()):
+                    edge_member = name
+    return tuple(members), edge_member, _ent.columns(entity_files)
+
+
+def _with_listing(dataset: Dataset, previous: Catalog | None, *, cap: int | None) -> Dataset:
+    """*dataset* with its archive's size, date and listing filled in.
+
+    A listing from *previous* is reused while the archive's size and date are
+    unchanged; otherwise an archive up to *cap* bytes is listed afresh.
+    """
+    validators = head(dataset.primary_file.url)
+    size = validators["bytes"] if isinstance(validators["bytes"], int) else None
+    modified = str(validators["last_modified"] or "")
+    stamped = dataclasses.replace(dataset, archive_bytes=size, archive_modified=modified)
+
+    if previous is not None and dataset.name in previous:
+        old = previous[dataset.name]
+        if size is not None and (old.archive_bytes, old.archive_modified) == (size, modified):
+            return dataclasses.replace(
+                stamped,
+                members=old.members,
+                edge_member=old.edge_member,
+                node_attributes=old.node_attributes,
+            )
+
+    if size is None or cap is None or size > cap:
+        return stamped
+    try:
+        members, edge_member, node_attributes = list_archive(dataset.primary_file.url)
+    except Exception:
+        # Unlisted is an honest answer; one bad archive must not sink the build.
+        return stamped
+    return dataclasses.replace(
+        stamped, members=members, edge_member=edge_member, node_attributes=node_attributes
+    )
+
+
+def build_catalog(
+    *,
+    workers: int = _REFRESH_WORKERS,
+    previous: Catalog | None = None,
+    list_cap: int | None = LIST_CAP_BYTES,
+) -> Catalog:
+    """Read the downloadable, non-series part of KONECT from the live site.
+
+    *previous* supplies archive listings to reuse; with none, every archive up to
+    *list_cap* bytes is downloaded once to list it. ``list_cap=None`` skips
+    listing entirely.
+    """
     rows = [
         row
         for row in parse_index(fetch_text(INDEX_URL))
@@ -222,13 +323,14 @@ def build_catalog(*, workers: int = _REFRESH_WORKERS) -> Catalog:
         except Exception:
             # One unreachable page must not sink the whole refresh.
             return None
-        return Dataset(
+        dataset = Dataset(
             name=row["name"],
             title=row["title"],
             nodes=row["nodes"],
             edges=row["edges"],
             **{**page, "temporal": page["temporal"] or row["temporal"]},
         )
+        return _with_listing(dataset, previous, cap=list_cap)
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
         fetched = [item for item in pool.map(fetch, rows) if item is not None]
@@ -242,9 +344,14 @@ def build_catalog(*, workers: int = _REFRESH_WORKERS) -> Catalog:
 
 
 def refresh(*, workers: int = _REFRESH_WORKERS) -> Catalog:
-    """Re-read the live site and store the result in the user cache."""
+    """Re-read the live site and store the result in the user cache.
+
+    Archive listings are carried over from the current catalog while their
+    archives are unchanged, so this downloads an archive only when KONECT has
+    published a new or changed one.
+    """
     global _cached
-    catalog = build_catalog(workers=workers)
+    catalog = build_catalog(workers=workers, previous=load_catalog())
     catalog.write(_refreshed_path())
     _cached = catalog
     return catalog

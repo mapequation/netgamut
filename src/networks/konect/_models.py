@@ -10,13 +10,14 @@ the convenience properties are derived from them.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
 from .._core.domains import domains_for_konect
 from .._core.models import DataFile
 
-__all__ = ["EDGE_TYPES", "FORMATS", "SITE_URL", "Dataset"]
+__all__ = ["EDGE_TYPES", "FORMATS", "SITE_URL", "Dataset", "attribute_name", "is_edge_list_header"]
 
 SITE_URL = "http://konect.cc"
 
@@ -38,6 +39,30 @@ EDGE_TYPES: dict[str, str] = {
     "weighted": "Ratings, no multiple edges",
     "multiweighted": "Ratings, multiple edges",
 }
+
+# The first line of every KONECT edge list, whatever the file is called.
+_EDGE_LIST_HEADER = re.compile(r"^%\s*(sym|asym|bip)\b")
+
+
+def is_edge_list_header(line: str | bytes) -> bool:
+    """Whether *line* opens a KONECT edge list: ``% <format> <edge type>``.
+
+    This, not the file name, identifies the edge list. The current layout calls
+    it ``out.<name>``, the older one ``rel.<relation>`` beside per-edge attribute
+    files such as ``rel.<name>.person.role``, which have no such header.
+    """
+    text = line.decode("utf-8", "replace") if isinstance(line, bytes) else line
+    return bool(_EDGE_LIST_HEADER.match(text))
+
+
+def attribute_name(member: str) -> str:
+    """``person.name`` from ``ent.moreno_crime_crime.person.name``.
+
+    KONECT names never contain a dot, so the last two components are always the
+    entity and the attribute, whatever network token precedes them.
+    """
+    return ".".join(member.split(".")[1:][-2:])
+
 
 # Edge types whose weight column Infomap can use as it stands.
 _INFOMAP_WEIGHTS = frozenset({"unweighted", "positive", "posweighted"})
@@ -79,6 +104,19 @@ class Dataset:
     citations: tuple[str, ...] = ()
     #: Where KONECT took the data from.
     upstream_url: str = ""
+    #: The archive's size and ``Last-Modified`` header when it was listed. A
+    #: refresh re-lists an archive only when either has changed.
+    archive_bytes: int | None = None
+    archive_modified: str = ""
+    #: Every file in the archive, by base name. ``None`` when it was not listed:
+    #: archives over 100 MB are left unread by the catalog build.
+    members: tuple[str, ...] | None = None
+    #: The member holding the edge list, when the archive was listed.
+    edge_member: str = ""
+    #: The columns :func:`networks.konect.node_table` returns (``name``, ``sex``),
+    #: read from the archive's ``ent.*`` files when it was listed; ``()`` when it
+    #: ships none, ``None`` when it was not listed.
+    node_attributes: tuple[str, ...] | None = None
 
     # -- shared interface -------------------------------------------------
     @property
@@ -112,6 +150,23 @@ class Dataset:
     def infomap_weights(self) -> bool:
         """Whether Infomap can read the weight column as link weights."""
         return self.edge_type in _INFOMAP_WEIGHTS or not self.edge_type
+
+    @property
+    def edge_attributes(self) -> tuple[str, ...] | None:
+        """Per-edge files (``person.role``), one line per edge; ``None`` if unlisted."""
+        if self.members is None:
+            return None
+        return tuple(
+            attribute_name(member)
+            for member in self.members
+            if member.startswith("rel.") and member != self.edge_member
+        )
+
+    @property
+    def node_metadata(self) -> bool | None:
+        """Whether the archive ships per-node attributes; ``None`` if unlisted."""
+        attributes = self.node_attributes
+        return None if attributes is None else bool(attributes)
 
     @property
     def duplicate_of(self) -> str | None:
@@ -161,6 +216,13 @@ class Dataset:
             "statistics": self.statistics,
             "citations": list(self.citations),
             "upstream_url": self.upstream_url,
+            "archive_bytes": self.archive_bytes,
+            "archive_modified": self.archive_modified,
+            "members": None if self.members is None else list(self.members),
+            "edge_member": self.edge_member,
+            "node_attributes": (
+                None if self.node_attributes is None else list(self.node_attributes)
+            ),
         }
 
     @classmethod
@@ -182,6 +244,13 @@ class Dataset:
             statistics=dict(data.get("statistics", {})),
             citations=tuple(data.get("citations", ())),
             upstream_url=data.get("upstream_url", ""),
+            archive_bytes=data.get("archive_bytes"),
+            archive_modified=data.get("archive_modified", ""),
+            members=None if data.get("members") is None else tuple(data["members"]),
+            edge_member=data.get("edge_member", ""),
+            node_attributes=(
+                None if data.get("node_attributes") is None else tuple(data["node_attributes"])
+            ),
         )
 
     def __str__(self) -> str:
