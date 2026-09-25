@@ -132,3 +132,39 @@ def test_load_refuses_to_guess_between_sources(monkeypatch) -> None:
     monkeypatch.setattr(netzschleuder, "catalog", lambda **_: {"shared"})
     with pytest.raises(KeyError, match="several sources"):
         networks.load("shared")
+
+
+# -- node metadata across sources -----------------------------------------------
+def test_node_metadata_filter_leaves_out_the_unknown() -> None:
+    with_metadata = networks.search(node_metadata=True)
+    without = networks.search(node_metadata=False)
+    assert all(match.node_metadata is True for match in with_metadata)
+    assert all(match.node_metadata is False for match in without)
+    # AHORN keeps node lines inside the dataset file, so it answers neither way.
+    assert not any(match.source == "ahorn" for match in with_metadata + without)
+    assert {match.source for match in with_metadata} >= {"snap", "netzschleuder", "konect"}
+
+
+def test_node_attribute_finds_a_named_column_in_any_source() -> None:
+    keys = {match.key for match in networks.search(node_attribute="Department")}
+    assert "snap/email-Eu-core" in keys
+    species = {match.source for match in networks.search(node_attribute="species")}
+    assert {"konect", "ogb"} <= species
+    assert all(
+        "gender" in (match.node_attributes or ())
+        for match in networks.search(node_attribute="gender")
+    )
+
+
+def test_node_attributes_leave_out_bookkeeping_columns() -> None:
+    """Netzschleuder's index and _pos layout are not attributes."""
+    karate = networks.netzschleuder.info("karate")
+    assert karate.node_attributes == ("name", "groups")
+    assert networks.snap.info("email-Eu-core").node_attributes == ("department",)
+    assert networks.ogb.info("ogbn-arxiv").node_attributes == ("year",)
+
+
+def test_sources_that_cannot_name_columns_still_answer_whether() -> None:
+    labelled = next(item for item in networks.pyg.datasets() if item.num_classes)
+    assert labelled.node_metadata is True and labelled.node_attributes == ()
+    assert all(item.node_metadata is False for item in networks.paths.datasets())

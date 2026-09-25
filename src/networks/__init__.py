@@ -165,6 +165,29 @@ class Match:
         return self.dataset.directed  # type: ignore[no-any-return]
 
     @property
+    def node_metadata(self) -> bool | None:
+        """Whether :meth:`Network.nodes` returns per-node attributes; ``None`` if unknown.
+
+        Each source answers from its own catalog, before any download: KONECT and
+        Netzschleuder from their file listings and analyses, SNAP from its label
+        files, OGB and PyG from their class labels. AHORN keeps node lines inside
+        the dataset file, so it cannot say.
+        """
+        value = getattr(self.dataset, "node_metadata", None)
+        return None if value is None else bool(value)
+
+    @property
+    def node_attributes(self) -> tuple[str, ...] | None:
+        """The per-node columns the source's catalog can name, ``None`` if unknown.
+
+        Exact for Netzschleuder, KONECT and SNAP. OGB names only its extra files
+        (``year``, ``species``) and PyG none, since their other column names come
+        with the download; ``nodes()`` returns those too.
+        """
+        value = getattr(self.dataset, "node_attributes", None)
+        return None if value is None else tuple(value)
+
+    @property
     def loops(self) -> bool | None:
         """Whether any node links to itself, where some source has checked.
 
@@ -224,6 +247,8 @@ def search(
     max_edges: int | None = None,
     min_edges: int | None = None,
     loops: bool | None = None,
+    node_metadata: bool | None = None,
+    node_attribute: str | None = None,
 ) -> tuple[Match, ...]:
     """Search every source at once, filtering on the shared domain vocabulary.
 
@@ -234,7 +259,11 @@ def search(
     Size filters exclude datasets whose size the source does not publish rather than
     assuming anything: most PyG entries and the largest OGB ones have no counts.
     ``loops`` does the same with datasets no source has checked for self-links
-    (see :attr:`Match.loops`).
+    (see :attr:`Match.loops`), and ``node_metadata`` with datasets whose catalog
+    cannot say (see :attr:`Match.node_metadata`). ``node_attribute`` finds
+    datasets with a per-node column of that name, case-insensitively, among the
+    names each catalog knows -- ``node_attribute="gender"`` for something to score
+    a partition against.
 
     A network held by both KONECT and Netzschleuder or SNAP appears once, from
     the other source; ``source="konect"`` lists KONECT's copy too.
@@ -276,6 +305,13 @@ def search(
                 continue
             match = Match(source=name, dataset=dataset)
             if loops is not None and match.loops is not loops:
+                continue
+            if node_metadata is not None and match.node_metadata is not node_metadata:
+                continue
+            if node_attribute is not None and not any(
+                column.casefold() == node_attribute.casefold()
+                for column in match.node_attributes or ()
+            ):
                 continue
             results.append(match)
 

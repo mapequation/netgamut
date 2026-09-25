@@ -171,6 +171,25 @@ class Dataset:
         available = ", ".join(item.name for item in candidates)
         raise KeyError(f"{self.name!r} has no file {name!r}. Available: {available}")
 
+    # -- node metadata, in the shared vocabulary ------------------------
+    @property
+    def node_attributes(self) -> tuple[str, ...] | None:
+        """The per-node columns :meth:`Network.nodes` returns, from the site's analyses.
+
+        The bundle's bookkeeping is left out: ``index``, the row number every
+        ``nodes.csv`` carries, and ``_pos`` and other underscored layout columns.
+        """
+        properties = self.analyses.get("vertex_properties")
+        if properties is None:
+            return None
+        return tuple(entry[0] for entry in properties if not str(entry[0]).startswith("_"))
+
+    @property
+    def node_metadata(self) -> bool | None:
+        """Whether the network carries per-node attributes; ``None`` if unknown."""
+        attributes = self.node_attributes
+        return None if attributes is None else bool(attributes)
+
     # -- serialisation ---------------------------------------------------
     def to_dict(self) -> dict[str, Any]:
         return {

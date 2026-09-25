@@ -93,6 +93,26 @@ class Dataset:
     def primary_file(self) -> DataFile | None:
         return self.files[0] if self.files else None
 
+    # -- node metadata, in the shared vocabulary ------------------------
+    @property
+    def node_attributes(self) -> tuple[str, ...]:
+        """The per-node columns the catalog can name: ``year``, ``species``.
+
+        :meth:`Network.nodes` returns more -- the label column, named by a mapping
+        file inside the archive (``arxiv_category``), and the entity mapping
+        (``paper``) -- whose names only the download reveals.
+        """
+        return tuple(name.removeprefix("node_") for name in self.node_files)
+
+    @property
+    def node_metadata(self) -> bool | None:
+        """``True`` with class labels or extra node files; otherwise unknown.
+
+        A dataset with neither may still map its nodes to entities, which only
+        the archive shows.
+        """
+        return True if self.num_classes or self.node_files else None
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,

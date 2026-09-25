@@ -44,7 +44,7 @@ from .._core.download import download as _download_file
 from .._core.network import Network
 from .._core.nodes import NodeTable
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
-from ._models import Category, DataFile, Dataset
+from ._models import Category, DataFile, Dataset, label_column
 from ._scrape import INDEX_URL, SNAP_BASE_URL
 
 __all__ = [
@@ -298,9 +298,7 @@ def node_table(network: Network) -> NodeTable:
             node = int(fields[0]) if fields[0].lstrip("-").isdigit() else fields[0]
             values[node] = fields[1]
 
-    # "email-Eu-core-department-labels.txt.gz" -> "department"
-    stem = Path(artifact.name).name.split(".")[0].lower()
-    column = stem.removeprefix(dataset.name.lower()).strip("-").removesuffix("-labels") or "label"
+    column = label_column(dataset.name, artifact.name)
     return NodeTable(values={column: values}, origin=f"snap/{Path(artifact.name).name}")
 
 

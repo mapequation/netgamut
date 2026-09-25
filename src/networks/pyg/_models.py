@@ -65,6 +65,20 @@ class Dataset:
         """PyG downloads its own raw files; nothing is listed here to fetch directly."""
         return ()
 
+    # -- node metadata, in the shared vocabulary ------------------------
+    @property
+    def node_attributes(self) -> tuple[str, ...]:
+        """None the catalog can name: ``y`` becomes ``label``, or ``label_0 ..``
+        for a multi-label set, and other scalar attributes appear only once the
+        dataset is materialised.
+        """
+        return ()
+
+    @property
+    def node_metadata(self) -> bool | None:
+        """``True`` for a dataset with class labels; otherwise unknown."""
+        return True if self.num_classes else None
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,

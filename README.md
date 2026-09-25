@@ -408,6 +408,22 @@ networks.load("ogbn-arxiv").nodes()["arxiv_category"]       # OGB
 networks.load("Planetoid/Cora", source="pyg").nodes()["label"]
 ```
 
+To find datasets that have node metadata before downloading anything, ask
+across sources — by presence, or by column name:
+
+```python
+networks.search(node_metadata=True)  # 240 datasets known to carry some
+networks.search(node_attribute="gender")  # something to score a partition against
+networks.search("karate")[0].node_attributes  # ('name', 'groups')
+```
+
+Each source answers from its own catalog: Netzschleuder from the site's analyses,
+KONECT from its archive listings, SNAP from its label files, OGB and PyG from their
+class labels. Netzschleuder, KONECT and SNAP name every column. OGB names only its
+extra files (`year`, `species`) and PyG none, since the rest of their column names
+come with the download. Datasets a catalog cannot answer for — all of AHORN, whose
+node lines live inside the dataset file — are left out of either filter.
+
 Column names come from the source, so a figure legend can use them as they are. Values
 are decoded to names **where the source ships names** — OGB does, PyG does not:
 `Data.y` is an integer tensor and PyG's API has no `class_names` anywhere, so

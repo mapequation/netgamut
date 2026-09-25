@@ -74,6 +74,15 @@ class Dataset:
         return None
 
     @property
+    def node_attributes(self) -> tuple[str, ...]:
+        """None: the paths source publishes no per-node metadata."""
+        return ()
+
+    @property
+    def node_metadata(self) -> bool:
+        return False
+
+    @property
     def primary_file(self) -> DataFile | None:
         return self.files[0] if self.files else None
 

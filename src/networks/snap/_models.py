@@ -13,6 +13,17 @@ from typing import Any
 from .._core.domains import domains_for_snap
 from .._core.models import DataFile
 
+
+def label_column(dataset: str, file_name: str) -> str:
+    """The column a node-label file becomes, named after the file.
+
+    ``email-Eu-core-department-labels.txt.gz`` gives ``department``: SNAP has no
+    schema to name it from.
+    """
+    stem = file_name.rsplit("/", 1)[-1].split(".")[0].lower()
+    return stem.removeprefix(dataset.lower()).strip("-").removesuffix("-labels") or "label"
+
+
 __all__ = ["Category", "DataFile", "Dataset"]
 
 # Fields the SNAP index uses for the node count, in the order we prefer them.
@@ -233,6 +244,17 @@ class Dataset:
                 return item
         available = ", ".join(item.name for item in self.files) or "none"
         raise KeyError(f"{self.name!r} has no file {name!r}. Available: {available}")
+
+    # -- node metadata, in the shared vocabulary ------------------------
+    @property
+    def node_attributes(self) -> tuple[str, ...]:
+        """The column :func:`networks.snap.node_table` returns, named after the file."""
+        return tuple(label_column(self.name, item.name) for item in self.label_files[:1])
+
+    @property
+    def node_metadata(self) -> bool:
+        """Whether SNAP publishes a node-label file for this dataset."""
+        return bool(self.label_files)
 
     def to_dict(self) -> dict[str, Any]:
         return {
