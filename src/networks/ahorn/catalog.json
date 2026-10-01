@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "source": "netsci-rwth/ahorn",
-  "retrieved": "2026-08-28T22:18:39Z",
+  "retrieved": "2026-10-01T10:44:56Z",
   "datasets": [
     {
       "name": "algebra-questions",
@@ -42,14 +42,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202446/files/algebra-questions.txt?download=1",
           "hif_url": "",
-          "size": 68524,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/18771367/files/algebra-questions.txt.gz?download=1",
           "hif_url": "",
-          "size": 9862,
+          "size": null,
           "changelog": [
             "Renamed the edge attribute from `genre` to `category`.",
             "Provided the dataset in gzipped format to reduce file size."
@@ -95,7 +95,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202002/files/amazon-reviews.txt.gz?download=1",
           "hif_url": "",
-          "size": 265141569,
+          "size": null,
           "changelog": []
         }
       ]
@@ -138,7 +138,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18632377/files/citeseer-cocitation.txt.gz?download=1",
           "hif_url": "",
-          "size": 17378,
+          "size": null,
           "changelog": []
         }
       ]
@@ -183,7 +183,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17600531/files/coauth-DBLP.txt.gz?download=1",
           "hif_url": "",
-          "size": 56430542,
+          "size": null,
           "changelog": []
         }
       ]
@@ -229,7 +229,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17600658/files/coauth-MAG-Geology.txt.gz?download=1",
           "hif_url": "",
-          "size": 30311118,
+          "size": null,
           "changelog": []
         }
       ]
@@ -275,7 +275,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17600662/files/coauth-MAG-History.txt.gz?download=1",
           "hif_url": "",
-          "size": 21767556,
+          "size": null,
           "changelog": []
         }
       ]
@@ -322,7 +322,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/16837446/files/contact-high-school.txt?download=1",
           "hif_url": "",
-          "size": 7788202,
+          "size": null,
           "changelog": []
         }
       ]
@@ -369,7 +369,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17092521/files/contact-primary-school.txt?download=1",
           "hif_url": "",
-          "size": 4860730,
+          "size": null,
           "changelog": []
         }
       ]
@@ -411,14 +411,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202566/files/cooking.txt.gz?download=1",
           "hif_url": "",
-          "size": 851444,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking.hif.json.gz?download=1",
-          "size": 851301,
+          "size": null,
           "changelog": [
             "Dropped hyperedges with only a single distinct ingredient.",
             "Updated the format version to `0.3`."
@@ -462,7 +462,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-brazilian.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-brazilian.hif.json.gz?download=1",
-          "size": 15493,
+          "size": null,
           "changelog": []
         }
       ]
@@ -503,7 +503,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-british.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-british.hif.json.gz?download=1",
-          "size": 23825,
+          "size": null,
           "changelog": []
         }
       ]
@@ -544,7 +544,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-cajun-creole.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-cajun-creole.hif.json.gz?download=1",
-          "size": 43962,
+          "size": null,
           "changelog": []
         }
       ]
@@ -585,7 +585,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-chinese.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-chinese.hif.json.gz?download=1",
-          "size": 62591,
+          "size": null,
           "changelog": []
         }
       ]
@@ -626,7 +626,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-filipino.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-filipino.hif.json.gz?download=1",
-          "size": 20320,
+          "size": null,
           "changelog": []
         }
       ]
@@ -667,7 +667,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-french.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-french.hif.json.gz?download=1",
-          "size": 60239,
+          "size": null,
           "changelog": []
         }
       ]
@@ -708,7 +708,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-greek.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-greek.hif.json.gz?download=1",
-          "size": 29863,
+          "size": null,
           "changelog": []
         }
       ]
@@ -749,7 +749,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-indian.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-indian.hif.json.gz?download=1",
-          "size": 68786,
+          "size": null,
           "changelog": []
         }
       ]
@@ -790,7 +790,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-irish.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-irish.hif.json.gz?download=1",
-          "size": 19587,
+          "size": null,
           "changelog": []
         }
       ]
@@ -831,7 +831,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-italian.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-italian.hif.json.gz?download=1",
-          "size": 146962,
+          "size": null,
           "changelog": []
         }
       ]
@@ -872,7 +872,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-jamaican.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-jamaican.hif.json.gz?download=1",
-          "size": 18022,
+          "size": null,
           "changelog": []
         }
       ]
@@ -913,7 +913,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-japanese.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-japanese.hif.json.gz?download=1",
-          "size": 35075,
+          "size": null,
           "changelog": []
         }
       ]
@@ -954,7 +954,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-korean.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-korean.hif.json.gz?download=1",
-          "size": 21728,
+          "size": null,
           "changelog": []
         }
       ]
@@ -995,7 +995,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-mexican.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-mexican.hif.json.gz?download=1",
-          "size": 130129,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1036,7 +1036,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-moroccan.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-moroccan.hif.json.gz?download=1",
-          "size": 24573,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1077,7 +1077,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-russian.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-russian.hif.json.gz?download=1",
-          "size": 16543,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1118,7 +1118,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-southern-us.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-southern-us.hif.json.gz?download=1",
-          "size": 86182,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1159,7 +1159,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-spanish.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-spanish.hif.json.gz?download=1",
-          "size": 28675,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1200,7 +1200,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-thai.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-thai.hif.json.gz?download=1",
-          "size": 41904,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1241,7 +1241,7 @@
           "number": 2,
           "url": "https://zenodo.org/records/20491193/files/cooking-vietnamese.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20491193/files/cooking-vietnamese.hif.json.gz?download=1",
-          "size": 26307,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1284,14 +1284,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/18632379/files/cora-coauthorship.txt.gz?download=1",
           "hif_url": "",
-          "size": 19101,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/19232933/files/cora-coauthorship.txt.gz?download=1",
           "hif_url": "",
-          "size": 16903,
+          "size": null,
           "changelog": [
             "Updated the format version to 0.3.",
             "Dropped papers with only one author."
@@ -1338,7 +1338,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18632383/files/cora-cocitation.txt.gz?download=1",
           "hif_url": "",
-          "size": 17848,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1380,14 +1380,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/18632385/files/dblp-coauthorship.txt.gz?download=1",
           "hif_url": "",
-          "size": 468280,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/19232918/files/dblp-coauthorship.txt.gz?download=1",
           "hif_url": "",
-          "size": 445155,
+          "size": null,
           "changelog": [
             "Updated the format version to 0.3.",
             "Dropped papers with only one author."
@@ -1431,7 +1431,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/21131192/files/drug-target-interaction.txt.gz?download=1",
           "hif_url": "",
-          "size": 424459,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1475,7 +1475,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20759663/files/email-enron.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20759663/files/email-enron.hif.json.gz?download=1",
-          "size": 67967,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1521,7 +1521,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20759801/files/email-eu.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20759801/files/email-eu.hif.json.gz?download=1",
-          "size": 1550383,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1563,7 +1563,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20741918/files/florentine-families.txt?download=1",
           "hif_url": "https://zenodo.org/records/20741918/files/florentine-families.hif.json?download=1",
-          "size": 749,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1607,14 +1607,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202479/files/geometry-questions.txt?download=1",
           "hif_url": "",
-          "size": 83454,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/18771452/files/geometry-questions.txt.gz?download=1",
           "hif_url": "",
-          "size": 12889,
+          "size": null,
           "changelog": [
             "Renamed the edge attribute from `genre` to `category`.",
             "Provided the dataset in gzipped format to reduce file size."
@@ -1665,7 +1665,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17198796/files/house-bills.txt?download=1",
           "hif_url": "",
-          "size": 5330425,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1710,7 +1710,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202783/files/house-committees.txt?download=1",
           "hif_url": "",
-          "size": 82777,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1752,14 +1752,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17953924/files/karate-club.txt?download=1",
           "hif_url": "",
-          "size": 2931,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/19236080/files/karate-club.txt?download=1",
           "hif_url": "",
-          "size": 2945,
+          "size": null,
           "changelog": [
             "Updated the format version to 0.3."
           ]
@@ -1804,14 +1804,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202762/files/madison-restaurant-reviews.txt?download=1",
           "hif_url": "",
-          "size": 29926,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/18771507/files/madison-restaurant-reviews.txt.gz?download=1",
           "hif_url": "",
-          "size": 8004,
+          "size": null,
           "changelog": [
             "Renamed the edge attribute from `genre` to `cuisine`.",
             "Provided the dataset in gzipped format to reduce file size."
@@ -1856,7 +1856,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17200740/files/MAG-10.txt.gz?download=1",
           "hif_url": "",
-          "size": 560579,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1897,7 +1897,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18161249/files/MANTRA-2-manifolds.txt.gz?download=1",
           "hif_url": "",
-          "size": 3021246,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1938,7 +1938,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18161249/files/MANTRA-3-manifolds.txt.gz?download=1",
           "hif_url": "",
-          "size": 23982585,
+          "size": null,
           "changelog": []
         }
       ]
@@ -1982,7 +1982,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202738/files/mathoverflow-answers.txt.gz?download=1",
           "hif_url": "",
-          "size": 1080433,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2026,14 +2026,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202708/files/music-blues-reviews.txt?download=1",
           "hif_url": "",
-          "size": 58404,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/20411732/files/music-blues-reviews.txt?download=1",
           "hif_url": "https://zenodo.org/records/20411732/files/music-blues-reviews.hif.json.gz?download=1",
-          "size": 58449,
+          "size": null,
           "changelog": [
             "Updated the format version to 0.3."
           ]
@@ -2042,7 +2042,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews.hif.json.gz?download=1",
-          "size": 58449,
+          "size": null,
           "changelog": [
             "Sub-dataset for each music genre."
           ]
@@ -2085,7 +2085,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-cajun-zydeco.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-cajun-zydeco.hif.json.gz?download=1",
-          "size": 594,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2126,7 +2126,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-chicago-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-chicago-blues.hif.json.gz?download=1",
-          "size": 22678,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2167,7 +2167,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-delta-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-delta-blues.hif.json.gz?download=1",
-          "size": 4198,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2208,7 +2208,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-detroit-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-detroit-blues.hif.json.gz?download=1",
-          "size": 154,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2249,7 +2249,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-memphis-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-memphis-blues.hif.json.gz?download=1",
-          "size": 440,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2290,7 +2290,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-new-york-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-new-york-blues.hif.json.gz?download=1",
-          "size": 13960,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2331,7 +2331,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744406/files/music-blues-reviews-st-louis-blues.txt?download=1",
           "hif_url": "https://zenodo.org/records/20744406/files/music-blues-reviews-st-louis-blues.hif.json.gz?download=1",
-          "size": 279,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2375,7 +2375,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17607716/files/NDC-classes.txt.gz?download=1",
           "hif_url": "",
-          "size": 506164,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2419,7 +2419,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17607718/files/NDC-substances.txt.gz?download=1",
           "hif_url": "",
-          "size": 1645221,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2464,7 +2464,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18632387/files/pubmed-cocitation.txt.gz?download=1",
           "hif_url": "",
-          "size": 136661,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2505,7 +2505,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/18199501/files/semantic-scholar-coauth-sample.txt.gz?download=1",
           "hif_url": "",
-          "size": 98128,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2552,7 +2552,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17198877/files/senate-bills.txt?download=1",
           "hif_url": "",
-          "size": 864643,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2597,7 +2597,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17200512/files/senate-committees.txt?download=1",
           "hif_url": "",
-          "size": 26606,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2643,7 +2643,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20762201/files/tags-ask-ubuntu.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20762201/files/tags-ask-ubuntu.hif.json.gz?download=1",
-          "size": 3372027,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2689,7 +2689,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20762447/files/tags-math-sx.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20762447/files/tags-math-sx.hif.json.gz?download=1",
-          "size": 7784735,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2735,7 +2735,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20761904/files/tags-stack-overflow.txt.gz?download=1",
           "hif_url": "",
-          "size": 195994274,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2782,7 +2782,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20762271/files/threads-ask-ubuntu.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20762271/files/threads-ask-ubuntu.hif.json.gz?download=1",
-          "size": 1893009,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2829,7 +2829,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20762488/files/threads-math-sx.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20762488/files/threads-math-sx.hif.json.gz?download=1",
-          "size": 9360886,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2876,7 +2876,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/20761583/files/threads-stack-overflow.txt.gz?download=1",
           "hif_url": "",
-          "size": 162693306,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2918,7 +2918,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202694/files/trivago-clicks.txt.gz?download=1",
           "hif_url": "",
-          "size": 2862516,
+          "size": null,
           "changelog": []
         }
       ]
@@ -2961,14 +2961,14 @@
           "number": 1,
           "url": "https://zenodo.org/records/17202660/files/vegas-bars-reviews.txt?download=1",
           "hif_url": "",
-          "size": 65649,
+          "size": null,
           "changelog": []
         },
         {
           "number": 2,
           "url": "https://zenodo.org/records/18771537/files/vegas-bars-reviews.txt.gz?download=1",
           "hif_url": "",
-          "size": 21694,
+          "size": null,
           "changelog": [
             "Renamed the edge attribute from `genre` to `category`.",
             "Updated the category edge attribute to store the category name instead of a numeric code.",
@@ -2979,7 +2979,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews.hif.json.gz?download=1",
-          "size": 21691,
+          "size": null,
           "changelog": [
             "Sub-dataset for each bar category."
           ]
@@ -3023,7 +3023,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-adult-entertainment.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-adult-entertainment.hif.json.gz?download=1",
-          "size": 740,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3065,7 +3065,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-bar-crawl.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-bar-crawl.hif.json.gz?download=1",
-          "size": 161,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3107,7 +3107,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-champagne-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-champagne-bars.hif.json.gz?download=1",
-          "size": 816,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3149,7 +3149,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-cocktail-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-cocktail-bars.hif.json.gz?download=1",
-          "size": 3347,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3191,7 +3191,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-comedy-clubs.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-comedy-clubs.hif.json.gz?download=1",
-          "size": 935,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3233,7 +3233,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dance-clubs.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dance-clubs.hif.json.gz?download=1",
-          "size": 849,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3275,7 +3275,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dive-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-dive-bars.hif.json.gz?download=1",
-          "size": 477,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3317,7 +3317,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-gay-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-gay-bars.hif.json.gz?download=1",
-          "size": 146,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3359,7 +3359,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-hookah-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-hookah-bars.hif.json.gz?download=1",
-          "size": 362,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3401,7 +3401,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-karaoke.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-karaoke.hif.json.gz?download=1",
-          "size": 8302,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3443,7 +3443,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-lounges.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-lounges.hif.json.gz?download=1",
-          "size": 384,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3485,7 +3485,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-piano-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-piano-bars.hif.json.gz?download=1",
-          "size": 170,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3527,7 +3527,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pool-halls.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pool-halls.hif.json.gz?download=1",
-          "size": 656,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3569,7 +3569,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pubs.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-pubs.hif.json.gz?download=1",
-          "size": 1716,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3611,7 +3611,7 @@
           "number": 3,
           "url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-sports-bars.txt.gz?download=1",
           "hif_url": "https://zenodo.org/records/20744599/files/vegas-bars-reviews-sports-bars.hif.json.gz?download=1",
-          "size": 1260,
+          "size": null,
           "changelog": []
         }
       ]
@@ -3653,7 +3653,7 @@
           "number": 1,
           "url": "https://zenodo.org/records/17201931/files/walmart-trips.txt.gz?download=1",
           "hif_url": "",
-          "size": 1391552,
+          "size": null,
           "changelog": []
         }
       ]
