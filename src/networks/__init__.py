@@ -32,6 +32,11 @@ Beyond the datasets, :mod:`networks.generate` samples synthetic benchmark
 networks with planted communities from any blueprint in the pool (requires
 the ``generate`` extra).
 
+Every network -- downloaded or generated, first-order, state or multilayer --
+converts and writes the same way: ``to_networkx()``, ``to_infomap()``, and
+``to_pajek(directory)`` / ``to_link_list(directory)``, which return the path
+of the file they wrote.
+
 All sources are mapped onto one domain vocabulary, so a comparison can span
 kinds of system rather than kinds of provenance::
 
@@ -64,8 +69,10 @@ from ._core.cache import (
 )
 from ._core.domains import DOMAINS
 from ._core.hypergraph import Hypergraph
+from ._core.multilayer import MultilayerNetwork
 from ._core.network import Network
 from ._core.state_network import StateNetwork
+from ._core.synthetic import SyntheticNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
@@ -74,8 +81,10 @@ __all__ = [
     "CachedDataset",
     "Hypergraph",
     "Match",
+    "MultilayerNetwork",
     "Network",
     "StateNetwork",
+    "SyntheticNetwork",
     "__version__",
     "ahorn",
     "cache_dir",
@@ -95,7 +104,7 @@ __all__ = [
     "sources",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 #: Source name -> subpackage, in the order results are reported.
 _SOURCES: dict[str, Any] = {

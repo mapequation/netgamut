@@ -197,6 +197,30 @@ im.run()
 
 Both default to the direction SNAP reports for the dataset.
 
+### Writing files
+
+Every network — downloaded or generated, first-order, memory or multilayer —
+writes itself into a directory and returns the path, named after the network
+unless you pass `name=`:
+
+```python
+net.to_pajek("out/")                  # PosixPath('out/ca-GrQc.net')
+net.to_link_list("out/", name="grqc") # PosixPath('out/grqc.txt')
+```
+
+| Network | `to_pajek` | `to_link_list` |
+|---|---|---|
+| first-order (`Network`, `SyntheticNetwork`) | `*Vertices` + `*Edges`/`*Arcs` | `source target [weight]` |
+| `StateNetwork` | `*Vertices` + `*States` + `*Links` | order 1 only |
+| `MultilayerNetwork` | `*Vertices` + `*Intra` (+ `*Inter`, or `*Multilayer`) | — |
+
+Integer node ids are written as they are, so a generated network's file lines up
+with its planted partition; other labels are numbered from 1 and kept as Pajek
+names. A link list has nowhere to put names, so it refuses non-integer labels
+rather than renumbering them silently. A written file loads the same network
+Infomap gets from `to_infomap()`, weights included. Downloads are streamed, so
+writing one never holds its links in memory.
+
 Some entries are multi-file bundles:
 
 ```python
@@ -522,10 +546,22 @@ import networks
 from networks import generate
 
 G = networks.load("polbooks").to_networkx()
-partition = generate.detect(G)              # Infomap, or bring your own
-H, info = generate.benchmark(G, partition)  # degree- and mixing-preserving
+partition = generate.detect(G)                # Infomap, or bring your own
+net = generate.benchmark(G, partition)        # degree- and mixing-preserving
 
-H, info = generate.weighted_benchmark(G, partition)  # + flow-model weights
+net = generate.weighted_benchmark(G, partition)  # + flow-model weights
+```
+
+Every generator returns a network object with the same methods as a download —
+a `SyntheticNetwork`, or a `StateNetwork` / `MultilayerNetwork` for the
+higher-order ones — carrying the planted partition and the sampler's
+diagnostics:
+
+```python
+net.partition                  # {node: module}, the ground truth
+net.info                       # diagnostics, plus "generator" and "parameters"
+H = net.to_networkx()          # planted module as node attribute "module"
+net.to_pajek("benchmarks/")    # PosixPath('benchmarks/polbooks-benchmark.net')
 ```
 
 Or drop the blueprint entirely and generate from fitted parameters — a
@@ -536,7 +572,7 @@ instead of assumed to be power laws:
 deg = generate.fit_families([k for _, k in G.degree()])
 size = generate.fit_families([120, 80, 60, 45, 30])  # module sizes
 mix = {"family": "delta", "mu": 0.15}                # flat LFR-style mixing
-H, partition, info = generate.parametric(1000, deg, size, mix, seed=1)
+net = generate.parametric(1000, deg, size, mix, seed=1)
 ```
 
 Directed blueprints keep both degree sequences and, like undirected ones,
@@ -545,7 +581,7 @@ a dense weighted network carries its structure in the weights rather than the
 topology:
 
 ```python
-H, info = generate.weighted_benchmark(G, partition)  # topology + flow weights
+net = generate.weighted_benchmark(G, partition)  # topology + flow weights
 ```
 
 Higher-order blueprints change only the sampler, never the flow model — a
@@ -553,8 +589,8 @@ memory link has to match at its physical junction, a multiplex link has to
 stay inside its layer:
 
 ```python
-sampled, info = generate.memory_benchmark(links, windows, partition, seed=1)
-sampled, info = generate.multilayer_benchmark(layers, partition, seed=1)
+memory = generate.memory_benchmark(links, windows, partition, seed=1)  # StateNetwork
+multiplex = generate.multilayer_benchmark(layers, partition, seed=1)  # MultilayerNetwork
 ```
 
 The flow model itself is public as well (`generate.flow_matrix`,
@@ -569,22 +605,29 @@ the authors' C++, not a reimplementation — so the classic baseline is one call
 away, in all six of its variants:
 
 ```python
-G, part = generate.lfr(1000, 15, 50, mu=0.2, minc=20, maxc=50, seed=1)
-G, part = generate.lfr(1000, 15, 50, mut=0.2, muw=0.1, beta=1.5)   # weighted
-G, part = generate.lfr(1000, 15, 50, mu=0.2, directed=True)        # directed
-G, part = generate.lfr(5000, 20, 100, mu1=0.1, mu2=0.3,            # two planted
-                       minc=10, maxc=100,                          #   levels
-                       min_macro=200, max_macro=1000)
-layers, part = generate.lfr(1000, 20, 50, mu=0.3, layers=10, graphs=3)
-G, cover = generate.lfr(1000, 15, 50, mu=0.2, on=20, om=2)         # overlapping
+net = generate.lfr(1000, 15, 50, mu=0.2, minc=20, maxc=50, seed=1)
+net = generate.lfr(1000, 15, 50, mut=0.2, muw=0.1, beta=1.5)   # weighted
+net = generate.lfr(1000, 15, 50, mu=0.2, directed=True)        # directed
+net = generate.lfr(5000, 20, 100, mu1=0.1, mu2=0.3,            # two planted
+                   minc=10, maxc=100,                          #   levels
+                   min_macro=200, max_macro=1000)
+net = generate.lfr(1000, 20, 50, mu=0.3, layers=10, graphs=3)  # multiplex
+net = generate.lfr(1000, 15, 50, mu=0.2, on=20, om=2)          # overlapping
+
+net.to_pajek("benchmarks/")
+# PosixPath('benchmarks/lfr-undirected-n1000-k15-maxk50-mu0.2-seed1.net')
 ```
 
-Which program runs follows from the arguments, and so does the shape that comes
-back: `{node: module}` normally, `{node: (macro, micro)}` for the hierarchical
-variant — the path convention the flow model reads — `{node: (module, ...)}` for
-an overlapping cover, and `({layer: graph}, {(node, layer): module})` for the
-multiplex one, ready for `generate.multilayer_benchmark`. Node labels are
-zero-based, unlike the one-based `.dat` files upstream writes.
+Which program runs follows from the arguments, and so does the shape of
+`net.partition`: `{node: module}` normally, `{node: (macro, micro)}` for the
+hierarchical variant — the path convention the flow model reads —
+`{node: (module, ...)}` for an overlapping cover, and `{(node, layer): module}`
+for the multiplex one, which comes back as a `MultilayerNetwork`
+(`net.to_networkx(layer=3)` is one layer) ready for
+`generate.multilayer_benchmark`. Node labels are zero-based, unlike the
+one-based `.dat` files upstream writes. The default name, and so the file name,
+spells out the variant, the main parameters and the seed; pass `name=` to
+`to_pajek` when a sweep varies something else.
 
 **`seed` alone decides the network.** Left to themselves the generators seed
 from the clock; the wrapper writes `time_seed.dat` instead, so the same seed
@@ -609,6 +652,40 @@ in place, without downloading anything.
 If you would rather not have a compiler in the loop, `generate.lfr_networkx(...)`
 keeps networkx's reimplementation of the undirected unweighted case, with
 retries around its flaky convergence.
+
+### Multilayer benchmarks with MultilayerGM
+
+`generate.multilayer_gm(...)` runs
+[MultilayerGM](https://github.com/MultilayerGM/MultilayerGM-py) (Bazzi, Jeub,
+Arenas, Howison & Porter): a partition of the state nodes is sampled with a
+tunable dependence between layers, then every layer gets a degree-corrected
+SBM. Upstream's four steps — dependency tensor, null distribution, partition,
+network — are one call:
+
+```python
+net = generate.multilayer_gm(1000, 5, p=0.9, mu=0.2, communities=10,
+                             theta=1, k_min=3, k_max=150, t_k=-2, seed=1)
+net.to_pajek("benchmarks/")   # *Intra only: couple layers with Infomap's relax rate
+# PosixPath('benchmarks/mlgm-multiplex-n1000-L5-p0.9-mu0.2-seed1.net')
+
+net = generate.multilayer_gm(1000, 20, p=0.95, coupling="temporal")  # layer i copies i-1
+```
+
+`p` is how likely a node keeps its community from another layer — any other
+layer for `coupling="multiplex"`, the previous one for `"temporal"`, where it
+can also be a list of `layers - 1` probabilities. `mu` is the fraction of edges
+placed ignoring communities, which is *not* LFR's mixing parameter: a random
+edge can still land inside a community.
+
+There is no generator object to keep around: building the dependency tensor
+and null takes milliseconds, and the time goes into sampling edges. What is
+worth reusing is the partition — `partition=net.partition` resamples only the
+edges, for a `mu` sweep over one planted structure.
+
+The sampling code is vendored, at a pinned upstream commit, because upstream is
+not on PyPI and seeds only through global random state; the vendored copy takes
+local random streams instead. The same `seed` reproduces upstream's network
+exactly, and never touches the caller's `random` or `numpy.random`.
 
 #### Which revision, and moving it
 
@@ -691,7 +768,7 @@ print(memory)
 # StateNetwork(order=2): 4,169 physical nodes, 58,944 state nodes,
 # 154,895 links from 50,509 paths
 
-memory.write("wikispeedia_states.net")  # *Vertices / *States / *Links file
+memory.to_pajek("out/")  # out/wikispeedia.net: *Vertices / *States / *Links
 im = memory.to_infomap(silent=True)     # or straight into Infomap, directed flow
 result = im.run()
 ```

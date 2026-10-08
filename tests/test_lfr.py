@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from networks import generate
+from networks import MultilayerNetwork, generate
 from networks.generate import _lfr
 from networks.generate._lfr import _io
 
@@ -221,7 +221,8 @@ def test_the_binary_benchmark_plants_the_mixing_it_was_asked_for() -> None:
     pytest.importorskip("networkx")
     compiler_or_skip()
     for mu in (0.1, 0.4):
-        G, partition = generate.lfr(500, 15, 50, mu=mu, minc=20, maxc=50, seed=3)
+        net = generate.lfr(500, 15, 50, mu=mu, minc=20, maxc=50, seed=3)
+        G, partition = net.to_networkx(), net.partition
         cross = sum(1 for u, v in G.edges() if partition[u] != partition[v])
         assert cross / G.number_of_edges() == pytest.approx(mu, abs=0.02)
 
@@ -240,9 +241,9 @@ def test_the_seed_alone_decides_the_network() -> None:
     again = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, seed=7)
     other = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, seed=8)
 
-    assert sorted(first[0].edges()) == sorted(again[0].edges())
-    assert first[1] == again[1]
-    assert sorted(first[0].edges()) != sorted(other[0].edges())
+    assert sorted(first.to_networkx().edges()) == sorted(again.to_networkx().edges())
+    assert first.partition == again.partition
+    assert sorted(first.to_networkx().edges()) != sorted(other.to_networkx().edges())
 
 
 @pytest.mark.network
@@ -250,11 +251,15 @@ def test_labels_are_zero_based_and_the_partition_covers_the_graph() -> None:
     """Upstream writes one-based ids; the rest of generate is zero-based."""
     pytest.importorskip("networkx")
     compiler_or_skip()
-    G, partition = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, seed=1)
+    nx = pytest.importorskip("networkx")
+    net = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, seed=1)
+    G, partition = net.to_networkx(), net.partition
     assert min(G) == 0
     assert max(G) == G.number_of_nodes() - 1
     assert set(partition) == set(G)
     assert min(partition.values()) == 0
+    # the network object carries the partition on the graph as the "module" attribute
+    assert partition == nx.get_node_attributes(G, "module")
 
 
 @pytest.mark.network
@@ -272,7 +277,8 @@ def test_each_flat_variant_returns_the_graph_type_it_promises(
 ) -> None:
     pytest.importorskip("networkx")
     compiler_or_skip()
-    G, partition = generate.lfr(200, 10, 25, minc=20, maxc=50, seed=1, **kwargs)
+    net = generate.lfr(200, 10, 25, minc=20, maxc=50, seed=1, **kwargs)
+    G, partition = net.to_networkx(), net.partition
     assert G.is_directed() is directed
     assert G.number_of_nodes() == 200
     _, _, data = next(iter(G.edges(data=True)))
@@ -290,10 +296,11 @@ def test_the_hierarchical_variant_returns_nested_paths() -> None:
     pytest.importorskip("networkx")
     numpy = pytest.importorskip("numpy")
     compiler_or_skip()
-    G, partition = generate.lfr(
+    net = generate.lfr(
         600, 20, 50, mu1=0.1, mu2=0.3, minc=10, maxc=50,
         min_macro=100, max_macro=300, seed=1,
     )
+    G, partition = net.to_networkx(), net.partition
     assert {len(path) for path in partition.values()} == {2}
     inside: dict[int, int] = {}
     for macro, micro in partition.values():
@@ -319,9 +326,12 @@ def test_the_multiplex_variant_returns_layers_and_a_state_partition() -> None:
     """
     pytest.importorskip("networkx")
     compiler_or_skip()
-    layers, partition = generate.lfr(
+    net = generate.lfr(
         150, 10, 25, mu=0.2, minc=20, maxc=40, layers=2, graphs=2, seed=1
     )
+    assert isinstance(net, MultilayerNetwork)
+    layers = {i: net.to_networkx(layer=i) for i in net.layers}
+    partition = net.partition
     assert sorted(layers) == [0, 1, 2, 3]
     assert all(G.number_of_nodes() == 150 for G in layers.values())
     assert set(partition) == {(u, layer) for layer in layers for u in layers[layer]}
@@ -331,7 +341,7 @@ def test_the_multiplex_variant_returns_layers_and_a_state_partition() -> None:
     assert not (first_graph & second_graph), "layers of different graphs share no module"
     assert partition[(0, 0)] == partition[(0, 1)], "layers of one graph share communities"
 
-    sampled, _ = generate.multilayer_benchmark(layers, partition, seed=1)
+    sampled = generate.multilayer_benchmark(layers, partition, seed=1).intra
     assert sorted(sampled) == sorted(layers)
 
 
@@ -340,7 +350,8 @@ def test_overlapping_nodes_come_back_as_a_cover() -> None:
     """``on``/``om`` make a cover, not a partition, and the shape says so."""
     pytest.importorskip("networkx")
     compiler_or_skip()
-    G, cover = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, on=20, om=2, seed=1)
+    net = generate.lfr(200, 10, 25, mu=0.2, minc=20, maxc=50, on=20, om=2, seed=1)
+    cover = net.partition
     overlapping = [value for value in cover.values() if isinstance(value, tuple)]
     assert len(overlapping) == 20
     assert {len(memberships) for memberships in overlapping} == {2}

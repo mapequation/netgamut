@@ -13,6 +13,7 @@ import csv
 import gzip
 import io
 import os
+import re
 import shutil
 import tarfile
 import zipfile
@@ -21,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO, Any
 
+from . import formats
 from .cache import file_lock, write_atomic
 from .download import extract_gzip
 from .models import DataFile, DatasetLike
@@ -38,6 +40,10 @@ _CANDIDATE_DELIMITERS = (",", ";")
 
 # Enough lines to tell a real delimiter from an incidental character.
 _SAMPLE_LINES = 25
+
+# The numeric prefix a C++ stream reads as a double -- what Infomap's own parser
+# makes of a weight field -- so "1_000" is 1 here too, not Python's 1000.
+_LEADING_NUMBER = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
 
 
 def _detect_delimiter(samples: Sequence[str]) -> str | None:
@@ -365,6 +371,88 @@ class Network:
             graph.clear()
             graph.add_edges_from(self.edges(cast=None))
         return graph
+
+    @property
+    def partition(self) -> None:
+        """Always ``None``: a downloaded network has no planted partition.
+
+        Present so code written for generated networks runs on downloaded ones
+        too. Per-node metadata, which is not ground truth, is :meth:`nodes`.
+        """
+        return None
+
+    def _links(self) -> Iterator[tuple[str, str, float | None]]:
+        """Stream ``(source, target, weight)`` exactly as :meth:`to_infomap` reads them.
+
+        A third column counts as a weight only where :meth:`to_infomap` lets
+        Infomap parse the file itself -- whitespace-separated, and weights the
+        source marks as valid -- so a written file loads the same network.
+        """
+        if not (self.delimiter is None and self.weighted_links):
+            for source, target in self.edges():
+                yield source, target, None
+            return
+        for fields in self.rows(delimiter=None):
+            if len(fields) < 2:
+                continue
+            number = _LEADING_NUMBER.match(fields[2]) if len(fields) > 2 else None
+            yield fields[0], fields[1], float(number.group()) if number else None
+
+    def _typed_links(self, cast: Callable[[str], Any]) -> Iterator[formats.Link]:
+        for source, target, weight in self._links():
+            yield cast(source), cast(target), weight
+
+    def to_pajek(
+        self, directory: str | Path, *, name: str | None = None, directed: bool | None = None
+    ) -> Path:
+        """Write ``<directory>/<name>.net`` in Pajek format and return its path.
+
+        *name* defaults to the dataset's name and *directed* to the direction
+        the source reports. Integer node ids are kept; any other labels are
+        numbered ``1..N`` and kept as ``*Vertices`` names. The file is
+        streamed in two passes -- nodes, then links -- so memory holds the
+        node set but never the links.
+        """
+        if directed is None:
+            directed = bool(self.dataset.directed)
+        labels = dict.fromkeys(label for u, v, _ in self._links() for label in (u, v))
+        cast: Callable[[str], Any] = (
+            int if all(label.isascii() and label.isdigit() for label in labels) else str
+        )
+        target = formats.output_path(directory, name or self.name, ".net")
+        return formats.write_pajek(
+            target,
+            nodes=(cast(label) for label in labels),
+            links=lambda: self._typed_links(cast),
+            directed=directed,
+            comments=formats.describe(self.name, None),
+        )
+
+    def to_link_list(
+        self, directory: str | Path, *, name: str | None = None, directed: bool | None = None
+    ) -> Path:
+        """Write ``<directory>/<name>.txt`` as a link list and return its path.
+
+        Streams in one pass. A ``# directed`` or ``# undirected`` comment
+        records *directed*, which defaults to what the source reports.
+
+        Raises:
+            ValueError: A node id is not a non-negative integer; use
+                :meth:`to_pajek`, which keeps labels as names.
+        """
+        if directed is None:
+            directed = bool(self.dataset.directed)
+
+        def cast(label: str) -> Any:
+            return int(label) if label.isascii() and label.isdigit() else label
+
+        target = formats.output_path(directory, name or self.name, ".txt")
+        return formats.write_link_list(
+            target,
+            links=self._typed_links(cast),
+            directed=directed,
+            comments=formats.describe(self.name, None),
+        )
 
     def to_infomap(self, *, directed: bool | None = None, **kwargs: Any) -> Any:
         """Build an :class:`infomap.Infomap` instance with this network loaded.
