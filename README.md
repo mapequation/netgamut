@@ -27,6 +27,9 @@ pip install mapequation-networks
 The distribution is `mapequation-networks`; the import name is `networks`.
 For a runnable tour — browsing, loading, and building memory networks from
 path data — see [`examples/tutorial.ipynb`](examples/tutorial.ipynb).
+Upgrading from 0.2? Generators now return network objects rather than tuples,
+and some downloads load with different weights; [`CHANGELOG.md`](CHANGELOG.md)
+has the call-by-call migration.
 
 ## One domain vocabulary across every source
 
