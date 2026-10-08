@@ -412,15 +412,16 @@ class Network:
     def _infomap_reads_directly(self) -> bool:
         """Whether Infomap's own parser reads this file as :attr:`columns` says.
 
-        It splits on whitespace and takes a third field as the weight, so the
-        file must be whitespace-separated and hold either two fields or
-        exactly source, target and weight.
+        It splits on whitespace and takes any third field as the weight, so the
+        file must be whitespace-separated and hold no field past the declared
+        weight -- on every line, not only the sampled ones, or a stray third
+        field deep in the file would be a weight here and nowhere else. The
+        check is a plain pass over the lines, about a tenth of Infomap's read.
         """
-        samples = self._samples()
-        if _detect_delimiter(samples) is not None or self.columns.layer is not None:
+        if self.delimiter is not None or self.columns.layer is not None:
             return False
-        width = max((len(line.split()) for line in samples), default=2)
-        return width == 2 or (width == 3 and self.columns.weight == 2)
+        width = 3 if self.columns.weight == 2 else 2
+        return all(len(fields) <= width for fields in self.rows())
 
     def _typed_links(self, cast: Callable[[str], Any]) -> Iterator[formats.Link]:
         for source, target, weight in self._links():
