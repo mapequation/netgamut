@@ -289,6 +289,7 @@ def test_signed_weights_are_kept_but_not_given_to_infomap(offline_konect) -> Non
     offline_konect[dataset.name] = "% asym multisigned\n1 2 -1 100\n2 1 1 200\n2 3 0 300\n"
     net = konect.load(dataset.name)
     assert net.weighted_links is False
+    assert net.columns.time == 3  # chess is temporal: u v w t
     assert list(net.rows())[0] == ("1", "2", "-1", "100")
     instance = net.to_infomap(silent=True)
     assert instance.num_links == 3

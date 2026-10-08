@@ -39,6 +39,7 @@ from .._core.cache import (
     set_cache_dir,
 )
 from .._core.cache import dataset_dir as _dataset_dir
+from .._core.columns import Columns
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
 from .._core.network import Network
@@ -181,6 +182,42 @@ def describe(name: str) -> str:
     return "\n".join(lines)
 
 
+#: Column roles for SNAP files with more than two fields, by file name. Anything
+#: not listed is read as a plain edge list: SNAP publishes no column metadata,
+#: and a guessed third column is as often a timestamp or a sign as a weight.
+_TIME = Columns(time=2, names=("source", "target", "time"))
+_SIGN = Columns(names=("source", "target", "sign"))
+_COLUMNS: dict[str, Columns] = {
+    **{
+        f"sx-{site}{variant}.txt.gz": _TIME
+        for site in ("stackoverflow", "mathoverflow", "superuser", "askubuntu")
+        for variant in ("", "-a2q", "-c2q", "-c2a")
+    },
+    "wiki-talk-temporal.txt.gz": _TIME,
+    "CollegeMsg.txt.gz": _TIME,
+    **{
+        f"email-Eu-core-temporal{part}.txt.gz": _TIME
+        for part in ("", "-Dept1", "-Dept2", "-Dept3", "-Dept4")
+    },
+    "higgs-activity_time.txt.gz": Columns(
+        time=2, names=("source", "target", "time", "interaction")
+    ),
+    **{
+        f"{kind}_network.edgelist.gz": Columns(weight=2, names=("source", "target", "weight"))
+        for kind in ("retweet", "reply", "mention")
+    },
+    # Ratings run from -10 to 10, so they are not Infomap weights.
+    "soc-sign-bitcoinotc.csv.gz": Columns(time=3, names=("source", "target", "rating", "time")),
+    "soc-sign-bitcoinalpha.csv.gz": Columns(time=3, names=("source", "target", "rating", "time")),
+    "soc-sign-epinions.txt.gz": _SIGN,
+    "soc-sign-Slashdot081106.txt.gz": _SIGN,
+    "soc-sign-Slashdot090216.txt.gz": _SIGN,
+    "soc-sign-Slashdot090221.txt.gz": _SIGN,
+    # Business relationship codes (-1 customer, 0 peer, 1 provider, 2 sibling).
+    "as-caida20071105.txt.gz": Columns(names=("source", "target", "relationship")),
+}
+
+
 def load(
     name: str,
     *,
@@ -229,7 +266,13 @@ def load(
         progress=progress,
         max_bytes=max_bytes,
     )
-    return Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
+    return Network(
+        dataset=dataset,
+        file=artifact,
+        archive_path=target,
+        source="snap",
+        columns=_COLUMNS.get(artifact.name, Columns()),
+    )
 
 
 def load_ground_truth(
@@ -257,7 +300,13 @@ def load_ground_truth(
     artifact = dataset.community_file(variant)
     target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
-    return Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
+    return Network(
+        dataset=dataset,
+        file=artifact,
+        archive_path=target,
+        source="snap",
+        columns=_COLUMNS.get(artifact.name, Columns()),
+    )
 
 
 def node_table(network: Network) -> NodeTable:
@@ -288,7 +337,13 @@ def node_table(network: Network) -> NodeTable:
 
     target = _dataset_dir("snap", dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, progress=False)
-    handle = Network(dataset=dataset, file=artifact, archive_path=target, source="snap")
+    handle = Network(
+        dataset=dataset,
+        file=artifact,
+        archive_path=target,
+        source="snap",
+        columns=_COLUMNS.get(artifact.name, Columns()),
+    )
 
     # Node ids are cast so they match the integers the edge list uses; the attribute
     # value stays exactly as SNAP wrote it, and NodeTable orders it naturally.

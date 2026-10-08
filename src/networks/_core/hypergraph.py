@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import IO, Any
 
 from .cache import write_atomic
+from .columns import Columns
 from .models import DataFile, DatasetLike
 from .network import Network
 from .nodes import NodeTable
@@ -502,6 +503,7 @@ class Hypergraph:
                 description=f"{projection} projection of {self.file.name}",
             ),
             archive_path=target,
+            columns=Columns(weight=2) if projection == "clique" else Columns(),
         )
 
     # -- display -----------------------------------------------------------

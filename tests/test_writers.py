@@ -6,14 +6,21 @@ from pathlib import Path
 
 import pytest
 
-from networks import MultilayerNetwork, StateNetwork, SyntheticNetwork
+from networks import InMemoryNetwork, MultilayerNetwork, StateNetwork
 from networks._core import formats
+from networks._core.columns import Columns
 from networks._core.models import DataFile
 from networks._core.network import Network
 from networks.snap._models import Dataset
 
 
-def make_network(path: Path, *, type_: str | None = "Undirected", name: str = "toy") -> Network:
+def make_network(
+    path: Path,
+    *,
+    type_: str | None = "Undirected",
+    name: str = "toy",
+    columns: Columns | None = None,
+) -> Network:
     dataset = Dataset(
         name=name,
         categories=("socnets",),
@@ -21,7 +28,12 @@ def make_network(path: Path, *, type_: str | None = "Undirected", name: str = "t
         type=type_,
         columns={},
     )
-    return Network(dataset=dataset, file=DataFile(path.name, "u"), archive_path=path)
+    return Network(
+        dataset=dataset,
+        file=DataFile(path.name, "u"),
+        archive_path=path,
+        columns=columns or Columns(),
+    )
 
 
 def lines(path: Path) -> list[str]:
@@ -104,7 +116,7 @@ def test_network_to_pajek_names_string_labels(tmp_path: Path) -> None:
 def test_network_writes_weights_exactly_as_to_infomap_reads_them(tmp_path: Path) -> None:
     edges = tmp_path / "weighted.txt"
     edges.write_text("1 2 0.5\n2 3 2\n3 1 1\n")
-    net = make_network(edges)
+    net = make_network(edges, columns=Columns(weight=2))
     body = lines(net.to_pajek(tmp_path / "out"))
     assert body[-3:] == ["1 2 0.5", "2 3 2.0", "3 1 1.0"]
     assert lines(net.to_link_list(tmp_path / "out"))[-3:] == ["1 2 0.5", "2 3 2.0", "3 1 1.0"]
@@ -138,11 +150,8 @@ def test_weights_are_read_as_infomap_reads_them(tmp_path: Path) -> None:
     # would read "1_000" as 1000.
     edges = tmp_path / "odd.txt"
     edges.write_text("0 1 1_000\n1 2 2.5x\n2 0 abc\n")
-    assert lines(make_network(edges).to_link_list(tmp_path / "out")) == [
-        "0 1 1.0",
-        "1 2 2.5",
-        "2 0",
-    ]
+    net = make_network(edges, columns=Columns(weight=2))
+    assert lines(net.to_link_list(tmp_path / "out")) == ["0 1 1.0", "1 2 2.5", "2 0 1.0"]
 
 
 def test_downloaded_networks_have_no_planted_partition(gzipped_edges: Path) -> None:
@@ -153,12 +162,12 @@ def test_downloaded_networks_have_no_planted_partition(gzipped_edges: Path) -> N
 
 
 @pytest.fixture
-def synthetic() -> SyntheticNetwork:
+def synthetic() -> InMemoryNetwork:
     nx = pytest.importorskip("networkx")
     G = nx.Graph()
     G.add_nodes_from(range(5))  # node 4 stays isolated
     G.add_weighted_edges_from([(0, 1, 2.0), (1, 2, 1.0), (2, 0, 1.0), (3, 2, 0.5)])
-    return SyntheticNetwork.from_networkx(
+    return InMemoryNetwork.from_networkx(
         G,
         name="toy-benchmark",
         partition={0: 0, 1: 0, 2: 0, 3: 1, 4: 1},
@@ -166,7 +175,7 @@ def synthetic() -> SyntheticNetwork:
     )
 
 
-def test_synthetic_to_networkx_carries_the_planted_partition(synthetic: SyntheticNetwork) -> None:
+def test_synthetic_to_networkx_carries_the_planted_partition(synthetic: InMemoryNetwork) -> None:
     nx = pytest.importorskip("networkx")
     G = synthetic.to_networkx()
     assert nx.get_node_attributes(G, "module") == synthetic.partition
@@ -176,7 +185,7 @@ def test_synthetic_to_networkx_carries_the_planted_partition(synthetic: Syntheti
 
 
 def test_synthetic_to_pajek_records_how_it_was_made(
-    synthetic: SyntheticNetwork, tmp_path: Path
+    synthetic: InMemoryNetwork, tmp_path: Path
 ) -> None:
     path = synthetic.to_pajek(tmp_path)
     assert path.name == "toy-benchmark.net"
@@ -187,7 +196,7 @@ def test_synthetic_to_pajek_records_how_it_was_made(
     assert "0 1 2.0" in body
 
 
-def test_synthetic_files_match_to_infomap(synthetic: SyntheticNetwork, tmp_path: Path) -> None:
+def test_synthetic_files_match_to_infomap(synthetic: InMemoryNetwork, tmp_path: Path) -> None:
     assert infomap_counts(synthetic.to_pajek(tmp_path))[1] == api_counts(synthetic)[1]
     assert infomap_counts(synthetic.to_link_list(tmp_path))[1] == api_counts(synthetic)[1]
 
@@ -197,14 +206,14 @@ def test_numpy_integer_labels_are_kept_as_ids(tmp_path: Path) -> None:
     np = pytest.importorskip("numpy")
     G = nx.Graph()
     G.add_edges_from(np.array([[0, 1], [1, 2]], dtype=np.int64))
-    net = SyntheticNetwork.from_networkx(G, name="np")
+    net = InMemoryNetwork.from_networkx(G, name="np")
     assert lines(net.to_link_list(tmp_path)) == ["0 1", "1 2"]
     assert lines(net.to_pajek(tmp_path))[:2] == ["*Vertices 3", '0 "0"']
 
 
 def test_unweighted_synthetic_writes_no_weight_column(tmp_path: Path) -> None:
     nx = pytest.importorskip("networkx")
-    net = SyntheticNetwork.from_networkx(nx.path_graph(3), name="path")
+    net = InMemoryNetwork.from_networkx(nx.path_graph(3), name="path")
     assert not net.weighted
     assert lines(net.to_link_list(tmp_path)) == ["0 1", "1 2"]
 

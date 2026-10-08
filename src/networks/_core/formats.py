@@ -1,7 +1,7 @@
 """Writing networks as the text files Infomap and other tools read.
 
 Every network type in the package -- a downloaded :class:`~networks.Network`, a
-generated :class:`~networks.SyntheticNetwork`, a :class:`~networks.StateNetwork`
+generated :class:`~networks.InMemoryNetwork`, a :class:`~networks.StateNetwork`
 and a :class:`~networks.MultilayerNetwork` -- writes through these functions, so
 the formats are defined once:
 

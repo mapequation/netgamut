@@ -1,12 +1,14 @@
-"""The first-order network every generator in :mod:`networks.generate` returns.
+"""A first-order network held in memory.
 
-A :class:`SyntheticNetwork` is the in-memory sibling of
-:class:`~networks.Network`: the same ``to_networkx`` / ``to_infomap`` /
-``to_pajek`` / ``to_link_list`` methods, plus the planted :attr:`partition`
-that makes it a benchmark, and the generator's diagnostics in :attr:`info`.
+:class:`InMemoryNetwork` is what every first-order generator in
+:mod:`networks.generate` returns, and what :meth:`Network.snapshots` yields for
+each time bin of a temporal network. It has the methods of a downloaded
+:class:`~networks.Network` -- ``to_networkx`` / ``to_infomap`` / ``to_pajek`` /
+``to_link_list`` -- plus a :attr:`partition`, the planted ground truth of a
+generated network, and :attr:`info`, which says where the network came from.
 The two are separate classes because a ``Network`` is a lazy handle on a cached
-download -- streamed, never held in memory -- while a generated network exists
-only in memory until it is written.
+download -- streamed, never held in memory -- while these exist only in memory
+until they are written.
 """
 
 from __future__ import annotations
@@ -18,12 +20,12 @@ from typing import Any
 
 from . import formats
 
-__all__ = ["SyntheticNetwork"]
+__all__ = ["InMemoryNetwork"]
 
 
 @dataclass(frozen=True)
-class SyntheticNetwork:
-    """A generated first-order network with its planted partition.
+class InMemoryNetwork:
+    """A first-order network in memory: generated, or a time slice of a download.
 
     Instances are frozen; the containers are the generator's result and must
     not be mutated. Convert with :meth:`to_networkx` for anything that edits.
@@ -38,12 +40,12 @@ class SyntheticNetwork:
     directed: bool = False
     #: Whether :attr:`links` carries weights worth writing.
     weighted: bool = False
-    #: The planted ground truth, ``{node: module}``. A module is an ``int``, a
-    #: path tuple for a hierarchical partition, or a tuple of memberships for
-    #: an overlapping cover -- see each generator's documentation.
+    #: The planted ground truth of a generated network, ``{node: module}``; a
+    #: module is an ``int``, a path tuple for a hierarchical partition, or a
+    #: tuple of memberships for an overlapping cover. ``None`` for real data.
     partition: dict[Hashable, Any] | None = field(default=None, hash=False)
-    #: ``"generator"`` and ``"parameters"`` say how this was made; the rest is
-    #: the generator's own diagnostics.
+    #: For a generated network, ``"generator"`` and ``"parameters"`` and the
+    #: generator's diagnostics; for a snapshot, its bin and time span.
     info: dict[str, Any] = field(default_factory=dict, hash=False)
 
     @classmethod
@@ -54,7 +56,7 @@ class SyntheticNetwork:
         name: str,
         partition: Mapping[Hashable, Any] | None = None,
         info: Mapping[str, Any] | None = None,
-    ) -> SyntheticNetwork:
+    ) -> InMemoryNetwork:
         """Capture a networkx graph; ``"weight"`` is the only edge data kept."""
         weighted = any("weight" in data for _, _, data in graph.edges(data=True))
         links = {(u, v): float(data.get("weight", 1.0)) for u, v, data in graph.edges(data=True)}
@@ -179,6 +181,6 @@ class SyntheticNetwork:
         weights = "weighted " if self.weighted else ""
         planted = ", planted partition" if self.partition is not None else ""
         return (
-            f"SyntheticNetwork {self.name!r}: {self.num_nodes:,} nodes, "
+            f"InMemoryNetwork {self.name!r}: {self.num_nodes:,} nodes, "
             f"{self.num_links:,} {weights}{kind} links{planted}"
         )
