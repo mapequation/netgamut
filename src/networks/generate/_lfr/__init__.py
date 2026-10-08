@@ -1,8 +1,10 @@
 """The Lancichinetti--Fortunato LFR benchmarks, driven from Python.
 
 :func:`lfr` runs the authors' own C++ generators -- fetched and compiled once per
-machine, see :mod:`._sources` -- and hands back a networkx graph with its planted
-communities.  Which of the six upstream programs runs follows from the arguments:
+machine, see :mod:`._sources` -- and hands back a
+:class:`~networks.SyntheticNetwork` (a :class:`~networks.MultilayerNetwork` for the
+multiplex generator) with its planted communities.  Which of the six upstream programs
+runs follows from the arguments:
 
 ===========================  =========================================================
 argument                     generator
@@ -41,6 +43,9 @@ from pathlib import Path
 from typing import Any
 
 from ..._core.cache import cache_dir
+from ..._core.multilayer import MultilayerNetwork
+from ..._core.synthetic import SyntheticNetwork
+from .._naming import run_name, settings
 from . import _io
 from ._build import CompilerNotFound, binary, compiler
 from ._sources import (
@@ -253,7 +258,7 @@ def lfr(
     seed: int = 1,
     timeout: float = 600.0,
     progress: bool | None = None,
-) -> tuple[Any, dict[Any, Any]]:
+) -> SyntheticNetwork | MultilayerNetwork:
     """Generate an LFR benchmark with the authors' own generator.
 
     Args:
@@ -296,18 +301,22 @@ def lfr(
         progress: Show a download bar on the first call; defaults to on for a tty.
 
     Returns:
-        ``(G, partition)``, both zero-based.
+        A :class:`~networks.SyntheticNetwork`, zero-based, whose ``partition`` is
 
         * flat, no overlap: ``{node: module}``
         * hierarchical: ``{node: (macro, micro)}``, the path convention
           :func:`~networks.generate.flow_matrix` and friends take
         * overlapping (``on > 0``): ``{node: (module, ...)}``, a cover rather than a
           partition
-        * multiplex: ``G`` is ``{layer: graph}`` and the partition is
-          ``{(node, layer): module}``, as
-          :func:`~networks.generate.multilayer_benchmark` expects; communities are
-          numbered per generated graph, so layers sliced from different graphs never
-          share a module.
+
+        For the multiplex generator, a :class:`~networks.MultilayerNetwork` with
+        intra-layer links only and partition ``{(node, layer): module}``, as
+        :func:`~networks.generate.multilayer_benchmark` expects; communities are
+        numbered per generated graph, so layers sliced from different graphs never
+        share a module. ``net.to_networkx(layer=i)`` is layer ``i`` alone.
+
+        The name, and so the file name :meth:`to_pajek` picks, is built from the
+        generator and ``n``, ``k``, ``maxk``, the mixing parameters and ``seed``.
 
     Raises:
         ValueError: Arguments select a generator upstream does not provide, or leave a
@@ -318,8 +327,9 @@ def lfr(
         TimeoutError: The generator ran past *timeout*.
 
     Example:
-        >>> G, partition = lfr(1000, 15, 50, mu=0.2, minc=20, maxc=50, seed=1)
-        ... # doctest: +SKIP
+        >>> net = lfr(1000, 15, 50, mu=0.2, minc=20, maxc=50, seed=1)  # doctest: +SKIP
+        >>> net.to_pajek("benchmarks/")  # doctest: +SKIP
+        PosixPath('benchmarks/lfr-undirected-n1000-k15-maxk50-mu0.2-seed1.net')
     """
     weighted = muw is not None or mut is not None or beta is not None
     hierarchical = mu1 is not None or mu2 is not None
@@ -358,12 +368,73 @@ def lfr(
     workdir = _run(variant, [*common, *specific, *extra], seed, timeout, progress)
     try:
         if variant.multiplex:
-            return _read_multiplex(workdir, int(layers or 0), graphs)
-        if variant.hierarchical:
-            return _read_hierarchical(workdir)
-        return _read_flat(workdir, variant)
+            graph, partition = _read_multiplex(workdir, int(layers or 0), graphs)
+        elif variant.hierarchical:
+            graph, partition = _read_hierarchical(workdir)
+        else:
+            graph, partition = _read_flat(workdir, variant)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
+
+    name = run_name(
+        f"lfr-{variant.key}",
+        n=n,
+        k=float(k),
+        maxk=maxk,
+        mu=mu,
+        mut=mut,
+        muw=muw,
+        mu1=mu1,
+        mu2=mu2,
+        on=on or None,
+        om=om or None,
+        L=layers,
+        Orig=graphs if multiplex and graphs != 1 else None,
+        rand=rand,
+        seed=seed,
+    )
+    info = {
+        "generator": "lfr",
+        "parameters": settings(
+            {
+                "variant": variant.key,
+                "n": n,
+                "k": k,
+                "maxk": maxk,
+                "mu": mu,
+                "mut": mut,
+                "muw": muw,
+                "beta": beta,
+                "t1": t1,
+                "t2": t2,
+                "minc": minc,
+                "maxc": maxc,
+                "on": on or None,
+                "om": om or None,
+                "clustering": clustering,
+                "mu1": mu1,
+                "mu2": mu2,
+                "min_macro": min_macro,
+                "max_macro": max_macro,
+                "layers": layers,
+                "graphs": graphs if multiplex else None,
+                "bound": bound,
+                "rand": rand or None,
+                "seed": seed,
+            }
+        ),
+        "commit": COMMIT,
+    }
+    if variant.multiplex:
+        return MultilayerNetwork(
+            name=name,
+            intra={
+                index: {(u, v): 1.0 for u, v in layer.edges()} for index, layer in graph.items()
+            },
+            partition=partition,
+            info=info,
+        )
+    return SyntheticNetwork.from_networkx(graph, name=name, partition=partition, info=info)
 
 
 def _read_flat(workdir: Path, variant: Variant) -> tuple[Any, dict[Any, Any]]:
@@ -376,11 +447,7 @@ def _read_flat(workdir: Path, variant: Variant) -> tuple[Any, dict[Any, Any]]:
 
     nodes = _io.compact(G.nodes())
     modules = _io.compact(c for ids in memberships.values() for c in ids)
-    paths = {
-        nodes[u]: [(modules[c],) for c in ids]
-        for u, ids in memberships.items()
-        if u in nodes
-    }
+    paths = {nodes[u]: [(modules[c],) for c in ids] for u, ids in memberships.items() if u in nodes}
     return _io.relabel(G, nodes), _io.as_partition(paths)
 
 

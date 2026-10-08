@@ -20,10 +20,12 @@ first-order/second-order comparisons a one-argument change.
 from __future__ import annotations
 
 import numbers
-from collections.abc import Hashable, Iterable, Mapping, Sequence, Set
+from collections.abc import Hashable, Iterable, Iterator, Mapping, Sequence, Set
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from . import formats
 
 __all__ = ["StateNetwork"]
 
@@ -75,8 +77,9 @@ def _coerce(item: PathItem) -> tuple[tuple[Hashable, ...], float]:
 class StateNetwork:
     """A memory network in Infomap's state format.
 
-    Build one from paths with :meth:`from_paths`, then :meth:`write` it as a
-    ``*States`` file for the Infomap CLI or hand it to the Python API with
+    Build one from paths with :meth:`from_paths` -- or sample one with
+    :func:`networks.generate.memory_benchmark` -- then write it for the Infomap
+    CLI with :meth:`to_pajek` or hand it to the Python API with
     :meth:`to_infomap`. Instances are frozen; the dicts are the construction
     result and must not be mutated.
     """
@@ -97,10 +100,20 @@ class StateNetwork:
     #: or, if the paths were cut to a node subset, that cutting fragmented
     #: them.
     num_short_paths: int = 0
+    #: Used as the file name by :meth:`to_pajek`; the dataset's name when built
+    #: from a path dataset.
+    name: str = ""
+    #: The planted ground truth of a sampled state network, ``{state_id: module}``.
+    partition: dict[int, Any] | None = field(default=None, hash=False)
+    #: For a sampled network, ``"generator"``, ``"parameters"`` and the
+    #: sampler's diagnostics.
+    info: dict[str, Any] = field(default_factory=dict, hash=False)
 
     # -- construction ------------------------------------------------------
     @classmethod
-    def from_paths(cls, paths: Iterable[PathItem], *, order: int = 2) -> StateNetwork:
+    def from_paths(
+        cls, paths: Iterable[PathItem], *, order: int = 2, name: str = ""
+    ) -> StateNetwork:
         """Accumulate paths into a state network of the given Markov order.
 
         Each item is a sequence of node labels, or a ``(sequence, weight)``
@@ -148,6 +161,7 @@ class StateNetwork:
             links=links,
             num_paths=num_paths,
             num_short_paths=num_short,
+            name=name,
         )
 
     # -- inspection --------------------------------------------------------
@@ -174,12 +188,8 @@ class StateNetwork:
 
     @staticmethod
     def _printable(name: str) -> str:
-        """Make a label safe inside a quoted name field.
-
-        Whitespace is collapsed so a label cannot inject newlines into the
-        file, and double quotes -- the field delimiters -- become single.
-        """
-        return " ".join(name.split()).replace('"', "'")
+        """Make a label safe inside a quoted name field."""
+        return formats.printable(name)
 
     # -- output ------------------------------------------------------------
     def write(self, target: str | Path) -> Path:
@@ -192,11 +202,15 @@ class StateNetwork:
         Output is sorted by id, so equal networks produce equal files.
         """
         target = Path(target)
-        with target.open("w", encoding="utf-8") as out:
-            out.write(
-                f"# State network with Markov order {self.order} "
-                f"built from {self.num_paths - self.num_short_paths} paths\n"
-            )
+        with formats.atomic(target) as out:
+            if self.info.get("generator"):
+                for line in formats.describe(self.name, self.info):
+                    out.write(f"# {formats.printable(line)}\n")
+            else:
+                out.write(
+                    f"# State network with Markov order {self.order} "
+                    f"built from {self.num_paths - self.num_short_paths} paths\n"
+                )
             out.write(f"*Vertices {len(self.physical_nodes)}\n")
             for pid in sorted(self.physical_nodes):
                 out.write(f'{pid} "{self._printable(self.physical_nodes[pid])}"\n')
@@ -211,6 +225,72 @@ class StateNetwork:
                 # exactly the weights to_infomap() would feed the API.
                 out.write(f"{source} {dest} {self.links[(source, dest)]!r}\n")
         return target
+
+    def _physical_links(self) -> Iterator[formats.Link]:
+        """Order 1 only: the links between physical ids, which states coincide with."""
+        for (source, dest), weight in self.links.items():
+            yield self.states[source][-1], self.states[dest][-1], weight
+
+    def to_pajek(self, directory: str | Path, *, name: str | None = None) -> Path:
+        """Write ``<directory>/<name>.net`` and return its path.
+
+        The states format (see :meth:`write`) for order 2 and up; at order 1,
+        where states and physical nodes coincide, a plain directed Pajek file,
+        matching what :meth:`to_infomap` loads. *name* defaults to :attr:`name`.
+        """
+        target = formats.output_path(directory, name or self.name, ".net")
+        if self.order > 1:
+            return self.write(target)
+        return formats.write_pajek(
+            target,
+            nodes=sorted(self.physical_nodes),
+            names=self.physical_nodes,
+            links=self._physical_links,
+            directed=True,
+            comments=formats.describe(self.name, self.info),
+        )
+
+    def to_link_list(self, directory: str | Path, *, name: str | None = None) -> Path:
+        """Write ``<directory>/<name>.txt`` at order 1 and return its path.
+
+        Raises:
+            TypeError: Order 2 and up; a link list cannot say which physical
+                node a state belongs to, so use :meth:`to_pajek`.
+        """
+        if self.order > 1:
+            raise TypeError(
+                "Infomap reads state networks only in its *States format; use to_pajek()."
+            )
+        target = formats.output_path(directory, name or self.name, ".txt")
+        return formats.write_link_list(
+            target,
+            links=self._physical_links(),
+            directed=True,
+            comments=formats.describe(self.name, self.info),
+        )
+
+    def to_networkx(self, *, partition_attribute: str | None = "module") -> Any:
+        """Build a ``networkx.DiGraph`` over state ids.
+
+        Each node carries ``physical`` (its physical id) and ``name`` (its
+        memory, e.g. ``"LAX -> JFK"``), plus the planted module under
+        *partition_attribute* when there is one. Edges carry ``weight``.
+        """
+        try:
+            import networkx
+        except ImportError as error:  # pragma: no cover - depends on install
+            raise ImportError(
+                "to_networkx() needs networkx. Install it with "
+                '`pip install "mapequation-networks[networkx]"`.'
+            ) from error
+
+        graph = networkx.DiGraph(name=self.name)
+        for sid, window in self.states.items():
+            graph.add_node(sid, physical=window[-1], name=self.state_name(sid))
+        if self.partition is not None and partition_attribute is not None:
+            networkx.set_node_attributes(graph, self.partition, partition_attribute)
+        graph.add_weighted_edges_from((u, v, w) for (u, v), w in self.links.items())
+        return graph
 
     def to_infomap(self, **kwargs: Any) -> Any:
         """Build an ``infomap.Infomap`` instance with this state network loaded.
@@ -250,6 +330,12 @@ class StateNetwork:
         return instance
 
     def __str__(self) -> str:
+        if self.info.get("generator"):
+            return (
+                f"StateNetwork(order={self.order}) from {self.info['generator']}: "
+                f"{self.num_physical_nodes:,} physical nodes, "
+                f"{self.num_state_nodes:,} state nodes, {self.num_links:,} links"
+            )
         return (
             f"StateNetwork(order={self.order}): "
             f"{self.num_physical_nodes:,} physical nodes, "

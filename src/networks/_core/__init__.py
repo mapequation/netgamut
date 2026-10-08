@@ -32,8 +32,10 @@ from .domains import (
 from .download import DownloadError, extract_gzip, fetch_bytes, fetch_text, head, verify
 from .hypergraph import Hypergraph
 from .models import DataFile, DatasetLike
+from .multilayer import MultilayerNetwork
 from .network import Network
 from .state_network import StateNetwork
+from .synthetic import SyntheticNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
@@ -44,8 +46,10 @@ __all__ = [
     "DatasetLike",
     "DownloadError",
     "Hypergraph",
+    "MultilayerNetwork",
     "Network",
     "StateNetwork",
+    "SyntheticNetwork",
     "cache_dir",
     "cache_info",
     "clear_cache",

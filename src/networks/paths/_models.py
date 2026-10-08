@@ -285,7 +285,7 @@ class PathData(Network):
         networks from a large dataset.
         """
         return StateNetwork.from_paths(
-            self.paths(max_paths=max_paths, max_nodes=max_nodes), order=order
+            self.paths(max_paths=max_paths, max_nodes=max_nodes), order=order, name=self.name
         )
 
     # -- side tables -------------------------------------------------------
@@ -341,6 +341,40 @@ class PathData(Network):
                     yield source, target
                 else:
                     yield cast(source), cast(target)
+
+    def to_pajek(
+        self,
+        directory: str | Path,
+        *,
+        name: str | None = None,
+        directed: bool | None = None,
+        order: int = 1,
+    ) -> Path:
+        """Write the network the paths make, weights kept, and return its path.
+
+        Order 1 by default, matching :meth:`to_infomap`: a directed Pajek file
+        of the first-order network. ``order=2`` and up writes the memory
+        network in Infomap's states format; see
+        :meth:`StateNetwork.to_pajek`. *directed* is accepted for signature
+        parity with :meth:`Network.to_pajek` and must not be ``False``:
+        transitions along a path are directed.
+        """
+        if directed is False:
+            raise ValueError("path data is directed; transitions have a direction.")
+        return self.to_state_network(order=order).to_pajek(directory, name=name)
+
+    def to_link_list(
+        self, directory: str | Path, *, name: str | None = None, directed: bool | None = None
+    ) -> Path:
+        """Write the first-order network of the paths as a link list.
+
+        Node labels are numbered from 1 in first-seen order -- a link list
+        cannot hold names -- so prefer :meth:`to_pajek` unless the labels are
+        meaningless anyway.
+        """
+        if directed is False:
+            raise ValueError("path data is directed; transitions have a direction.")
+        return self.to_state_network(order=1).to_link_list(directory, name=name)
 
     def to_infomap(self, *, directed: bool | None = None, order: int = 1, **kwargs: Any) -> Any:
         """Build an ``infomap.Infomap`` instance from the paths, weights kept.

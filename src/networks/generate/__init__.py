@@ -12,7 +12,15 @@ statistics and a known planted partition::
 
     G = networks.load("polbooks").to_networkx()
     partition = generate.detect(G)             # or bring your own
-    H, info = generate.benchmark(G, partition)
+    net = generate.benchmark(G, partition)
+
+Every generator returns a network object -- a :class:`~networks.SyntheticNetwork`,
+a :class:`~networks.StateNetwork` or a :class:`~networks.MultilayerNetwork` --
+with the same methods as a downloaded :class:`~networks.Network`. The planted
+partition is ``net.partition``, the sampler's diagnostics are ``net.info``::
+
+    H = net.to_networkx()              # the planted module is node attribute "module"
+    net.to_pajek("benchmarks/")        # -> Path("benchmarks/polbooks-benchmark.net")
 
 Three routes, increasingly detached from the blueprint:
 
@@ -33,6 +41,9 @@ Three routes, increasingly detached from the blueprint:
   :func:`lfr_networkx` keeps networkx's reimplementation of the binary case,
   with retries around its flaky convergence, for callers who would rather not
   have a compiler in the loop.
+* :func:`multilayer_gm` runs MultilayerGM (Bazzi, Jeub et al.): a multilayer
+  partition sampled with tunable dependence between layers, multiplex or
+  temporal, then a degree-corrected SBM in every layer.
 
 Higher-order blueprints keep the same flow model and change only the sampler:
 :func:`memory_benchmark` and :func:`multilayer_benchmark` pair *typed* stubs,
@@ -57,7 +68,14 @@ faithful to the code behind its published numbers.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from ._naming import run_name, settings
+
+if TYPE_CHECKING:
+    from .._core.multilayer import MultilayerNetwork
+    from .._core.state_network import StateNetwork
+    from .._core.synthetic import SyntheticNetwork
 
 __all__ = [
     # high-level generation
@@ -73,6 +91,7 @@ __all__ = [
     "lfr_source",
     "memory_benchmark",
     "multilayer_benchmark",
+    "multilayer_gm",
     "parametric",
     "weighted_benchmark",
     # the flow model itself
@@ -131,9 +150,8 @@ _REEXPORTS = {
         "null_partition",
     )},
     **{name: "_lfr" for name in ("LfrSource", "lfr", "lfr_available", "lfr_source")},
-    **{name: "_higher_order" for name in (
-        "memory_benchmark", "multilayer_benchmark", "sample_state_links",
-    )},
+    "sample_state_links": "_higher_order",
+    "multilayer_gm": "_multilayer_gm",
     "pair_stubs": "_flowgen",
 }
 
@@ -175,6 +193,32 @@ def _require_infomap(flowgen: Any, what: str) -> None:
         raise ImportError(f"{what} needs infomap. Install it with `{_INSTALL}`.")
 
 
+def _blueprint(G: Any) -> Any:
+    """A networkx graph from *G*, which may also be any network of this package."""
+    return G.to_networkx() if hasattr(G, "to_networkx") else G
+
+
+def _synthetic(
+    graph: Any,
+    *,
+    name: str,
+    partition: Any,
+    generator: str,
+    parameters: dict[str, Any],
+    info: dict[str, Any] | None = None,
+) -> SyntheticNetwork:
+    """Wrap a sampled graph, its planted partition restricted to the nodes it has."""
+    from .._core.synthetic import SyntheticNetwork
+
+    planted = None if partition is None else {u: partition[u] for u in graph if u in partition}
+    return SyntheticNetwork.from_networkx(
+        graph,
+        name=name,
+        partition=planted,
+        info={"generator": generator, "parameters": settings(parameters), **(info or {})},
+    )
+
+
 def _pick_family(fit: dict[str, Any]) -> dict[str, Any]:
     """Normalize a fit to the ``{"family", "params", "support_min"}`` shape."""
     if "family" in fit:
@@ -194,7 +238,7 @@ def _pick_family(fit: dict[str, Any]) -> dict[str, Any]:
 
 def benchmark(
     G: Any, partition: dict[Any, Any] | None = None, **kwargs: Any
-) -> tuple[Any, dict[str, Any]]:
+) -> SyntheticNetwork:
     """Sample one benchmark network from a blueprint's modular flow.
 
     The default sampler is microcanonical stub matching: degrees follow the
@@ -206,30 +250,70 @@ def benchmark(
     LFR; on real blueprints it keeps what LFR throws away.
 
     Args:
-        G: Blueprint network, a networkx graph (weights honoured). A directed
-            blueprint gets the in-/out-degree-preserving directed sampler.
+        G: Blueprint network, a networkx graph (weights honoured) or any
+            network of this package. A directed blueprint gets the
+            in-/out-degree-preserving directed sampler.
         partition: ``{node: module id or path tuple}``; hierarchical paths
             welcome. When omitted, Infomap detects one (needs the ``infomap``
-            package).
+            package) -- with the same ``num_trials`` and ``seed`` the sampler
+            would use -- and that becomes the planted partition.
         **kwargs: Passed to the sampler -- ``target_edges``, ``mixing_scale``
             (> 1 blurs communities for detectability sweeps), ``method``
             (``"stub"`` or ``"multinomial"``), ``connect``, ``min_degree``,
             ``match_clustering``, ``rng``, ``seed``.
 
     Returns:
-        ``(H, info)`` -- the sampled graph and a dict of diagnostics.
+        A :class:`~networks.SyntheticNetwork` named ``<blueprint>-benchmark``,
+        with the planted ``partition`` and the sampler's diagnostics in
+        ``info``. ``seed`` seeds Infomap only; pass ``rng`` to make the
+        sample itself reproducible.
 
     Raises:
         ImportError: numpy or networkx is missing, or Infomap is needed but
             not installed.
     """
     flowgen, _ = _modules()
+    G = _blueprint(G)
     if partition is None:
         _require_infomap(flowgen, "benchmark() without a partition")
-    result: tuple[Any, dict[str, Any]] = flowgen.sample_benchmark(
-        G, partition=partition, **kwargs
+        directed = kwargs.get("directed")
+        partition = flowgen.infomap_partition(
+            G,
+            two_level=False,
+            num_trials=kwargs.get("num_trials", 20),
+            seed=kwargs.get("seed", 1),
+            directed=G.is_directed() if directed is None else directed,
+        )
+    H, info = flowgen.sample_benchmark(G, partition=partition, **kwargs)
+    H = _labelled(H, G, kwargs.get("method"))
+    return _synthetic(
+        H,
+        name=f"{G.name or 'network'}-benchmark",
+        partition=partition,
+        generator="benchmark",
+        parameters={"blueprint": G.name or None, **_recorded(kwargs)},
+        info=info,
     )
-    return result
+
+
+def _labelled(H: Any, G: Any, method: str | None) -> Any:
+    """Give a multinomial sample the blueprint's node labels back.
+
+    The multinomial sampler draws from the flow matrix, whose rows are
+    ``sorted(G.nodes())``, and returns row indices as nodes; the planted
+    partition is keyed by the blueprint's labels.
+    """
+    if method != "multinomial":
+        return H
+    import networkx
+
+    nodes = sorted(G.nodes())
+    return networkx.relabel_nodes(H, dict(enumerate(nodes)), copy=True)
+
+
+def _recorded(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Sampler keyword arguments worth writing into a file header."""
+    return {key: value for key, value in kwargs.items() if key != "rng"}
 
 
 def weighted_benchmark(
@@ -240,7 +324,7 @@ def weighted_benchmark(
     num_trials: int = 20,
     seed: int = 1,
     **kwargs: Any,
-) -> tuple[Any, dict[str, Any]]:
+) -> SyntheticNetwork:
     """Sample a benchmark topology and give its edges flow-model weights.
 
     Dense weighted blueprints carry their modular structure in the link
@@ -255,7 +339,8 @@ def weighted_benchmark(
     directions) before sampling.
 
     Args:
-        G: Blueprint network (weights honoured; a DiGraph is symmetrized).
+        G: Blueprint network (weights honoured; a DiGraph is symmetrized), a
+            networkx graph or any network of this package.
         partition: ``{node: module id or path tuple}``. When omitted, Infomap
             detects a hierarchical partition of the symmetrized blueprint.
         degree_target: Which degree sequence the *topology* targets.
@@ -274,8 +359,10 @@ def weighted_benchmark(
         **kwargs: Passed to the topology sampler (see :func:`benchmark`).
 
     Returns:
-        ``(H, info)`` -- an undirected weighted graph and a dict of
-        diagnostics. ``info["degree_target"]`` records the mode used.
+        An undirected weighted :class:`~networks.SyntheticNetwork` named
+        ``<blueprint>-weighted-benchmark``, with the planted ``partition`` and
+        the diagnostics in ``info``; ``info["degree_target"]`` records the
+        mode used.
 
     Raises:
         ImportError: numpy or networkx is missing, or Infomap is needed but
@@ -297,6 +384,7 @@ def weighted_benchmark(
     flowgen, params = _modules()
     import networkx
 
+    G = _blueprint(G)
     U = params._und(G)
     if partition is None:
         _require_infomap(flowgen, "weighted_benchmark() without a partition")
@@ -314,7 +402,18 @@ def weighted_benchmark(
         H[u][v]["weight"] = w
     info["frame"] = "undirected"
     info["degree_target"] = degree_target
-    return H, info
+    return _synthetic(
+        H,
+        name=f"{G.name or 'network'}-weighted-benchmark",
+        partition=partition,
+        generator="weighted_benchmark",
+        parameters={
+            "blueprint": G.name or None,
+            "degree_target": degree_target,
+            **_recorded(kwargs),
+        },
+        info=info,
+    )
 
 
 def parametric(
@@ -332,7 +431,7 @@ def parametric(
     clustering_kwargs: dict[str, Any] | None = None,
     rng: Any = None,
     seed: int | None = None,
-) -> tuple[Any, dict[Any, Any], dict[str, Any]]:
+) -> SyntheticNetwork:
     """Generate a two-level benchmark purely from fitted parameters.
 
     The generalized-LFR generator: draw module sizes and node degrees from
@@ -365,8 +464,8 @@ def parametric(
         seed: Seed for a fresh generator when *rng* is omitted.
 
     Returns:
-        ``(H, partition, info)`` -- the sampled graph, the planted
-        ``{node: module}`` partition and a dict of diagnostics.
+        A :class:`~networks.SyntheticNetwork` with the planted
+        ``{node: module}`` partition and the diagnostics in ``info``.
 
     Raises:
         ImportError: numpy or networkx is missing.
@@ -377,10 +476,12 @@ def parametric(
 
     if rng is None:
         rng = numpy.random.default_rng(seed)
-    result: tuple[Any, dict[Any, Any], dict[str, Any]] = params.sample_from_params(
+    degree_family = _pick_family(degree_fit)
+    size_family = _pick_family(size_fit)
+    H, partition, info = params.sample_from_params(
         n,
-        _pick_family(degree_fit),
-        _pick_family(size_fit),
+        degree_family,
+        size_family,
         mixing_fit,
         rng,
         min_size=min_size,
@@ -391,7 +492,25 @@ def parametric(
         clustering_fit=clustering_fit,
         clustering_kwargs=clustering_kwargs,
     )
-    return result
+    return _synthetic(
+        H,
+        name=run_name("parametric", n=n, seed=seed),
+        partition=partition,
+        generator="parametric",
+        parameters={
+            "n": n,
+            "degrees": degree_family["family"],
+            "sizes": size_family["family"],
+            "mixing": mixing_fit.get("family"),
+            "min_size": min_size,
+            "k_mean": k_mean,
+            "k_max": k_max,
+            "size_max": size_max,
+            "clustering": "fitted" if clustering_fit is not None else None,
+            "seed": seed,
+        },
+        info=info,
+    )
 
 
 def fit_clustering_profile(graph: Any, min_degree: int = 2) -> dict[str, Any]:
@@ -486,14 +605,14 @@ def lfr_networkx(
     seed: int = 1,
     max_iters: int = 800,
     retries: int = 5,
-) -> tuple[Any, dict[Any, int]]:
+) -> SyntheticNetwork:
     """Generate a classic LFR benchmark with networkx's reimplementation.
 
     ``networkx.LFR_benchmark_graph`` fails to converge for perfectly
     reasonable parameters depending on the seed. This wrapper retries with
     escalating seeds and iteration budgets, strips self-loops, and returns
     the planted communities as a plain partition dict instead of node
-    attributes.
+    attribute sets.
 
     This is the undirected unweighted case only. :func:`lfr` runs the
     authors' own generator instead -- weighted, directed, hierarchical and
@@ -517,7 +636,9 @@ def lfr_networkx(
         retries: Attempts before giving up.
 
     Returns:
-        ``(G, partition)`` -- the graph and ``{node: community index}``.
+        A :class:`~networks.SyntheticNetwork` with ``partition``
+        ``{node: community index}``. ``info["seed"]`` is the seed of the
+        attempt that converged.
 
     Raises:
         ImportError: networkx is missing.
@@ -548,7 +669,25 @@ def lfr_networkx(
         G.remove_edges_from(networkx.selfloop_edges(G))
         communities = sorted({frozenset(G.nodes[u]["community"]) for u in G}, key=min)
         partition = {u: index for index, members in enumerate(communities) for u in members}
-        return G, partition
+        return _synthetic(
+            G,
+            name=run_name("lfr-nx", n=n, mu=mu, seed=seed),
+            partition=partition,
+            generator="lfr_networkx",
+            parameters={
+                "n": n,
+                "tau1": tau1,
+                "tau2": tau2,
+                "mu": mu,
+                "average_degree": average_degree,
+                "min_degree": min_degree,
+                "max_degree": max_degree,
+                "min_community": min_community,
+                "max_community": max_community,
+                "seed": seed,
+            },
+            info={"seed": seed + 1000 * attempt},
+        )
     raise RuntimeError(
         f"LFR did not converge in {retries} attempts (n={n}, tau1={tau1}, tau2={tau2}, "
         f"mu={mu}). Relax the constraints or raise max_iters."
@@ -588,3 +727,145 @@ def detect(
         G, two_level=two_level, num_trials=num_trials, seed=seed, extra=extra, directed=directed
     )
     return result
+
+
+def memory_benchmark(
+    links: dict[tuple[Any, Any], float],
+    windows: dict[Any, tuple[Any, ...]],
+    partition: dict[Any, Any],
+    rng: Any = None,
+    seed: int | None = None,
+    topup: bool = True,
+) -> StateNetwork:
+    """Sample a memory-network benchmark from a state-level blueprint.
+
+    Typed stub matching: a state link ``a -> b`` is realizable only where the
+    windows overlap in ``m - 1`` nodes, so every sampled link is a valid
+    memory transition; see :func:`~networks.generate._higher_order.memory_benchmark`
+    for the construction.
+
+    A :class:`~networks.StateNetwork` blueprint passes as
+    ``memory_benchmark(net.links, net.states, partition)``.
+
+    Args:
+        links: ``{(state, state): weight}`` blueprint state links.
+        windows: ``{state: tuple of physical nodes}``, oldest first.
+        partition: ``{state: module}`` planted ground truth.
+        rng, seed: ``numpy`` Generator, or a seed for a fresh one.
+        topup: Place stubs the non-redundant rule could not.
+
+    Returns:
+        A :class:`~networks.StateNetwork` with the planted ``partition`` keyed
+        by state id and the diagnostics in ``info``. State and physical ids
+        are the blueprint's labels when those are non-negative integers, and
+        numbered from 1 otherwise, the labels kept as names.
+    """
+    from .._core.formats import node_ids, ordered
+    from .._core.state_network import StateNetwork
+    from . import _higher_order
+
+    _modules()
+    sampler: Any = _higher_order.memory_benchmark
+    sampled, info = sampler(links, windows, partition, rng=rng, seed=seed, topup=topup)
+    physical = node_ids(ordered(node for window in windows.values() for node in window))
+    order = len(next(iter(windows.values()))) if windows else 1
+    if order == 1:
+        # States are physical nodes here, and Infomap and the writers use the
+        # physical ids, so the state ids -- and the partition -- must match them.
+        state = {s: physical[w[0]] for s, w in windows.items()}
+    else:
+        state = node_ids(ordered(windows))
+    return StateNetwork(
+        order=order,
+        physical_nodes={index: str(label) for label, index in physical.items()},
+        states={state[s]: tuple(physical[node] for node in w) for s, w in windows.items()},
+        links={(state[a], state[b]): float(w) for (a, b), w in sampled.items()},
+        name=run_name("memory-benchmark", order=order, seed=seed),
+        partition={state[s]: module for s, module in partition.items() if s in state},
+        info={
+            "generator": "memory_benchmark",
+            "parameters": settings({"order": order, "topup": topup, "seed": seed}),
+            **info,
+        },
+    )
+
+
+def multilayer_benchmark(
+    layers: Any,
+    partition: dict[tuple[Any, Any], Any] | None = None,
+    rng: Any = None,
+    seed: int | None = None,
+    **kwargs: Any,
+) -> MultilayerNetwork:
+    """Sample a multiplex benchmark layer by layer from a state-level blueprint.
+
+    Intra-layer links pair within their layer, so each layer is resampled on
+    its own with the state partition restricted to it; inter-layer coupling is
+    left to the relax rate at analysis time. See
+    :func:`~networks.generate._higher_order.multilayer_benchmark` for what is
+    and is not preserved -- notably, a weighted layer keeps its link count but
+    not its total weight.
+
+    Args:
+        layers: ``{layer: networkx graph}``, ``{layer: {(u, v): weight}}``,
+            or a :class:`~networks.MultilayerNetwork` blueprint.
+        partition: ``{(node, layer): module}`` planted ground truth. Defaults
+            to the blueprint's own partition when *layers* is a
+            ``MultilayerNetwork`` that has one.
+        rng, seed: ``numpy`` Generator, or a seed for a fresh one.
+        **kwargs: Passed to the per-layer sampler; ``connect`` defaults to
+            ``False`` here.
+
+    Returns:
+        A :class:`~networks.MultilayerNetwork` with intra-layer links only, the
+        planted ``partition`` and the diagnostics in ``info``.
+
+    Raises:
+        ValueError: No partition given and none on the blueprint.
+    """
+    from .._core.multilayer import MultilayerNetwork
+    from . import _higher_order
+
+    _modules()
+    name = "network"
+    if isinstance(layers, MultilayerNetwork):
+        name = layers.name or name
+        if partition is None:
+            partition = layers.partition
+        layers = {layer: layers.to_networkx(layer=layer) for layer in layers.intra}
+    if partition is None:
+        raise ValueError("multilayer_benchmark() needs a partition {(node, layer): module}.")
+    directed = any(
+        getattr(spec, "is_directed", lambda: False)() for spec in layers.values()
+    )
+    sampler: Any = _higher_order.multilayer_benchmark
+    sampled, info = sampler(layers, partition, rng=rng, seed=seed, **kwargs)
+
+    def layer_nodes(spec: Any) -> list[Any]:
+        if isinstance(spec, dict):
+            return list(dict.fromkeys(node for pair in spec for node in pair))
+        return list(spec.nodes())
+
+    intra: dict[Any, dict[tuple[Any, Any], float]] = {}
+    planted: dict[tuple[Any, Any], Any] = {}
+    for layer, links in sampled.items():
+        nodes = layer_nodes(layers[layer])
+        if kwargs.get("method") == "multinomial":
+            # Row indices into the layer's sorted nodes, as in benchmark().
+            label = dict(enumerate(sorted(nodes)))
+            links = {(label[u], label[v]): w for (u, v), w in links.items()}
+        intra[layer] = dict(links)
+        # The sampler puts a node the partition leaves out in module (0,).
+        planted.update({(u, layer): partition.get((u, layer), (0,)) for u in nodes})
+    return MultilayerNetwork(
+        name=f"{name}-multilayer-benchmark",
+        intra=intra,
+        directed=directed,
+        weighted=any(w != 1.0 for links in intra.values() for w in links.values()),
+        partition=planted,
+        info={
+            "generator": "multilayer_benchmark",
+            "parameters": settings({"blueprint": name, "seed": seed, **_recorded(kwargs)}),
+            **info,
+        },
+    )
