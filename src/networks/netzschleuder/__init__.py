@@ -254,6 +254,9 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
     names = tuple(field.strip() for field in header[0].split(","))
     types = {name: kind for name, kind in dataset.analyses.get("edge_properties") or ()}
 
+    # Infomap takes no negative weight, so a signed weight is not one here.
+    signed = "Signed" in dataset.tags
+
     def first(candidates: tuple[str, ...], *, numeric: bool = False) -> int | None:
         for candidate in candidates:
             if candidate in names[2:] and not (numeric and types.get(candidate) in _NOT_NUMERIC):
@@ -261,7 +264,7 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
         return None
 
     return Columns(
-        weight=first(_WEIGHT_NAMES, numeric=True),
+        weight=None if signed else first(_WEIGHT_NAMES, numeric=True),
         time=first(_TIME_NAMES),
         layer=first(_LAYER_NAMES),
         names=names,

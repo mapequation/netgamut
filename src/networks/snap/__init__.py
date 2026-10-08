@@ -199,8 +199,9 @@ _COLUMNS: dict[str, Columns] = {
         f"email-Eu-core-temporal{part}.txt.gz": _TIME
         for part in ("", "-Dept1", "-Dept2", "-Dept3", "-Dept4")
     },
+    # Retweet, mention or reply: the layer of a multiplex.
     "higgs-activity_time.txt.gz": Columns(
-        time=2, names=("source", "target", "time", "interaction")
+        time=2, layer=3, names=("source", "target", "time", "interaction")
     ),
     **{
         f"{kind}_network.edgelist.gz": Columns(weight=2, names=("source", "target", "weight"))
