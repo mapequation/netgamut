@@ -51,6 +51,22 @@ def test_a_timestamp_is_not_a_weight(contacts: Network, tmp_path: Path) -> None:
     assert im.num_links == 5 and im.num_nodes == 4
 
 
+def test_a_stray_field_past_the_sample_is_not_a_weight(tmp_path: Path) -> None:
+    """Infomap's parser would take it for one, so the whole file decides the reader."""
+    infomap = pytest.importorskip("infomap")
+    path = tmp_path / "late.txt"
+    rows = [f"{i} {i + 1}" for i in range(1, 40)] + ["40 1 1000"]
+    path.write_text("\n".join(rows) + "\n")
+    net = make_network(path, Columns())
+
+    def codelength(im: object) -> float:
+        return im.run().codelength  # type: ignore[attr-defined,no-any-return]
+
+    written = infomap.Infomap(silent=True, num_trials=1, seed=1)
+    written.read_file(str(net.to_link_list(tmp_path / "out")))
+    assert codelength(net.to_infomap(silent=True, num_trials=1, seed=1)) == codelength(written)
+
+
 def test_times_are_an_array_in_file_order(contacts: Network) -> None:
     assert contacts.times.dtype == np.int64
     assert contacts.times.tolist() == [100, 350, 110, 900, 1000]
