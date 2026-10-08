@@ -115,7 +115,7 @@ def test_iso_dates_become_datetimes(tmp_path: Path) -> None:
     net = make_network(path, Columns(time=2))
     assert net.times.dtype == np.dtype("datetime64[s]")
     edges = net.time_bins(2)
-    assert edges.dtype == np.dtype("datetime64[s]")
+    assert edges.dtype == np.dtype("datetime64[us]")
     assert [s.info["events"] for s in net.snapshots(bins=2)] == [1, 2]
 
 
@@ -193,3 +193,84 @@ def test_netzschleuder_roles_come_from_the_file_header(tmp_path: Path) -> None:
     )
     assert (net.columns.weight, net.columns.time) == (None, 3)
     assert net.columns.names == ("source", "target", "weight", "timestamp")
+
+
+def test_signed_netzschleuder_weights_are_not_weights(tmp_path: Path) -> None:
+    from networks import netzschleuder
+    from networks.netzschleuder import _columns as nz_columns
+
+    path = tmp_path / "edges.csv"
+    path.write_text("# source, target, weight\n0,1,-1\n1,2,1\n")
+    dataset = dataclasses.replace(
+        netzschleuder.info("new_guinea_tribes"),
+        analyses={"edge_properties": [["weight", "int16_t"]]},
+    )
+    net = Network(dataset=dataset, file=DataFile("e", "u"), archive_path=path)
+    assert nz_columns(net, dataset).weight is None
+
+
+def _timed(tmp_path: Path, times: list[str], *, layers: list[str] | None = None) -> Network:
+    path = tmp_path / "timed.csv"
+    rows = [f"{i},{i + 1},{t}" for i, t in enumerate(times)]
+    if layers is not None:
+        rows = [f"{row},{layer}" for row, layer in zip(rows, layers, strict=True)]
+    path.write_text("\n".join(rows) + "\n")
+    return make_network(path, Columns(time=2, layer=3 if layers is not None else None))
+
+
+def test_missing_times_are_left_out_of_every_bin(tmp_path: Path) -> None:
+    dated = _timed(tmp_path, ["2020-01-01", "", "2020-01-05", "2020-01-09"])
+    assert np.isnat(dated.times[1])
+    snapshots = list(dated.snapshots(bins=2))
+    assert [s.info["events"] for s in snapshots] == [1, 2]
+    assert str(snapshots[0].info["start"]).startswith("2020-01-01")
+    numbers = _timed(tmp_path, ["100", "", "200", "300"])
+    assert [s.info["events"] for s in numbers.snapshots(bins=2)] == [1, 2]
+
+
+def test_a_missing_first_time_does_not_hide_dates(tmp_path: Path) -> None:
+    path = tmp_path / "late.txt"
+    path.write_text("1 2\n2 3 2020-01-01\n3 4 2020-01-03\n")
+    net = make_network(path, Columns(time=2))
+    assert net.times.dtype == np.dtype("datetime64[s]")
+    assert [s.info["events"] for s in net.snapshots(bins=1)] == [2]
+
+
+def test_datetime_bins_can_be_dates_or_the_edges_time_bins_gave(tmp_path: Path) -> None:
+    dated = _timed(tmp_path, ["2020-01-01", "2020-01-03", "2020-01-05"])
+    again = list(dated.snapshots(bins=dated.time_bins(2)))
+    assert [s.info["events"] for s in again] == [1, 2]
+    by_date = list(dated.snapshots(bins=["2020-01-01", "2020-01-02", "2020-01-06"]))
+    assert [s.info["events"] for s in by_date] == [1, 2]
+
+
+def test_reported_datetime_edges_are_the_edges_used(tmp_path: Path) -> None:
+    # Edges at 3.33 s and 6.67 s: whole-second edges would claim bin 0 ends at
+    # 00:00:03 while holding the 00:00:03 event.
+    times = ["00:00:00", "00:00:03", "00:00:04", "00:00:10"]
+    net = _timed(tmp_path, [f"1970-01-01T{t}" for t in times])
+    snapshots = list(net.snapshots(bins=3))
+    assert [s.info["events"] for s in snapshots] == [2, 1, 1]
+    assert snapshots[0].info["end"] == np.datetime64("1970-01-01T00:00:03.333333")
+    assert snapshots[0].info["end"] > net.times[1]
+
+
+def test_rows_without_a_layer_belong_to_no_layer(tmp_path: Path) -> None:
+    net = _timed(tmp_path, ["1", "2", "3"], layers=["1", "", "2"])
+    assert set(net.to_multilayer().intra) == {1, 2}
+
+
+def test_leading_zero_labels_stay_strings_everywhere(tmp_path: Path) -> None:
+    path = tmp_path / "zeros.txt"
+    path.write_text("007 1 5\n1 2 6\n")
+    net = make_network(path, Columns(time=2))
+    (only,) = net.snapshots(bins=1)
+    assert set(only.nodes) == {"007", "1", "2"}
+    body = net.to_pajek(tmp_path / "out").read_text()
+    assert '"007"' in body
+
+
+def test_higgs_interactions_are_its_layers() -> None:
+    from networks.snap import _COLUMNS
+
+    assert _COLUMNS["higgs-activity_time.txt.gz"].layer == 3

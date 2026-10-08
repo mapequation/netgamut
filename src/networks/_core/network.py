@@ -441,7 +441,7 @@ class Network:
             directed = bool(self.dataset.directed)
         labels = dict.fromkeys(label for u, v, _ in self._links() for label in (u, v))
         cast: Callable[[str], Any] = (
-            int if all(label.isascii() and label.isdigit() for label in labels) else str
+            int if all(_columns.is_int_label(label) for label in labels) else str
         )
         target = formats.output_path(directory, name or self.name, ".net")
         return formats.write_pajek(
@@ -468,7 +468,7 @@ class Network:
             directed = bool(self.dataset.directed)
 
         def cast(label: str) -> Any:
-            return int(label) if label.isascii() and label.isdigit() else label
+            return int(label) if _columns.is_int_label(label) else label
 
         target = formats.output_path(directory, name or self.name, ".txt")
         return formats.write_link_list(
@@ -646,7 +646,8 @@ class Network:
             assert table.layers is not None
             by_layer: dict[Any, list[int]] = {}
             for row, label in enumerate(table.layers):
-                by_layer.setdefault(label, []).append(row)
+                if label is not None:  # a row without a layer belongs to none
+                    by_layer.setdefault(label, []).append(row)
             for label in formats.ordered(by_layer):
                 intra[label] = _aggregate(table, by_layer[label], directed)
             name = self.columns.names[column] if column < len(self.columns.names) else column

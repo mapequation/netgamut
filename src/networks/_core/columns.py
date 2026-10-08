@@ -72,8 +72,18 @@ class Columns:
         )
 
 
+def is_int_label(text: str) -> bool:
+    """Whether *text* reads as an integer id and back unchanged: ``"7"``, not ``"007"``.
+
+    The one rule for when labels from a file become integers -- here, in
+    :meth:`Network.to_pajek` and in :meth:`Network.to_link_list` -- so a label
+    with a leading zero stays the string it is everywhere.
+    """
+    return text.isascii() and text.isdigit() and (text == "0" or text[0] != "0")
+
+
 class _Labels:
-    """Node labels: compact integers while every label is digits, strings after."""
+    """Node labels: compact integers while every label is an integer, strings after."""
 
     def __init__(self) -> None:
         self.ints: array[int] | None = array("q")
@@ -81,7 +91,7 @@ class _Labels:
 
     def add(self, text: str) -> None:
         if self.ints is not None:
-            if text.isascii() and text.isdigit():
+            if is_int_label(text):
                 try:
                     self.ints.append(int(text))
                     return
@@ -98,8 +108,9 @@ class _Labels:
 class _Values:
     """A numeric column: integers, then floats on the first non-integer, then text.
 
-    A missing field is NaN, so the column turns float; text that is not a
-    number keeps the column as strings for the caller to interpret.
+    A missing or empty field is NaN, so the column turns float; text that is
+    not a number keeps the column as strings for the caller to interpret, with
+    missing fields as empty strings, which numpy reads as NaT.
     """
 
     def __init__(self) -> None:
@@ -110,10 +121,15 @@ class _Values:
         if kind == "float":
             self.data = array("d", (float(value) for value in self.data))
         else:
-            self.data = [str(value) for value in self.data]
+            self.data = [
+                "" if isinstance(value, float) and math.isnan(value) else str(value)
+                for value in self.data
+            ]
         self.kind = kind
 
     def add(self, text: str | None) -> None:
+        if text is not None and not text.strip():
+            text = None
         if text is None:
             if self.kind == "int":
                 self._widen("float")
@@ -157,8 +173,8 @@ class Table:
     weights: Any
     #: The time column as an array, or ``None`` when not asked for.
     times: Any
-    #: Layer labels, or ``None`` when not asked for.
-    layers: Sequence[Hashable] | None
+    #: Layer labels, ``None`` for a row without one; ``None`` when not asked for.
+    layers: Sequence[Hashable | None] | None
 
 
 def read_table(
@@ -182,7 +198,7 @@ def read_table(
     ends = _Labels()
     weights = array("d") if columns.weight is not None else None
     times = _Values() if time is not None else None
-    layers: _Labels | None = _Labels() if layer is not None else None
+    layers: list[str | None] | None = [] if layer is not None else None
     for fields in rows:
         if len(fields) < 2:
             continue
@@ -194,15 +210,23 @@ def read_table(
         if times is not None and time is not None:
             times.add(fields[time] if len(fields) > time else None)
         if layers is not None and layer is not None:
-            layers.add(fields[layer] if len(fields) > layer else "")
+            text = fields[layer].strip() if len(fields) > layer else ""
+            layers.append(text or None)
     labels = ends.values()
     return Table(
         sources=labels[0::2],
         targets=labels[1::2],
         weights=None if weights is None else np.frombuffer(weights, dtype=np.float64).copy(),
         times=None if times is None else times.array(),
-        layers=None if layers is None else layers.values(),
+        layers=None if layers is None else _layer_labels(layers),
     )
+
+
+def _layer_labels(texts: list[str | None]) -> list[Hashable | None]:
+    """Integers when every present label is one; ``None`` marks a missing layer."""
+    if all(text is None or is_int_label(text) for text in texts):
+        return [None if text is None else int(text) for text in texts]
+    return list(texts)
 
 
 def weight_of(fields: Sequence[str], column: int | None) -> float:
@@ -213,42 +237,63 @@ def weight_of(fields: Sequence[str], column: int | None) -> float:
     return float(number.group()) if number else 1.0
 
 
-def numeric(times: Any) -> Any:
-    """Times as numbers for binning: datetimes become seconds since the epoch."""
+def numeric(times: Any) -> tuple[Any, Any]:
+    """``(values, missing)``: times as numbers for binning, and which are absent.
+
+    Datetimes become seconds since the epoch; NaT and NaN are missing.
+    """
     import numpy as np
 
     if np.issubdtype(times.dtype, np.datetime64):
-        return times.astype("datetime64[s]").astype(np.int64)
+        missing = np.isnat(times)
+        return times.astype("datetime64[s]").astype(np.int64), missing
     if times.dtype == object:
+        present = [value for value in times if value]
         raise ValueError(
             "the time column holds text that is neither a number nor an ISO date, "
-            f"e.g. {times[0]!r}; it cannot be binned."
+            f"e.g. {present[0] if present else times[0]!r}; it cannot be binned."
         )
-    return times
+    if times.dtype.kind == "f":
+        return times, np.isnan(times)
+    return times, np.zeros(len(times), dtype=bool)
+
+
+def _seconds(value: Any) -> Any:
+    """A datetime-like value (or a sequence of them) as seconds since the epoch."""
+    import numpy as np
+
+    as_datetime = np.asarray(value, dtype="datetime64[us]")
+    return as_datetime.astype(np.int64) / 1e6
 
 
 def assign_bins(times: Any, bins: Any, range: tuple[Any, Any] | None) -> tuple[Any, Any]:
     """``(edges, index)``: :func:`numpy.histogram_bin_edges` and each time's bin.
 
-    *index* is ``-1`` for a time outside every bin (or NaN). Edges come back
-    in the time column's own type, so datetimes stay datetimes.
+    *index* is ``-1`` for a time outside every bin, or missing. For datetime
+    times, *bins* edges and *range* may be datetimes or ISO strings, and the
+    edges come back as microsecond datetimes -- the same edges the times were
+    binned with, so a bin never holds a time its reported span excludes.
     """
     import numpy as np
 
-    values = numeric(times)
-    finite = values[~np.isnan(values)] if values.dtype.kind == "f" else values
-    if range is not None and np.issubdtype(times.dtype, np.datetime64):
-        range = tuple(np.datetime64(r, "s").astype(np.int64) for r in range)
-    edges = np.histogram_bin_edges(finite, bins=bins, range=range)
-    index = np.searchsorted(edges, values, side="right") - 1
-    last = len(edges) - 2
-    index[values == edges[-1]] = last  # the last bin is closed, as in numpy.histogram
-    outside = (index < 0) | (index > last)
-    if values.dtype.kind == "f":
-        outside |= np.isnan(values)
-    index[outside] = -1
-    if np.issubdtype(times.dtype, np.datetime64):
-        edges = edges.astype("datetime64[s]")
+    values, missing = numeric(times)
+    dated = np.issubdtype(times.dtype, np.datetime64)
+    if dated:
+        if range is not None:
+            range = (float(_seconds(range[0])), float(_seconds(range[1])))
+        if not isinstance(bins, (int, np.integer, str)):
+            bins = _seconds(bins)
+    edges = np.histogram_bin_edges(values[~missing], bins=bins, range=range)
+    if dated:
+        edges = np.round(edges * 1e6).astype(np.int64).astype("datetime64[us]")
+        values = values.astype(np.float64)
+        bounds = edges.astype(np.int64) / 1e6
+    else:
+        bounds = edges
+    index = np.searchsorted(bounds, values, side="right") - 1
+    last = len(bounds) - 2
+    index[values == bounds[-1]] = last  # the last bin is closed, as in numpy.histogram
+    index[(index < 0) | (index > last) | missing] = -1
     return edges, index
 
 
