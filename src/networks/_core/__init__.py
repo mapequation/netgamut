@@ -22,6 +22,7 @@ from .cache import (
     write_atomic,
     write_sidecar,
 )
+from .columns import Columns
 from .domains import (
     DOMAINS,
     domains_for_ahorn,
@@ -31,17 +32,18 @@ from .domains import (
 )
 from .download import DownloadError, extract_gzip, fetch_bytes, fetch_text, head, verify
 from .hypergraph import Hypergraph
+from .in_memory import InMemoryNetwork
 from .models import DataFile, DatasetLike
 from .multilayer import MultilayerNetwork
 from .network import Network
 from .state_network import StateNetwork
-from .synthetic import SyntheticNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
     "DOMAINS",
     "CacheInfo",
     "CachedDataset",
+    "Columns",
     "DataFile",
     "DatasetLike",
     "DownloadError",
@@ -49,7 +51,7 @@ __all__ = [
     "MultilayerNetwork",
     "Network",
     "StateNetwork",
-    "SyntheticNetwork",
+    "InMemoryNetwork",
     "cache_dir",
     "cache_info",
     "clear_cache",

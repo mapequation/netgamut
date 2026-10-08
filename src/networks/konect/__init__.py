@@ -40,6 +40,7 @@ from pathlib import Path
 
 from .._core.cache import cache_dir, cache_info, clear_cache, file_lock, set_cache_dir
 from .._core.cache import dataset_dir as _dataset_dir
+from .._core.columns import Columns
 from .._core.domains import DOMAINS
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
@@ -297,6 +298,20 @@ def _normalise(
         yield "\t".join(fields) + "\n"
 
 
+def _columns(dataset: Dataset) -> Columns:
+    """KONECT's fixed layout: ``source target [weight [time]]``.
+
+    The weight is read only where Infomap accepts it -- not for signed or
+    arbitrary-real edge types -- and the fourth field is the timestamp of a
+    temporal network.
+    """
+    return Columns(
+        weight=2 if dataset.infomap_weights else None,
+        time=3 if dataset.temporal else None,
+        names=("source", "target", "weight", "time") if dataset.temporal else (),
+    )
+
+
 def _write_edge_file(dataset: Dataset, archive_path: Path, target: Path) -> None:
     with file_lock(target):
         if target.is_file():
@@ -368,7 +383,7 @@ def load(
         archive_path=archive_path,
         source=SOURCE,
         edge_file=edge_file,
-        weighted_links=dataset.infomap_weights,
+        columns=_columns(dataset),
     )
 
 

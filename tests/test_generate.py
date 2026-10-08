@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from networks import MultilayerNetwork, StateNetwork, SyntheticNetwork, generate
+from networks import InMemoryNetwork, MultilayerNetwork, StateNetwork, generate
 
 
 def blueprint() -> tuple[Any, dict[int, int]]:
@@ -40,7 +40,7 @@ def two_cliques(size: int = 10) -> tuple[Any, dict[int, int]]:
 
 
 def as_graph_info(net: Any) -> tuple[Any, dict[str, Any]]:
-    """Unpack a SyntheticNetwork the way the generators used to return it."""
+    """Unpack a InMemoryNetwork the way the generators used to return it."""
     return net.to_networkx(), net.info
 
 
@@ -214,7 +214,7 @@ def test_lfr_networkx_returns_graph_and_partition() -> None:
         max_community=60,
         seed=42,
     )
-    assert isinstance(net, SyntheticNetwork)
+    assert isinstance(net, InMemoryNetwork)
     G, partition = net.to_networkx(), net.partition
     assert partition == nx.get_node_attributes(G, "module")
     assert set(partition) == set(G.nodes())

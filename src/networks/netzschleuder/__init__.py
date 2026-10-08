@@ -23,12 +23,14 @@ Please cite the networks you use; see ``Dataset.citations``.
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from .._core.cache import cache_dir, cache_info, clear_cache, set_cache_dir
 from .._core.cache import dataset_dir as _dataset_dir
+from .._core.columns import Columns
 from .._core.domains import DOMAINS
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
@@ -68,6 +70,15 @@ SOURCE = "netzschleuder"
 
 #: The member of the CSV bundle holding the edge list.
 _EDGES_MEMBER = "edges.csv"
+
+#: Edge-property names that carry each role, in order of preference. ``count``
+#: is a multiplicity -- migrants, visits -- and so a weight; ``year`` is a time.
+_WEIGHT_NAMES = ("weight", "count")
+_TIME_NAMES = ("time", "timestamp", "year")
+_LAYER_NAMES = ("layer",)
+#: Property types that cannot be a link weight: a boolean ``weight`` only marks
+#: presence, and text is not a number.
+_NOT_NUMERIC = ("bool", "string")
 _NODES_MEMBER = "nodes.csv"
 
 
@@ -218,12 +229,42 @@ def load(
     artifact = dataset.files_for(subgraph)[0]
     target = _dataset_dir(SOURCE, dataset.name) / Path(artifact.name).name
     _download_file(artifact.url, target, force=force, progress=progress, max_bytes=max_bytes)
-    return Network(
+    network = Network(
         dataset=dataset,
         file=artifact,
         archive_path=target,
         member=_EDGES_MEMBER,
         source=SOURCE,
+    )
+    return dataclasses.replace(network, columns=_columns(network, dataset))
+
+
+def _columns(network: Network, dataset: Dataset) -> Columns:
+    """Column roles from the file's own ``# source, target, ...`` header.
+
+    The catalog's edge properties are the union over a dataset's subgraphs, and
+    one subgraph's file can hold fewer of them, in its own order -- copenhagen's
+    ``sms`` has ``timestamp`` where the catalog lists ``timestamp, rssi`` -- so
+    the header of the file actually loaded names the columns, and the catalog
+    only says which of them are numeric.
+    """
+    header = network.header
+    if not header:
+        return Columns()
+    names = tuple(field.strip() for field in header[0].split(","))
+    types = {name: kind for name, kind in dataset.analyses.get("edge_properties") or ()}
+
+    def first(candidates: tuple[str, ...], *, numeric: bool = False) -> int | None:
+        for candidate in candidates:
+            if candidate in names[2:] and not (numeric and types.get(candidate) in _NOT_NUMERIC):
+                return names.index(candidate)
+        return None
+
+    return Columns(
+        weight=first(_WEIGHT_NAMES, numeric=True),
+        time=first(_TIME_NAMES),
+        layer=first(_LAYER_NAMES),
+        names=names,
     )
 
 

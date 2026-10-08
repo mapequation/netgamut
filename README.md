@@ -210,7 +210,7 @@ net.to_link_list("out/", name="grqc") # PosixPath('out/grqc.txt')
 
 | Network | `to_pajek` | `to_link_list` |
 |---|---|---|
-| first-order (`Network`, `SyntheticNetwork`) | `*Vertices` + `*Edges`/`*Arcs` | `source target [weight]` |
+| first-order (`Network`, `InMemoryNetwork`) | `*Vertices` + `*Edges`/`*Arcs` | `source target [weight]` |
 | `StateNetwork` | `*Vertices` + `*States` + `*Links` | order 1 only |
 | `MultilayerNetwork` | `*Vertices` + `*Intra` (+ `*Inter`, or `*Multilayer`) | — |
 
@@ -220,6 +220,53 @@ names. A link list has nowhere to put names, so it refuses non-integer labels
 rather than renumbering them silently. A written file loads the same network
 Infomap gets from `to_infomap()`, weights included. Downloads are streamed, so
 writing one never holds its links in memory.
+
+### Weights, times and layers
+
+A third column is a weight in one file, a Unix timestamp in the next and a
+sign or rating in a third, so nothing here guesses. Each source declares what
+the extra columns of the file it loaded hold — Netzschleuder from the file's
+own header, KONECT from its fixed `source target weight time` layout, SNAP from
+a table of its temporal and signed files — and `to_infomap()`, the writers and
+everything below follow it:
+
+```python
+net = snap.load("CollegeMsg")
+print(net.columns)           # source target time (time)
+net.weighted_links           # False: the timestamp is not a weight
+```
+
+Temporal networks expose their times as a numpy array, read once, so you can
+look before you bin:
+
+```python
+t = net.times                        # int64 Unix seconds, in file order
+t.min(), t.max()
+net.time_bins("auto")                # numpy.histogram_bin_edges(t, "auto")
+
+for snapshot in net.snapshots(bins=12):   # lazy: one network per bin
+    print(snapshot.info["start"], snapshot.info["end"], snapshot)
+```
+
+`bins` and `range` mean what they mean to `numpy.histogram_bin_edges`: a
+number of equal-width bins, explicit edges, or an estimator name. Bin `i` is
+`[edges[i], edges[i+1])`, the last one closed; every bin yields, empty ones
+too, and a link's weight in a snapshot is how often it occurs there (summed
+weights where the file has a weight column). ISO dates come back as
+`datetime64`.
+
+The same bins, or a layer column, make a multilayer network:
+
+```python
+ml = net.to_multilayer(bins=12)          # layer i = bin i; ml.info["bin_edges"]
+ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)  # couple adjacent bins
+
+networks.load("london_transport").to_multilayer()             # its layer column
+snap.load("higgs-twitter").to_multilayer(layer="interaction") # any categorical column
+```
+
+If a source has a column wrong, or you know better, declare it yourself:
+`dataclasses.replace(net, columns=networks.Columns(time=2))`.
 
 Some entries are multi-file bundles:
 
@@ -553,7 +600,7 @@ net = generate.weighted_benchmark(G, partition)  # + flow-model weights
 ```
 
 Every generator returns a network object with the same methods as a download —
-a `SyntheticNetwork`, or a `StateNetwork` / `MultilayerNetwork` for the
+a `InMemoryNetwork`, or a `StateNetwork` / `MultilayerNetwork` for the
 higher-order ones — carrying the planted partition and the sampler's
 diagnostics:
 

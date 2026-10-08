@@ -67,24 +67,26 @@ from ._core.cache import (
     clear_cache,
     set_cache_dir,
 )
+from ._core.columns import Columns
 from ._core.domains import DOMAINS
 from ._core.hypergraph import Hypergraph
+from ._core.in_memory import InMemoryNetwork
 from ._core.multilayer import MultilayerNetwork
 from ._core.network import Network
 from ._core.state_network import StateNetwork
-from ._core.synthetic import SyntheticNetwork
 
 __all__ = [
     "CACHE_ENV_VAR",
     "DOMAINS",
     "CacheInfo",
     "CachedDataset",
+    "Columns",
     "Hypergraph",
     "Match",
     "MultilayerNetwork",
     "Network",
     "StateNetwork",
-    "SyntheticNetwork",
+    "InMemoryNetwork",
     "__version__",
     "ahorn",
     "cache_dir",

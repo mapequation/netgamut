@@ -14,7 +14,7 @@ statistics and a known planted partition::
     partition = generate.detect(G)             # or bring your own
     net = generate.benchmark(G, partition)
 
-Every generator returns a network object -- a :class:`~networks.SyntheticNetwork`,
+Every generator returns a network object -- a :class:`~networks.InMemoryNetwork`,
 a :class:`~networks.StateNetwork` or a :class:`~networks.MultilayerNetwork` --
 with the same methods as a downloaded :class:`~networks.Network`. The planted
 partition is ``net.partition``, the sampler's diagnostics are ``net.info``::
@@ -73,9 +73,9 @@ from typing import TYPE_CHECKING, Any
 from ._naming import run_name, settings
 
 if TYPE_CHECKING:
+    from .._core.in_memory import InMemoryNetwork
     from .._core.multilayer import MultilayerNetwork
     from .._core.state_network import StateNetwork
-    from .._core.synthetic import SyntheticNetwork
 
 __all__ = [
     # high-level generation
@@ -206,12 +206,12 @@ def _synthetic(
     generator: str,
     parameters: dict[str, Any],
     info: dict[str, Any] | None = None,
-) -> SyntheticNetwork:
+) -> InMemoryNetwork:
     """Wrap a sampled graph, its planted partition restricted to the nodes it has."""
-    from .._core.synthetic import SyntheticNetwork
+    from .._core.in_memory import InMemoryNetwork
 
     planted = None if partition is None else {u: partition[u] for u in graph if u in partition}
-    return SyntheticNetwork.from_networkx(
+    return InMemoryNetwork.from_networkx(
         graph,
         name=name,
         partition=planted,
@@ -238,7 +238,7 @@ def _pick_family(fit: dict[str, Any]) -> dict[str, Any]:
 
 def benchmark(
     G: Any, partition: dict[Any, Any] | None = None, **kwargs: Any
-) -> SyntheticNetwork:
+) -> InMemoryNetwork:
     """Sample one benchmark network from a blueprint's modular flow.
 
     The default sampler is microcanonical stub matching: degrees follow the
@@ -263,7 +263,7 @@ def benchmark(
             ``match_clustering``, ``rng``, ``seed``.
 
     Returns:
-        A :class:`~networks.SyntheticNetwork` named ``<blueprint>-benchmark``,
+        A :class:`~networks.InMemoryNetwork` named ``<blueprint>-benchmark``,
         with the planted ``partition`` and the sampler's diagnostics in
         ``info``. ``seed`` seeds Infomap only; pass ``rng`` to make the
         sample itself reproducible.
@@ -324,7 +324,7 @@ def weighted_benchmark(
     num_trials: int = 20,
     seed: int = 1,
     **kwargs: Any,
-) -> SyntheticNetwork:
+) -> InMemoryNetwork:
     """Sample a benchmark topology and give its edges flow-model weights.
 
     Dense weighted blueprints carry their modular structure in the link
@@ -359,7 +359,7 @@ def weighted_benchmark(
         **kwargs: Passed to the topology sampler (see :func:`benchmark`).
 
     Returns:
-        An undirected weighted :class:`~networks.SyntheticNetwork` named
+        An undirected weighted :class:`~networks.InMemoryNetwork` named
         ``<blueprint>-weighted-benchmark``, with the planted ``partition`` and
         the diagnostics in ``info``; ``info["degree_target"]`` records the
         mode used.
@@ -431,7 +431,7 @@ def parametric(
     clustering_kwargs: dict[str, Any] | None = None,
     rng: Any = None,
     seed: int | None = None,
-) -> SyntheticNetwork:
+) -> InMemoryNetwork:
     """Generate a two-level benchmark purely from fitted parameters.
 
     The generalized-LFR generator: draw module sizes and node degrees from
@@ -464,7 +464,7 @@ def parametric(
         seed: Seed for a fresh generator when *rng* is omitted.
 
     Returns:
-        A :class:`~networks.SyntheticNetwork` with the planted
+        A :class:`~networks.InMemoryNetwork` with the planted
         ``{node: module}`` partition and the diagnostics in ``info``.
 
     Raises:
@@ -605,7 +605,7 @@ def lfr_networkx(
     seed: int = 1,
     max_iters: int = 800,
     retries: int = 5,
-) -> SyntheticNetwork:
+) -> InMemoryNetwork:
     """Generate a classic LFR benchmark with networkx's reimplementation.
 
     ``networkx.LFR_benchmark_graph`` fails to converge for perfectly
@@ -636,7 +636,7 @@ def lfr_networkx(
         retries: Attempts before giving up.
 
     Returns:
-        A :class:`~networks.SyntheticNetwork` with ``partition``
+        A :class:`~networks.InMemoryNetwork` with ``partition``
         ``{node: community index}``. ``info["seed"]`` is the seed of the
         attempt that converged.
 

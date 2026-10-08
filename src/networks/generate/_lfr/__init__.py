@@ -2,7 +2,7 @@
 
 :func:`lfr` runs the authors' own C++ generators -- fetched and compiled once per
 machine, see :mod:`._sources` -- and hands back a
-:class:`~networks.SyntheticNetwork` (a :class:`~networks.MultilayerNetwork` for the
+:class:`~networks.InMemoryNetwork` (a :class:`~networks.MultilayerNetwork` for the
 multiplex generator) with its planted communities.  Which of the six upstream programs
 runs follows from the arguments:
 
@@ -43,8 +43,8 @@ from pathlib import Path
 from typing import Any
 
 from ..._core.cache import cache_dir
+from ..._core.in_memory import InMemoryNetwork
 from ..._core.multilayer import MultilayerNetwork
-from ..._core.synthetic import SyntheticNetwork
 from .._naming import run_name, settings
 from . import _io
 from ._build import CompilerNotFound, binary, compiler
@@ -258,7 +258,7 @@ def lfr(
     seed: int = 1,
     timeout: float = 600.0,
     progress: bool | None = None,
-) -> SyntheticNetwork | MultilayerNetwork:
+) -> InMemoryNetwork | MultilayerNetwork:
     """Generate an LFR benchmark with the authors' own generator.
 
     Args:
@@ -301,7 +301,7 @@ def lfr(
         progress: Show a download bar on the first call; defaults to on for a tty.
 
     Returns:
-        A :class:`~networks.SyntheticNetwork`, zero-based, whose ``partition`` is
+        A :class:`~networks.InMemoryNetwork`, zero-based, whose ``partition`` is
 
         * flat, no overlap: ``{node: module}``
         * hierarchical: ``{node: (macro, micro)}``, the path convention
@@ -434,7 +434,7 @@ def lfr(
             partition=partition,
             info=info,
         )
-    return SyntheticNetwork.from_networkx(graph, name=name, partition=partition, info=info)
+    return InMemoryNetwork.from_networkx(graph, name=name, partition=partition, info=info)
 
 
 def _read_flat(workdir: Path, variant: Variant) -> tuple[Any, dict[Any, Any]]:

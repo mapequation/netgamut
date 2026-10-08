@@ -13,22 +13,28 @@ import csv
 import gzip
 import io
 import os
-import re
 import shutil
 import tarfile
 import zipfile
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, TYPE_CHECKING, Any
 
+from . import columns as _columns
 from . import formats
 from .cache import file_lock, write_atomic
+from .columns import Columns
 from .download import extract_gzip
 from .models import DataFile, DatasetLike
 from .nodes import NodeTable
 
-__all__ = ["Network"]
+if TYPE_CHECKING:
+    from .in_memory import InMemoryNetwork
+    from .multilayer import MultilayerNetwork
+
+__all__ = ["Columns", "Network"]
 
 _COMMENT_PREFIXES = ("#", "%")
 
@@ -41,9 +47,7 @@ _CANDIDATE_DELIMITERS = (",", ";")
 # Enough lines to tell a real delimiter from an incidental character.
 _SAMPLE_LINES = 25
 
-# The numeric prefix a C++ stream reads as a double -- what Infomap's own parser
-# makes of a weight field -- so "1_000" is 1 here too, not Python's 1000.
-_LEADING_NUMBER = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
+_LEADING_NUMBER = _columns.LEADING_NUMBER
 
 
 def _detect_delimiter(samples: Sequence[str]) -> str | None:
@@ -89,10 +93,16 @@ class Network:
     #: rejects and number the two sides of a bipartite network independently, so
     #: ``networks.konect`` writes a clean copy and keeps the archive beside it.
     edge_file: Path | None = None
-    #: Whether a third column, where present, holds weights Infomap accepts.
-    #: False for signed or arbitrary-real weights -- Infomap refuses a negative
-    #: link weight -- so :meth:`to_infomap` reads the first two columns only.
-    weighted_links: bool = True
+    #: What the fields beyond source and target hold -- weight, time, layer --
+    #: as the source declares it from its metadata. Everything that reads links
+    #: follows it, so a timestamp or a sign is never mistaken for a weight.
+    #: Replace it with :func:`dataclasses.replace` to read a column differently.
+    columns: Columns = Columns()
+
+    @property
+    def weighted_links(self) -> bool:
+        """Whether links carry a weight column Infomap accepts."""
+        return self.columns.weight is not None
 
     # -- paths -----------------------------------------------------------
     @property
@@ -233,6 +243,10 @@ class Network:
     @property
     def delimiter(self) -> str | None:
         """The field separator this file uses, or ``None`` for whitespace."""
+        return _detect_delimiter(self._samples())
+
+    def _samples(self) -> list[str]:
+        """The first data lines, for sniffing the delimiter and the row width."""
         samples: list[str] = []
         with self.open() as stream:
             for line in stream:
@@ -241,7 +255,7 @@ class Network:
                     samples.append(stripped)
                     if len(samples) >= _SAMPLE_LINES:
                         break
-        return _detect_delimiter(samples)
+        return samples
 
     def rows(self, *, delimiter: str | None = None) -> Iterator[tuple[str, ...]]:
         """Yield every non-comment line, split into its fields.
@@ -384,19 +398,29 @@ class Network:
     def _links(self) -> Iterator[tuple[str, str, float | None]]:
         """Stream ``(source, target, weight)`` exactly as :meth:`to_infomap` reads them.
 
-        A third column counts as a weight only where :meth:`to_infomap` lets
-        Infomap parse the file itself -- whitespace-separated, and weights the
-        source marks as valid -- so a written file loads the same network.
+        The weight comes from :attr:`columns` alone -- never from whatever
+        happens to be the third field -- read the way Infomap's parser reads a
+        number, so a written file loads the same network.
         """
-        if not (self.delimiter is None and self.weighted_links):
-            for source, target in self.edges():
-                yield source, target, None
-            return
-        for fields in self.rows(delimiter=None):
+        column = self.columns.weight
+        for fields in self.rows():
             if len(fields) < 2:
                 continue
-            number = _LEADING_NUMBER.match(fields[2]) if len(fields) > 2 else None
-            yield fields[0], fields[1], float(number.group()) if number else None
+            weight = None if column is None else _columns.weight_of(fields, column)
+            yield fields[0], fields[1], weight
+
+    def _infomap_reads_directly(self) -> bool:
+        """Whether Infomap's own parser reads this file as :attr:`columns` says.
+
+        It splits on whitespace and takes a third field as the weight, so the
+        file must be whitespace-separated and hold either two fields or
+        exactly source, target and weight.
+        """
+        samples = self._samples()
+        if _detect_delimiter(samples) is not None or self.columns.layer is not None:
+            return False
+        width = max((len(line.split()) for line in samples), default=2)
+        return width == 2 or (width == 3 and self.columns.weight == 2)
 
     def _typed_links(self, cast: Callable[[str], Any]) -> Iterator[formats.Link]:
         for source, target, weight in self._links():
@@ -475,19 +499,186 @@ class Network:
         kwargs.setdefault("directed", directed)
         instance = Infomap(**kwargs)
 
-        if self.delimiter is None and self.weighted_links:
+        if self._infomap_reads_directly():
             # Fast path: let Infomap's own parser read the file directly.
             instance.read_file(str(self.path))
         else:
-            # Infomap cannot parse CSV, nor a negative weight, so feed the links
-            # in. Only the first two columns are used: the extra columns on
-            # these files are ratings and timestamps, and signed ratings would
-            # be invalid as Infomap link weights.
-            instance.add_links(self.edges(cast=int))
+            # CSV, or extra fields Infomap would misread -- a timestamp taken
+            # for a weight, a sign it refuses -- so feed the links in, with the
+            # weight from the column the source declared.
+            instance.add_links(
+                (int(u), int(v), 1.0 if w is None else w) for u, v, w in self._links()
+            )
         return instance
+
+    # -- time and layers ---------------------------------------------------
+    def _require(self, role: str) -> int:
+        column: int | None = getattr(self.columns, role)
+        if column is None:
+            raise LookupError(
+                f"{self.name!r} has no {role} column ({self.columns}). If one of its "
+                "fields is one, set it with dataclasses.replace(net, columns=Columns(...))."
+            )
+        return column
+
+    @cached_property
+    def times(self) -> Any:
+        """The time of every link, as a numpy array in file order.
+
+        One entry per link row, aligned with :meth:`edges`. Integers stay
+        ``int64`` (Unix timestamps usually), fractional times are ``float64``
+        and ISO dates ``datetime64[s]``. Read once and kept, so look at it
+        before choosing how to bin::
+
+            t = net.times
+            t.min(), t.max()
+            numpy.histogram(t, bins="auto")
+
+        Needs numpy.
+
+        Raises:
+            LookupError: The source declares no time column for this file.
+        """
+        column = self._require("time")
+        table = _columns.read_table(self.rows(), self.columns, time=column, nodes=False)
+        return table.times
+
+    def time_bins(self, bins: Any = 10, range: tuple[Any, Any] | None = None) -> Any:
+        """The bin edges :meth:`snapshots` would use, from :attr:`times`.
+
+        *bins* and *range* mean what they mean to
+        :func:`numpy.histogram_bin_edges`: a number of equal-width bins, a
+        sequence of edges, or an estimator such as ``"auto"`` or ``"fd"``.
+        """
+        edges, _ = _columns.assign_bins(self.times, bins, range)
+        return edges
+
+    def snapshots(
+        self,
+        bins: Any = 10,
+        range: tuple[Any, Any] | None = None,
+        *,
+        directed: bool | None = None,
+    ) -> Iterator[InMemoryNetwork]:
+        """Yield one first-order network per time bin, built only when reached.
+
+        Bins follow :meth:`time_bins`; bin ``i`` holds the links with
+        ``edges[i] <= t < edges[i + 1]`` (the last bin also ``t == edges[-1]``),
+        and links outside every bin are left out. Every bin yields, empty ones
+        included, so the position in the iteration is the bin. A link's weight
+        is how many times it occurs in the bin -- the sum of its weights if the
+        file has a weight column. Each snapshot's ``info`` holds its ``bin``,
+        ``start``, ``end`` and the number of ``events``.
+
+        The file is read once, on the first ``next()``; each snapshot is
+        assembled from its rows when it is reached.
+
+        Raises:
+            LookupError: The source declares no time column for this file.
+        """
+        from .in_memory import InMemoryNetwork
+
+        column = self._require("time")
+        if directed is None:
+            directed = bool(self.dataset.directed)
+        table = _columns.read_table(self.rows(), self.columns, time=column)
+        edges, index = _columns.assign_bins(table.times, bins, range)
+        for b, rows in _columns.groups(index, len(edges) - 1):
+            links = _aggregate(table, rows, directed)
+            yield InMemoryNetwork(
+                name=f"{self.name}-t{b}",
+                nodes=tuple(dict.fromkeys(node for pair in links for node in pair)),
+                links=links,
+                directed=directed,
+                weighted=True,
+                info={
+                    "source": self.name,
+                    "bin": b,
+                    "start": edges[b],
+                    "end": edges[b + 1],
+                    "events": len(rows),
+                },
+            )
+
+    def to_multilayer(
+        self,
+        *,
+        bins: Any = None,
+        range: tuple[Any, Any] | None = None,
+        layer: str | None = None,
+        directed: bool | None = None,
+    ) -> MultilayerNetwork:
+        """Build a :class:`~networks.MultilayerNetwork` from a layer or time column.
+
+        With *bins*, the layers are time bins, exactly the :meth:`snapshots`:
+        layer ``i`` is bin ``i``, empty ones kept so layer ids stay time order,
+        and ``info["bin_edges"]`` records the edges. Without, the layers come
+        from the source's layer column, or from the column named *layer* -- any
+        categorical field, e.g. a type of interaction. Link weights are counts
+        of occurrences, summed weights where the file has a weight column.
+
+        There are no inter-layer links: give Infomap a relax rate, and for time
+        layers a relax limit so flow moves only between neighbouring bins::
+
+            ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)
+
+        Raises:
+            LookupError: No time column (with *bins*), or no layer column.
+            ValueError: Both *bins* and *layer* given.
+        """
+        from .multilayer import MultilayerNetwork
+
+        if bins is not None and layer is not None:
+            raise ValueError("give bins (time layers) or layer (a layer column), not both.")
+        if directed is None:
+            directed = bool(self.dataset.directed)
+        intra: dict[Any, dict[tuple[Any, Any], float]] = {}
+        if bins is not None:
+            column = self._require("time")
+            table = _columns.read_table(self.rows(), self.columns, time=column)
+            edges, index = _columns.assign_bins(table.times, bins, range)
+            for b, rows in _columns.groups(index, len(edges) - 1):
+                intra[b] = _aggregate(table, rows, directed)
+            info: dict[str, Any] = {"layers": "time", "bin_edges": edges}
+        else:
+            column = self.columns.find(layer) if layer is not None else self._require("layer")
+            table = _columns.read_table(self.rows(), self.columns, layer=column)
+            assert table.layers is not None
+            by_layer: dict[Any, list[int]] = {}
+            for row, label in enumerate(table.layers):
+                by_layer.setdefault(label, []).append(row)
+            for label in formats.ordered(by_layer):
+                intra[label] = _aggregate(table, by_layer[label], directed)
+            name = self.columns.names[column] if column < len(self.columns.names) else column
+            info = {"layers": name}
+        return MultilayerNetwork(
+            name=self.name,
+            intra=intra,
+            directed=directed,
+            weighted=any(w != 1.0 for links in intra.values() for w in links.values()),
+            info={"source": self.name, **info},
+        )
 
     def __repr__(self) -> str:
         return f"<Network {self.dataset.name!r} file={self.file.name!r} at {self.archive_path}>"
 
     def __str__(self) -> str:
         return f"{self.dataset} -> {self.path}"
+
+
+def _aggregate(
+    table: _columns.Table, rows: Iterable[int], directed: bool
+) -> dict[tuple[Any, Any], float]:
+    """Sum the links of *rows*: occurrences, or weights where there are any.
+
+    An undirected link counts the same whichever way round a row lists it.
+    """
+    links: dict[tuple[Any, Any], float] = {}
+    weights = table.weights
+    for row in rows:
+        u, v = table.sources[row], table.targets[row]
+        key = (u, v)
+        if not directed and key not in links and (v, u) in links:
+            key = (v, u)
+        links[key] = links.get(key, 0.0) + (1.0 if weights is None else float(weights[row]))
+    return links
