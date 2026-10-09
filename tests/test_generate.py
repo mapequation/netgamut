@@ -250,6 +250,7 @@ def test_import_networks_does_not_need_the_extras() -> None:
         "    assert 'mapequation-networks[generate]' in str(error), error\n"
         "else:\n"
         "    raise SystemExit('expected an ImportError with install advice')\n"
+        "networks.generate.overlapping_memory_benchmark(2, 300, n_nodes=32, community_size=8)\n"
         "print('ok')\n"
     )
     result = subprocess.run(
@@ -554,6 +555,54 @@ def test_multilayer_benchmark_keeps_links_inside_their_layer() -> None:
         assert edges
         assert all(u in layers[layer] and v in layers[layer] for u, v in edges)
     assert 0.8 < info["realized_E"] / info["target_E"] < 1.2
+
+
+# -- overlapping memory benchmark -------------------------------------------
+def test_overlapping_memory_benchmark_reproduces_the_published_sampler() -> None:
+    """Same states, links and planted partition as the paper project's script.
+
+    The hash is of that script's output for ``N32 om2 nc8 E3000 mu0.1``, sample 1
+    (``columnar_wip/make-om-network.py`` in the Infomap repo), taken over its links and
+    partition by state id, so it pins every random draw and the state numbering but not
+    the file layout.
+    """
+    import hashlib
+
+    net = generate.overlapping_memory_benchmark(2, 3000, n_nodes=32, community_size=8, seed=1)
+    assert net.partition is not None
+    text = "".join(f"{s} {t} {int(w)}\n" for (s, t), w in sorted(net.links.items()))
+    text += "".join(f"{s} {c}\n" for s, c in sorted(net.partition.items()))
+    assert hashlib.md5(text.encode()).hexdigest() == "a50bb228004c5548c970e7308ef21a6a"
+    assert net.name == "overlapping-memory-n32-om2-nc8-E3000-mu0.1-seed1"
+
+
+def test_overlapping_memory_benchmark_overlaps_on_nodes_not_on_states(tmp_path: Any) -> None:
+    net = generate.overlapping_memory_benchmark(
+        3, 3000, n_nodes=32, community_size=8, mu=0.3, seed=7
+    )
+    assert net.partition is not None
+    communities = net.info["communities"]
+    assert len(communities) == 32 * 3 // 8
+    assert all(len(nodes) == 8 for nodes in communities.values())
+    members = {c: set(nodes) for c, nodes in communities.items()}
+    # every state lies inside the one community that planted it
+    for state, window in net.states.items():
+        assert set(window) <= members[net.partition[state]]
+    # every link joins its states at the physical junction
+    assert all(net.states[s][1] == net.states[t][0] for s, t in net.links)
+    # exactly the mu share of the trigrams crosses communities
+    cross = sum(w for (s, t), w in net.links.items() if net.partition[s] != net.partition[t])
+    assert net.total_weight == 3000
+    assert cross == int(0.3 * 3000) == net.info["cross_trigrams"]
+    path = net.to_pajek(tmp_path)
+    assert "*Vertices 32\n" in path.read_text()
+
+
+def test_overlapping_memory_benchmark_rejects_impossible_parameters() -> None:
+    with pytest.raises(ValueError, match="multiple of"):
+        generate.overlapping_memory_benchmark(3, 1000, n_nodes=30, community_size=8)
+    with pytest.raises(ValueError, match="at least 3"):
+        generate.overlapping_memory_benchmark(2, 1000, n_nodes=32, community_size=2)
 
 
 # -- Infomap helpers --------------------------------------------------------

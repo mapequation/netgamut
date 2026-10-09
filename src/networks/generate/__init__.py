@@ -48,7 +48,10 @@ Three routes, increasingly detached from the blueprint:
 Higher-order blueprints keep the same flow model and change only the sampler:
 :func:`memory_benchmark` and :func:`multilayer_benchmark` pair *typed* stubs,
 so a memory link matches at its physical junction and a multiplex link stays
-inside its layer.
+inside its layer.  :func:`overlapping_memory_benchmark` needs no blueprint: it plants
+communities that overlap on the physical nodes and are disjoint on the states --
+Lancichinetti's trigram sampler, seeded, and the one generator here that needs only the
+standard library.
 
 The flow model is public too -- :class:`ModuleTree`, :func:`flow_matrix`,
 :func:`cross_R` and the flow-model distances -- for callers that want the
@@ -92,6 +95,7 @@ __all__ = [
     "memory_benchmark",
     "multilayer_benchmark",
     "multilayer_gm",
+    "overlapping_memory_benchmark",
     "parametric",
     "weighted_benchmark",
     # the flow model itself
@@ -134,6 +138,9 @@ __all__ = [
     "run_infomap",
 ]
 
+#: Internal modules that need only the standard library, so no extras check.
+_STDLIB_ONLY = {"_overlapping_memory"}
+
 #: Names re-exported from the sampler internals, resolved on first use so that
 #: ``import networks`` keeps working without the ``[generate]`` extras.
 _REEXPORTS = {
@@ -152,6 +159,7 @@ _REEXPORTS = {
     **{name: "_lfr" for name in ("LfrSource", "lfr", "lfr_available", "lfr_source")},
     "sample_state_links": "_higher_order",
     "multilayer_gm": "_multilayer_gm",
+    "overlapping_memory_benchmark": "_overlapping_memory",
     "pair_stubs": "_flowgen",
 }
 
@@ -161,7 +169,8 @@ def __getattr__(name: str) -> Any:
     module = _REEXPORTS.get(name)
     if module is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    _modules()  # raises the friendly ImportError when the extras are missing
+    if module not in _STDLIB_ONLY:
+        _modules()  # raises the friendly ImportError when the extras are missing
     import importlib
 
     target = importlib.import_module(f".{module}", __name__)

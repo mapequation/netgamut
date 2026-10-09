@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `generate.overlapping_memory_benchmark`: second-order memory networks with
+  communities that overlap on the physical nodes and are disjoint on the states,
+  from Andrea Lancichinetti's trigram sampler, seeded. Returns a `StateNetwork`
+  with the planted state partition. Needs only the standard library.
+
 ## 0.3.0
 
 Every network -- downloaded, generated, built from paths or binned from time --
