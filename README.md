@@ -643,6 +643,23 @@ memory = generate.memory_benchmark(links, windows, partition, seed=1)  # StateNe
 multiplex = generate.multilayer_benchmark(layers, partition, seed=1)  # MultilayerNetwork
 ```
 
+Without a blueprint, `overlapping_memory_benchmark` plants communities that
+overlap on the physical nodes and are disjoint on the states — the regime a
+first-order partition cannot represent. It is Andrea Lancichinetti's trigram
+sampler, seeded, and needs only the standard library:
+
+```python
+memory = generate.overlapping_memory_benchmark(4, 50_000, seed=1)  # StateNetwork, om=4, E=50000
+memory.to_pajek("out/")  # out/overlapping-memory-n256-om4-nc64-E50000-mu0.1-seed1.net
+memory.partition         # {state id: planted community}, for `infomap -d --no-infomap -c`
+```
+
+Every node sits in `memberships` communities of `community_size` nodes
+(defaults: 256 nodes, communities of 64, `mu=0.1`); `mu` of the trigrams cross
+communities by stitching two existing pairs, so mixing adds links but no
+states. A seeded network has the same states, links and planted partition as
+the original script run with that seed.
+
 The flow model itself is public as well (`generate.flow_matrix`,
 `generate.ModuleTree`, `generate.cross_R`) for callers who want the joint
 distribution rather than a sample of it. Everything here needs the extras:
