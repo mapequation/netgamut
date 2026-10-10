@@ -70,9 +70,7 @@ __all__ = [
 ]
 
 
-def _resolve(
-    *, directed: bool, weighted: bool, hierarchical: bool, multiplex: bool
-) -> Variant:
+def _resolve(*, directed: bool, weighted: bool, hierarchical: bool, multiplex: bool) -> Variant:
     """Pick the upstream generator, refusing combinations upstream does not have."""
     if hierarchical and (directed or weighted or multiplex):
         raise ValueError(
@@ -358,9 +356,7 @@ def lfr(
     elif weighted:
         specific = _flags(mut=mut, muw=muw, beta=beta, C=clustering)
     else:
-        specific = _flags(
-            mu=mu, C=clustering, L=layers, Orig=graphs if multiplex else None
-        )
+        specific = _flags(mu=mu, C=clustering, L=layers, Orig=graphs if multiplex else None)
     extra = [f"-{bound}"] if bound else []
     if rand:
         extra.append("-rand")

@@ -90,9 +90,7 @@ class NodeTable:
         except KeyError:
             available = ", ".join(self.columns) or "none"
             where = f" in {self.origin}" if self.origin else ""
-            raise KeyError(
-                f"No node column {column!r}{where}. Available: {available}."
-            ) from None
+            raise KeyError(f"No node column {column!r}{where}. Available: {available}.") from None
 
     def __getitem__(self, column: str) -> dict[Any, Any]:
         """``{node: value}``, with codes decoded to names where the source has them.
@@ -160,9 +158,7 @@ class NodeTable:
 
     def __repr__(self) -> str:
         sizes = ", ".join(
-            f"{column}[{len(self.categories(column))}]"
-            if column in self.names
-            else f"{column}"
+            f"{column}[{len(self.categories(column))}]" if column in self.names else f"{column}"
             for column in self.columns
         )
         where = f" from {self.origin}" if self.origin else ""

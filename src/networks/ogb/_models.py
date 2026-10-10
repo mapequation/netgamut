@@ -83,10 +83,7 @@ class Dataset:
                 "which a single homogeneous Network cannot represent"
             )
         if self.binary:
-            return (
-                "OGB stores it as data.npz rather than csv.gz, which this reader "
-                "does not parse"
-            )
+            return "OGB stores it as data.npz rather than csv.gz, which this reader does not parse"
         return ""
 
     @property
@@ -178,14 +175,11 @@ DOMAIN_MAP: dict[str, tuple[str, ...]] = {
 DESCRIPTIONS: dict[str, str] = {
     "ogbn-arxiv": "Citation network among arXiv CS papers; each node's label is its "
     "arXiv subject area.",
-    "ogbn-products": "Amazon co-purchasing network; each node's label is its product "
-    "category.",
+    "ogbn-products": "Amazon co-purchasing network; each node's label is its product category.",
     "ogbn-proteins": "Protein association network; labels are 112 binary presence "
     "indicators, and node_species is the categorical attribute.",
-    "ogbn-mag": "Heterogeneous academic graph: papers, authors, institutions and "
-    "fields of study.",
-    "ogbn-papers100M": "Citation network of 111M papers, the largest OGB node "
-    "dataset.",
+    "ogbn-mag": "Heterogeneous academic graph: papers, authors, institutions and fields of study.",
+    "ogbn-papers100M": "Citation network of 111M papers, the largest OGB node dataset.",
     "ogbl-ppa": "Protein association network, for link prediction.",
     "ogbl-collab": "Author collaboration network, for link prediction.",
     "ogbl-citation2": "Paper citation network, for link prediction.",

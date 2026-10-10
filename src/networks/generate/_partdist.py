@@ -80,9 +80,8 @@ def _leaf_constants(tree, non_redundant=True):
         denom = flow[A] + q[A]
         U = q[A] / denom if denom > 0 else 0.0  # exit leaf A
         for L in range(dA - 1, -1, -1):
-            nu, c = A[:L], A[:L + 1]
-            Z = S.get(nu, 0.0) - (q[c] if non_redundant else 0.0) \
-                + (q[nu] if nu != () else 0.0)
+            nu, c = A[:L], A[: L + 1]
+            Z = S.get(nu, 0.0) - (q[c] if non_redundant else 0.0) + (q[nu] if nu != () else 0.0)
             UZ[a, L] = U / Z if Z > 0 else 0.0
             if L > 0:  # keep exiting: factor q[nu] / Z(nu, c)
                 U = U * q[nu] / Z if Z > 0 else 0.0
@@ -90,8 +89,8 @@ def _leaf_constants(tree, non_redundant=True):
         den = q[A] / flow[A] if flow[A] > 0 else 0.0
         DEN[a, dA - 1] = den
         for L in range(dA - 2, -1, -1):
-            Ssub = S.get(A[:L + 1], 0.0)
-            den = den * q[A[:L + 1]] / Ssub if Ssub > 0 else 0.0
+            Ssub = S.get(A[: L + 1], 0.0)
+            den = den * q[A[: L + 1]] / Ssub if Ssub > 0 else 0.0
             DEN[a, L] = den
 
     if maxd == 1:  # flat two-level partition: LCA is always the root
@@ -112,8 +111,7 @@ def _leaf_constants(tree, non_redundant=True):
             L = neq.argmax(axis=2)  # distinct leaves always differ somewhere
             C[lo:hi] = UZ[cols[lo:hi, None], L] * DEN[cols[None, :], L]
 
-    within = np.array([1.0 / (flow[A] + q[A]) if (flow[A] + q[A]) > 0 else 0.0
-                       for A in leaves])
+    within = np.array([1.0 / (flow[A] + q[A]) if (flow[A] + q[A]) > 0 else 0.0 for A in leaves])
     np.fill_diagonal(C, within)
     return C, leaves, {A: a for a, A in enumerate(leaves)}
 
@@ -144,8 +142,8 @@ def D_blockwise(G, partA, partB, non_redundant=True, return_info=False):
     # meet cells: unique (leaf_A, leaf_B) pairs, with flow weight W = sum of p
     cell_ids, node_cell = np.unique(ua * mB + vb, return_inverse=True)
     K = len(cell_ids)
-    cu = cell_ids // mB   # A-module index of each cell
-    cv = cell_ids % mB    # B-module index of each cell
+    cu = cell_ids // mB  # A-module index of each cell
+    cv = cell_ids % mB  # B-module index of each cell
     w = np.bincount(node_cell, weights=p, minlength=K)  # cell flow
 
     # per-cell JSD between row conditionals: every node j in cell (a, b) contributes
@@ -158,10 +156,12 @@ def D_blockwise(G, partA, partB, non_redundant=True, return_info=False):
         Y = CB[cv[lo:hi, None], cv[None, :]]
         M = X + Y  # = 2 * mixture / (that factor of 2 folded into the logs below)
         with np.errstate(divide="ignore", invalid="ignore"):
-            tx = np.where(X > 0, X * np.log2(np.divide(2.0 * X, M,
-                          out=np.ones_like(X), where=M > 0)), 0.0)
-            ty = np.where(Y > 0, Y * np.log2(np.divide(2.0 * Y, M,
-                          out=np.ones_like(Y), where=M > 0)), 0.0)
+            tx = np.where(
+                X > 0, X * np.log2(np.divide(2.0 * X, M, out=np.ones_like(X), where=M > 0)), 0.0
+            )
+            ty = np.where(
+                Y > 0, Y * np.log2(np.divide(2.0 * Y, M, out=np.ones_like(Y), where=M > 0)), 0.0
+            )
         jsd_cell[lo:hi] = 0.5 * ((tx + ty) @ w)
     jsd_cell = np.maximum(jsd_cell, 0.0)
 

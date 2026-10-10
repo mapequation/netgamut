@@ -41,7 +41,7 @@ def test_add_inverse_edge_is_inverted_into_directedness() -> None:
     directed, and silently double its edge count on conversion.
     """
     demo, hetero = _parse_master("nodeproppred", MASTER)
-    assert demo.directed is False   # add_inverse_edge=True  -> undirected
+    assert demo.directed is False  # add_inverse_edge=True  -> undirected
     assert hetero.directed is True  # add_inverse_edge=False -> directed
 
 
@@ -80,7 +80,10 @@ def test_load_refuses_the_unsupported_ones_before_downloading() -> None:
 def test_search_filters_on_loadability_and_domain() -> None:
     assert all(d.supported for d in ogb.search(supported=True))
     assert {d.name for d in ogb.search(supported=False)} == {
-        "ogbn-mag", "ogbn-papers100M", "ogbl-biokg", "ogbl-vessel",
+        "ogbn-mag",
+        "ogbn-papers100M",
+        "ogbl-biokg",
+        "ogbl-vessel",
     }
     assert all("Biological" in d.domains for d in ogb.search(domain="Biological"))
 

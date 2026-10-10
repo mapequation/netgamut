@@ -144,18 +144,47 @@ _STDLIB_ONLY = {"_overlapping_memory"}
 #: Names re-exported from the sampler internals, resolved on first use so that
 #: ``import networks`` keeps working without the ``[generate]`` extras.
 _REEXPORTS = {
-    **{name: "_flowgen" for name in (
-        "ModuleTree", "apportion", "as_paths", "common_prefix_len", "connect_components",
-        "cross_R", "directed_mixing_stats", "flow_matrix", "infomap_partition",
-        "mixing_stats", "node_flows", "raise_clustering", "read_pajek", "run_infomap",
-        "sample_benchmark", "sample_multinomial", "sample_stub_matching",
-        "sample_stub_matching_directed", "stationary_flows",
-        "D_dist", "S_dist", "element_distances", "jsd",
-    )},
-    **{name: "_partdist" for name in (
-        "D_adjusted", "D_blockwise", "D_null", "agmd", "agms", "gmd", "gms",
-        "null_partition",
-    )},
+    **{
+        name: "_flowgen"
+        for name in (
+            "ModuleTree",
+            "apportion",
+            "as_paths",
+            "common_prefix_len",
+            "connect_components",
+            "cross_R",
+            "directed_mixing_stats",
+            "flow_matrix",
+            "infomap_partition",
+            "mixing_stats",
+            "node_flows",
+            "raise_clustering",
+            "read_pajek",
+            "run_infomap",
+            "sample_benchmark",
+            "sample_multinomial",
+            "sample_stub_matching",
+            "sample_stub_matching_directed",
+            "stationary_flows",
+            "D_dist",
+            "S_dist",
+            "element_distances",
+            "jsd",
+        )
+    },
+    **{
+        name: "_partdist"
+        for name in (
+            "D_adjusted",
+            "D_blockwise",
+            "D_null",
+            "agmd",
+            "agms",
+            "gmd",
+            "gms",
+            "null_partition",
+        )
+    },
     **{name: "_lfr" for name in ("LfrSource", "lfr", "lfr_available", "lfr_source")},
     "sample_state_links": "_higher_order",
     "multilayer_gm": "_multilayer_gm",
@@ -181,6 +210,7 @@ def __getattr__(name: str) -> Any:
 
 def __dir__() -> list[str]:
     return sorted(set(__all__) | set(globals()))
+
 
 _INSTALL = 'pip install "mapequation-networks[generate]"'
 
@@ -245,9 +275,7 @@ def _pick_family(fit: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def benchmark(
-    G: Any, partition: dict[Any, Any] | None = None, **kwargs: Any
-) -> InMemoryNetwork:
+def benchmark(G: Any, partition: dict[Any, Any] | None = None, **kwargs: Any) -> InMemoryNetwork:
     """Sample one benchmark network from a blueprint's modular flow.
 
     The default sampler is microcanonical stub matching: degrees follow the
@@ -403,7 +431,7 @@ def weighted_benchmark(
     if degree_target == "plain":
         topology_source = networkx.Graph()
         topology_source.add_nodes_from(U.nodes())
-        topology_source.add_edges_from(U.edges())      # weights dropped on purpose
+        topology_source.add_edges_from(U.edges())  # weights dropped on purpose
     else:
         topology_source = U
     H, info = flowgen.sample_benchmark(topology_source, partition=partition, **kwargs)
@@ -573,9 +601,7 @@ def fit_families(values: Any, support_min: int | None = None) -> dict[str, Any]:
     try:
         import scipy  # noqa: F401
     except ImportError as error:  # pragma: no cover - depends on install
-        raise ImportError(
-            f"fit_families() needs scipy. Install it with `{_INSTALL}`."
-        ) from error
+        raise ImportError(f"fit_families() needs scipy. Install it with `{_INSTALL}`.") from error
     result: dict[str, Any] = params.fit_families(values, support_min=support_min)
     return result
 
@@ -844,9 +870,7 @@ def multilayer_benchmark(
         layers = {layer: layers.to_networkx(layer=layer) for layer in layers.intra}
     if partition is None:
         raise ValueError("multilayer_benchmark() needs a partition {(node, layer): module}.")
-    directed = any(
-        getattr(spec, "is_directed", lambda: False)() for spec in layers.values()
-    )
+    directed = any(getattr(spec, "is_directed", lambda: False)() for spec in layers.values())
     sampler: Any = _higher_order.multilayer_benchmark
     sampled, info = sampler(layers, partition, rng=rng, seed=seed, **kwargs)
 

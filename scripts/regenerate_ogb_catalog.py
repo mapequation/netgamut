@@ -78,26 +78,36 @@ def fill_stats(catalog: ogb_catalog.Catalog, *, max_bytes: int | None) -> ogb_ca
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--with-stats", action="store_true",
-                        help="download each archive to read exact node/edge counts")
-    parser.add_argument("--max-bytes", type=int, default=None,
-                        help="with --stats, skip archives larger than this")
+    parser.add_argument(
+        "--with-stats",
+        action="store_true",
+        help="download each archive to read exact node/edge counts",
+    )
+    parser.add_argument(
+        "--max-bytes", type=int, default=None, help="with --stats, skip archives larger than this"
+    )
     args = parser.parse_args(argv)
 
     catalog = ogb_catalog.build_catalog()
     print(f"read {len(catalog.datasets)} datasets from {', '.join(ogb_catalog.FAMILIES)}")
 
     if len(catalog.datasets) < MIN_DATASETS:
-        print(f"\nRefusing to write: only {len(catalog.datasets)} datasets, expected at "
-              f"least {MIN_DATASETS}. Has OGB moved master.csv?", file=sys.stderr)
+        print(
+            f"\nRefusing to write: only {len(catalog.datasets)} datasets, expected at "
+            f"least {MIN_DATASETS}. Has OGB moved master.csv?",
+            file=sys.stderr,
+        )
         return 2
 
     unmapped = [d.name for d in catalog.datasets if d.name not in DOMAIN_MAP]
     if unmapped:
-        print(f"\nRefusing to write: no domain assigned for {', '.join(unmapped)}.",
-              file=sys.stderr)
-        print("Add them to DOMAIN_MAP and DESCRIPTIONS in src/networks/ogb/_models.py.",
-              file=sys.stderr)
+        print(
+            f"\nRefusing to write: no domain assigned for {', '.join(unmapped)}.", file=sys.stderr
+        )
+        print(
+            "Add them to DOMAIN_MAP and DESCRIPTIONS in src/networks/ogb/_models.py.",
+            file=sys.stderr,
+        )
         return 2
 
     if args.with_stats:
@@ -125,8 +135,10 @@ def main(argv: list[str] | None = None) -> int:
 
     TARGET.write_text(json.dumps(catalog.to_dict(), indent=2) + "\n")
     loadable = sum(1 for d in catalog.datasets if d.supported)
-    print(f"\nWrote {TARGET.relative_to(ROOT)}: {len(catalog.datasets)} datasets, "
-          f"{loadable} loadable.")
+    print(
+        f"\nWrote {TARGET.relative_to(ROOT)}: {len(catalog.datasets)} datasets, "
+        f"{loadable} loadable."
+    )
     return 0
 
 

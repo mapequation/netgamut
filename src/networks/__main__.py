@@ -215,9 +215,7 @@ def build_parser() -> argparse.ArgumentParser:
     get.add_argument("name")
     get.add_argument("-s", "--source", choices=list(_SOURCES))
     get.add_argument("-f", "--file", help="which artifact to fetch (SNAP only)")
-    get.add_argument(
-        "--revision", type=int, help="which published revision to pin (AHORN only)"
-    )
+    get.add_argument("--revision", type=int, help="which published revision to pin (AHORN only)")
     get.add_argument("--year", type=int, help="which year to fetch (quarterly paths data only)")
     get.add_argument("--quarter", type=int, help="which quarter to fetch, 1-4 (paths data only)")
     get.add_argument("--force", action="store_true")

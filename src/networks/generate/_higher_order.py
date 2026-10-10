@@ -98,8 +98,7 @@ def _capped_apportion(total, weights, cap, rng, passes=6):
     return np.minimum(k, cap)
 
 
-def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None,
-                       topup=True):
+def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None, topup=True):
     """Typed microcanonical sampler for a state network.
 
     Parameters
@@ -153,11 +152,15 @@ def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None,
         # distinct-partner capacity, minus the state itself when it sits on both sides
         cap_o = np.array([len(si) - int(it(s) == cls) for s in so])
         cap_i = np.array([len(so) - int(ot(s) == cls) for s in si])
-        for s, k in zip(so, _capped_apportion(
-                e_c, np.array([wout[idx[s]] for s in so]), cap_o, rng), strict=True):
+        for s, k in zip(
+            so,
+            _capped_apportion(e_c, np.array([wout[idx[s]] for s in so]), cap_o, rng),
+            strict=True,
+        ):
             kout[idx[s]] = k
-        for s, k in zip(si, _capped_apportion(
-                e_c, np.array([win[idx[s]] for s in si]), cap_i, rng), strict=True):
+        for s, k in zip(
+            si, _capped_apportion(e_c, np.array([win[idx[s]] for s in si]), cap_i, rng), strict=True
+        ):
             kin[idx[s]] = k
 
     # 2. per-module directed mixing on the weighted state graph
@@ -171,8 +174,8 @@ def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None,
             cin[comm[b]] += w
 
     # 3. split each state's stubs into internal and boundary by its module's mixing
-    o_int, i_int = defaultdict(list), defaultdict(list)   # keyed (type, module)
-    o_bnd, i_bnd = defaultdict(list), defaultdict(list)   # keyed type
+    o_int, i_int = defaultdict(list), defaultdict(list)  # keyed (type, module)
+    o_bnd, i_bnd = defaultdict(list), defaultdict(list)  # keyed type
     for s in states:
         A = comm[s]
         to, ti = within[A] + cout[A], within[A] + cin[A]
@@ -209,9 +212,14 @@ def sample_state_links(links, partition, out_type, in_type, rng=None, seed=None,
     sampled = defaultdict(float)
     for e in pairs:
         sampled[e] += 1.0
-    return dict(sampled), {"target_E": len(links), "realized_E": len(sampled),
-                           "realized_stubs": len(pairs), "dropped_stubs": dropped,
-                           "n_states": len(states), "n_type_classes": len(cls_count)}
+    return dict(sampled), {
+        "target_E": len(links),
+        "realized_E": len(sampled),
+        "realized_stubs": len(pairs),
+        "dropped_stubs": dropped,
+        "n_states": len(states),
+        "n_type_classes": len(cls_count),
+    }
 
 
 def memory_benchmark(links, windows, partition, rng=None, seed=None, topup=True):
@@ -240,10 +248,14 @@ def memory_benchmark(links, windows, partition, rng=None, seed=None, topup=True)
         ``(sampled, info)`` -- ``{(state, state): weight}`` and diagnostics.
     """
     return sample_state_links(
-        links, partition,
+        links,
+        partition,
         out_type={s: tuple(w[1:]) for s, w in windows.items()},
         in_type={s: tuple(w[:-1]) for s, w in windows.items()},
-        rng=rng, seed=seed, topup=topup)
+        rng=rng,
+        seed=seed,
+        topup=topup,
+    )
 
 
 def multilayer_benchmark(layers, partition, rng=None, seed=None, **kwargs):
@@ -294,10 +306,10 @@ def multilayer_benchmark(layers, partition, rng=None, seed=None, **kwargs):
             G = spec
         part_l = {u: partition.get((u, layer), (0,)) for u in G.nodes()}
         H, li = fg.sample_benchmark(G, partition=part_l, rng=rng, **kwargs)
-        sampled[layer] = {(u, v): float(d.get("weight", 1.0))
-                          for u, v, d in H.edges(data=True)}
+        sampled[layer] = {(u, v): float(d.get("weight", 1.0)) for u, v, d in H.edges(data=True)}
         info["layers"][layer] = li
     info["realized_E"] = sum(len(e) for e in sampled.values())
     info["target_E"] = sum(
-        (len(s) if isinstance(s, dict) else s.number_of_edges()) for s in layers.values())
+        (len(s) if isinstance(s, dict) else s.number_of_edges()) for s in layers.values()
+    )
     return sampled, info

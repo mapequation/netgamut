@@ -133,9 +133,11 @@ def parse_stats(cls: str, source: str) -> tuple[list[Entry], bool]:
                 continue
 
         def column(name: str, row: list[str], header: list[str] = header) -> int | None:
-            return _number(row[header.index(name)]) if name in header and len(
-                row
-            ) > header.index(name) else None
+            return (
+                _number(row[header.index(name)])
+                if name in header and len(row) > header.index(name)
+                else None
+            )
 
         named = header and header[0] == "name"
         for row in rows[1:]:
