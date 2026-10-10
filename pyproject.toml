@@ -78,8 +78,12 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 # The sampler internals are the reference implementation of the generative map
 # equation; their style is kept close to the derivations they implement.
 [tool.ruff.lint.per-file-ignores]
-"src/networks/generate/_flowgen.py" = ["B905", "E702", "SIM300"]
+"src/networks/generate/_flowgen.py" = ["B905", "E501", "E702", "SIM300"]
 "src/networks/generate/_params.py" = ["B905", "B007"]
+
+# The same goes for their hand-aligned comments, and for the README's examples.
+[tool.ruff.format]
+exclude = ["src/networks/generate/_flowgen.py", "*.md"]
 
 [tool.mypy]
 python_version = "3.11"

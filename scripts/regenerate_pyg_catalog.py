@@ -87,8 +87,10 @@ def fill_direction(catalog: pyg_catalog.Catalog, *, max_edges: int | None) -> py
             filled.append(dataset)
             continue
         resolved = network.dataset
-        print(f"  {dataset.name:46s} directed={str(resolved.directed):5s} "
-              f"{resolved.nodes:>9,} nodes {resolved.edges:>10,} edges")
+        print(
+            f"  {dataset.name:46s} directed={str(resolved.directed):5s} "
+            f"{resolved.nodes:>9,} nodes {resolved.edges:>10,} edges"
+        )
         filled.append(
             dataclasses.replace(
                 dataset,
@@ -102,8 +104,10 @@ def fill_direction(catalog: pyg_catalog.Catalog, *, max_edges: int | None) -> py
     if skipped:
         print(f"\n{skipped} skipped as larger than --max-edges.")
     if failed:
-        print(f"\n{len(failed)} could not be materialised, keeping what the catalog had:",
-              file=sys.stderr)
+        print(
+            f"\n{len(failed)} could not be materialised, keeping what the catalog had:",
+            file=sys.stderr,
+        )
         for name, reason in failed:
             print(f"  {name:46s} {reason}", file=sys.stderr)
     return dataclasses.replace(catalog, datasets=tuple(filled))
@@ -133,14 +137,22 @@ def carry_over(catalog: pyg_catalog.Catalog) -> pyg_catalog.Catalog:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--show-omitted", action="store_true",
-                        help="list every class left out, and why")
-    parser.add_argument("--with-direction", action="store_true",
-                        help="materialise each dataset to record directedness and size")
-    parser.add_argument("--max-edges", type=int, default=None,
-                        help="with --with-direction, skip datasets PyG already reports "
-                             "as larger; the ones with no published size are attempted "
-                             "regardless, since the size is only knowable by loading")
+    parser.add_argument(
+        "--show-omitted", action="store_true", help="list every class left out, and why"
+    )
+    parser.add_argument(
+        "--with-direction",
+        action="store_true",
+        help="materialise each dataset to record directedness and size",
+    )
+    parser.add_argument(
+        "--max-edges",
+        type=int,
+        default=None,
+        help="with --with-direction, skip datasets PyG already reports "
+        "as larger; the ones with no published size are attempted "
+        "regardless, since the size is only knowable by loading",
+    )
     args = parser.parse_args(argv)
 
     catalog = pyg_catalog.build_catalog()
@@ -149,9 +161,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"omitted {len(catalog.omitted)} classes")
 
     if len(catalog.datasets) < MIN_DATASETS:
-        print(f"\nRefusing to write: only {len(catalog.datasets)} datasets, expected at "
-              f"least {MIN_DATASETS}. Has PyG restructured torch_geometric/datasets?",
-              file=sys.stderr)
+        print(
+            f"\nRefusing to write: only {len(catalog.datasets)} datasets, expected at "
+            f"least {MIN_DATASETS}. Has PyG restructured torch_geometric/datasets?",
+            file=sys.stderr,
+        )
         return 2
 
     reasons = Counter(catalog.omitted.values())
@@ -169,20 +183,26 @@ def main(argv: list[str] | None = None) -> int:
 
     unmapped = sorted({d.cls for d in catalog.datasets if not d.domains})
     if unmapped:
-        print(f"\n{len(unmapped)} classes have no domain and will not match domain "
-              f"queries:\n  {', '.join(unmapped)}")
+        print(
+            f"\n{len(unmapped)} classes have no domain and will not match domain "
+            f"queries:\n  {', '.join(unmapped)}"
+        )
         print("Add them to DOMAIN_MAP in src/networks/pyg/_models.py.")
 
     unsized = sum(1 for d in catalog.datasets if d.nodes is None)
     unknown = sum(1 for d in catalog.datasets if d.directed is None)
     total = len(catalog.datasets)
     print(f"\n{unsized} of {total} datasets have no size; search(max_nodes=...) skips those.")
-    print(f"{unknown} of {total} have unknown directedness; search(directed=...) skips those."
-          + ("  Run --with-direction to measure them." if unknown else ""))
+    print(
+        f"{unknown} of {total} have unknown directedness; search(directed=...) skips those."
+        + ("  Run --with-direction to measure them." if unknown else "")
+    )
     broken = [d.name for d in catalog.datasets if not d.supported]
     if broken:
-        print(f"{len(broken)} cannot be constructed and are marked unloadable: "
-              f"{', '.join(broken[:6])}{' ...' if len(broken) > 6 else ''}")
+        print(
+            f"{len(broken)} cannot be constructed and are marked unloadable: "
+            f"{', '.join(broken[:6])}{' ...' if len(broken) > 6 else ''}"
+        )
 
     TARGET.write_text(json.dumps(catalog.to_dict(), indent=2) + "\n")
     print(f"Wrote {TARGET.relative_to(ROOT)}.")

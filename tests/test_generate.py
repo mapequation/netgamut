@@ -79,9 +79,7 @@ def test_benchmark_reproduces_the_mixing() -> None:
     np = pytest.importorskip("numpy")
     G, partition = blueprint()
     H, _ = as_graph_info(generate.benchmark(G, partition, rng=np.random.default_rng(3)))
-    assert cross_fraction(H, partition) == pytest.approx(
-        cross_fraction(G, partition), abs=0.03
-    )
+    assert cross_fraction(H, partition) == pytest.approx(cross_fraction(G, partition), abs=0.03)
 
 
 def test_benchmark_without_partition_uses_infomap() -> None:
@@ -163,9 +161,11 @@ def test_parametric_roundtrip_on_fitted_families() -> None:
     degree_fit = generate.fit_families(rng.zipf(2.8, size=2000), support_min=1)
     size_fit = generate.fit_families(rng.poisson(30.0, size=200) + 5)
     mixing_fit = generate.fit_mixing_beta([0.05, 0.1, 0.15, 0.2], [1.0, 1.0, 1.0, 1.0])
-    H, partition, info = as_graph_partition_info(generate.parametric(
-        400, degree_fit, size_fit, mixing_fit, k_mean=6.0, k_max=40, size_max=80, seed=10
-    ))
+    H, partition, info = as_graph_partition_info(
+        generate.parametric(
+            400, degree_fit, size_fit, mixing_fit, k_mean=6.0, k_max=40, size_max=80, seed=10
+        )
+    )
     assert set(partition) == set(H.nodes())
     assert abs(H.number_of_nodes() - 400) <= 2
     assert info["n_modules"] >= 2
@@ -174,16 +174,18 @@ def test_parametric_roundtrip_on_fitted_families() -> None:
 
 def test_parametric_accepts_explicit_families() -> None:
     pytest.importorskip("numpy")
-    H, partition, info = as_graph_partition_info(generate.parametric(
-        300,
-        {"family": "powerlaw", "params": {"alpha": 2.7}, "support_min": 1},
-        {"family": "geometric", "params": {"p": 0.05}, "support_min": 10},
-        {"family": "delta", "mu": 0.1},
-        k_mean=6.0,
-        k_max=30,
-        size_max=60,
-        seed=11,
-    ))
+    H, partition, info = as_graph_partition_info(
+        generate.parametric(
+            300,
+            {"family": "powerlaw", "params": {"alpha": 2.7}, "support_min": 1},
+            {"family": "geometric", "params": {"p": 0.05}, "support_min": 10},
+            {"family": "delta", "mu": 0.1},
+            k_mean=6.0,
+            k_max=30,
+            size_max=60,
+            seed=11,
+        )
+    )
     assert set(partition) == set(H.nodes())
     assert info["realized_E"] == H.number_of_edges()
 
@@ -262,8 +264,13 @@ def test_import_networks_does_not_need_the_extras() -> None:
 
 # -- directed and hierarchical blueprints -----------------------------------
 def directed_hierarchical(
-    seed: int = 1, per: int = 40, subs: int = 3, supers: int = 4,
-    k_int: float = 5.0, k_sub: float = 0.8, k_sup: float = 0.25,
+    seed: int = 1,
+    per: int = 40,
+    subs: int = 3,
+    supers: int = 4,
+    k_int: float = 5.0,
+    k_sub: float = 0.8,
+    k_sup: float = 0.25,
 ) -> tuple[Any, dict[int, tuple[int, int]]]:
     """A directed blueprint with a genuinely detectable two-level hierarchy.
 
@@ -296,8 +303,7 @@ def directed_hierarchical(
             siblings = [x for t, o in enumerate(subl) if t != sub for x in o]
             for _ in range(int(len(members) * k_sub)):
                 add(rng.choice(members), rng.choice(siblings))
-            outside = [x for t, o2 in enumerate(groups) if t != supermodule
-                       for o in o2 for x in o]
+            outside = [x for t, o2 in enumerate(groups) if t != supermodule for o in o2 for x in o]
             for _ in range(int(len(members) * k_sup)):
                 add(rng.choice(members), rng.choice(outside))
     G.add_nodes_from(partition)
@@ -309,8 +315,7 @@ def arc_classes(H: Any, partition: dict[Any, tuple[int, int]]) -> dict[str, int]
     counts = {"internal": 0, "within_super": 0, "cross_super": 0}
     for u, v in H.edges():
         pu, pv = partition[u], partition[v]
-        key = ("internal" if pu == pv
-               else "within_super" if pu[0] == pv[0] else "cross_super")
+        key = "internal" if pu == pv else "within_super" if pu[0] == pv[0] else "cross_super"
         counts[key] += 1
     return counts
 
@@ -345,8 +350,9 @@ def test_directed_sampler_keeps_the_supermodule_layer(routing: str) -> None:
     flat = {u: (path[0] * 10 + path[1],) for u, path in partition.items()}
     reference = arc_classes(G, partition)
 
-    hier, _ = as_graph_info(generate.benchmark(G, partition, routing=routing,
-                                               rng=np.random.default_rng(1)))
+    hier, _ = as_graph_info(
+        generate.benchmark(G, partition, routing=routing, rng=np.random.default_rng(1))
+    )
     flattened, _ = as_graph_info(generate.benchmark(G, flat, rng=np.random.default_rng(1)))
     hier_counts = arc_classes(hier, partition)
     flat_counts = arc_classes(flattened, partition)
@@ -368,12 +374,17 @@ def test_sampler_default_routing_is_the_documented_one() -> None:
     import inspect
 
     flowgen, _ = generate._modules()
-    expected = "model"          # re-measured 2026-09-18; the robustness gate selects it
-    for fn in (flowgen.sample_stub_matching, flowgen.sample_stub_matching_directed,
-               flowgen.sample_benchmark, flowgen._route_stubs):
+    expected = "model"  # re-measured 2026-09-18; the robustness gate selects it
+    for fn in (
+        flowgen.sample_stub_matching,
+        flowgen.sample_stub_matching_directed,
+        flowgen.sample_benchmark,
+        flowgen._route_stubs,
+    ):
         assert inspect.signature(fn).parameters["routing"].default == expected, fn.__name__
-    tree_default = inspect.signature(
-        flowgen.ModuleTree.escalation_probs).parameters["routing"].default
+    tree_default = (
+        inspect.signature(flowgen.ModuleTree.escalation_probs).parameters["routing"].default
+    )
     assert tree_default == expected
 
 
@@ -404,8 +415,7 @@ def test_module_tree_count_frame_keeps_directed_asymmetry() -> None:
     # the sampler frame reads endpoint counts, so in- and out-flow differ per module
     assert max(abs(counts.flow_out[m] - counts.flow_in[m]) for m in counts.flow) > 1e-6
     # the flow-model frame has one visit rate per node, hence flow_out == flow
-    assert all(abs(stationary.flow_out[m] - stationary.flow[m]) < 1e-12
-               for m in stationary.flow)
+    assert all(abs(stationary.flow_out[m] - stationary.flow[m]) < 1e-12 for m in stationary.flow)
 
 
 @pytest.mark.parametrize("routing", ["boundary", "model", "observed"])
@@ -419,8 +429,7 @@ def test_escalation_probs_are_a_distribution(routing: str) -> None:
             assert abs(sum(prob for _, _, prob in levels) - 1.0) < 1e-9
             assert all(prob >= 0.0 for _, _, prob in levels)
             # deepest level first, and each stub is tagged with the branch it left
-            assert [nu for nu, _, _ in levels] == [leaf[:t]
-                                                   for t in range(len(leaf) - 1, -1, -1)]
+            assert [nu for nu, _, _ in levels] == [leaf[:t] for t in range(len(leaf) - 1, -1, -1)]
 
 
 def test_two_level_routing_collapses_to_one_pool() -> None:
@@ -428,8 +437,7 @@ def test_two_level_routing_collapses_to_one_pool() -> None:
     G, partition = blueprint()
     tree = generate.ModuleTree(G, {u: (m,) for u, m in partition.items()})
     for leaf in tree.leaves:
-        levels = [tree.escalation_probs(leaf, routing=r)
-                  for r in ("boundary", "model", "observed")]
+        levels = [tree.escalation_probs(leaf, routing=r) for r in ("boundary", "model", "observed")]
         assert all(lv == [((), leaf, 1.0)] for lv in levels)
 
 
@@ -453,10 +461,10 @@ def skewed_weighted() -> tuple[Any, dict[int, int]]:
         for u in members:
             partition[u] = module
         for i, u in enumerate(members):
-            for v in members[i + 1:]:
+            for v in members[i + 1 :]:
                 if rng.random() < 0.4:
                     G.add_edge(u, v, weight=float(rng.integers(50, 200)))
-    for u in range(0, 20, 4):          # a few weak cross links
+    for u in range(0, 20, 4):  # a few weak cross links
         G.add_edge(u, u + 20, weight=1.0)
     G.add_edge(0, 21, weight=50000.0)  # one dominating hub link
     return G, partition
@@ -465,10 +473,16 @@ def skewed_weighted() -> tuple[Any, dict[int, int]]:
 def test_weighted_benchmark_plain_target_is_feasible_when_flow_target_is_not() -> None:
     np = pytest.importorskip("numpy")
     G, partition = skewed_weighted()
-    plain, plain_info = as_graph_info(generate.weighted_benchmark(
-        G, partition, degree_target="plain", rng=np.random.default_rng(1)))
-    flow, flow_info = as_graph_info(generate.weighted_benchmark(
-        G, partition, degree_target="flow", rng=np.random.default_rng(1)))
+    plain, plain_info = as_graph_info(
+        generate.weighted_benchmark(
+            G, partition, degree_target="plain", rng=np.random.default_rng(1)
+        )
+    )
+    flow, flow_info = as_graph_info(
+        generate.weighted_benchmark(
+            G, partition, degree_target="flow", rng=np.random.default_rng(1)
+        )
+    )
     assert plain_info["degree_target"] == "plain"
     assert flow_info["degree_target"] == "flow"
     # the plain target is a feasible simple graph by construction; the flow target
@@ -498,7 +512,7 @@ def memory_blueprint() -> tuple[dict[Any, float], dict[Any, Any], dict[Any, Any]
     for _ in range(600):
         group = groups[int(rng.integers(2))]
         trail = [int(rng.choice(group)) for _ in range(4)]
-        if rng.random() < 0.1:                       # occasional cross-community step
+        if rng.random() < 0.1:  # occasional cross-community step
             trail[-1] = int(rng.choice(groups[1] if group is groups[0] else groups[0]))
         for a, b, c in zip(trail, trail[1:], trail[2:], strict=False):
             if a == b or b == c:
@@ -517,10 +531,10 @@ def test_memory_benchmark_respects_the_physical_junction() -> None:
     sampled, info = net.links, net.info
     assert isinstance(net, StateNetwork)
     assert sampled, "sampler produced no links"
-    states = net.states                      # state id -> window of physical ids
+    states = net.states  # state id -> window of physical ids
     violations = [(a, b) for a, b in sampled if states[a][-1] != states[b][0]]
     assert violations == [], f"{len(violations)} links skip their junction"
-    assert info["dropped_stubs"] == 0          # multi-edges aggregate, nothing strands
+    assert info["dropped_stubs"] == 0  # multi-edges aggregate, nothing strands
     assert 0.7 < info["realized_E"] / info["target_E"] < 1.3
 
 
@@ -531,8 +545,7 @@ def test_memory_benchmark_reproduces_the_module_mixing() -> None:
 
     def mixing(edge_weights: dict[Any, float], partition: dict[Any, Any]) -> float:
         total = sum(edge_weights.values())
-        cross = sum(w for (a, b), w in edge_weights.items()
-                    if partition[a] != partition[b])
+        cross = sum(w for (a, b), w in edge_weights.items() if partition[a] != partition[b])
         return cross / total
 
     assert abs(mixing(sampled, net.partition) - mixing(links, partition)) < 0.05
@@ -610,8 +623,9 @@ def test_run_infomap_accepts_non_integer_labels() -> None:
     pytest.importorskip("infomap")
     nx = pytest.importorskip("networkx")
     G = nx.Graph()
-    G.add_edges_from([("a", "b"), ("b", "c"), ("a", "c"),
-                      ("c", "x"), ("x", "y"), ("y", "z"), ("x", "z")])
+    G.add_edges_from(
+        [("a", "b"), ("b", "c"), ("a", "c"), ("c", "x"), ("x", "y"), ("y", "z"), ("x", "z")]
+    )
     partition, codelength = generate.run_infomap(G, two_level=True, seed=1)
     assert set(partition) == set(G.nodes())
     assert all(isinstance(path, tuple) for path in partition.values())
@@ -687,13 +701,15 @@ def test_mixing_scale_is_monotone_and_routing_independent(routing: str) -> None:
     G, partition = directed_hierarchical()
     fractions = []
     for scale in (1.0, 1.5, 2.0, 3.0):
-        H, _ = as_graph_info(generate.benchmark(
-            G, partition, routing=routing, mixing_scale=scale,
-            rng=np.random.default_rng(7)))
+        H, _ = as_graph_info(
+            generate.benchmark(
+                G, partition, routing=routing, mixing_scale=scale, rng=np.random.default_rng(7)
+            )
+        )
         counts = arc_classes(H, partition)
         total = sum(counts.values())
         fractions.append((counts["within_super"] + counts["cross_super"]) / total)
-    pairs = list(zip(fractions, fractions[1:], strict=False))   # deliberately offset
+    pairs = list(zip(fractions, fractions[1:], strict=False))  # deliberately offset
     assert all(b > a for a, b in pairs), fractions
     assert fractions[0] < 0.3 < fractions[-1]
 
@@ -714,8 +730,9 @@ def test_two_level_samples_are_identical_across_routing_rules() -> None:
     undirected = {
         r: sorted(
             tuple(sorted(e))
-            for e in generate.benchmark(
-                G, partition, routing=r, rng=np.random.default_rng(42)).to_networkx().edges()
+            for e in generate.benchmark(G, partition, routing=r, rng=np.random.default_rng(42))
+            .to_networkx()
+            .edges()
         )
         for r in rules
     }
@@ -725,8 +742,11 @@ def test_two_level_samples_are_identical_across_routing_rules() -> None:
     D, hier = directed_hierarchical(per=20, subs=2, supers=3)
     two_level = {u: (path[0],) for u, path in hier.items()}
     directed = {
-        r: sorted(generate.benchmark(
-            D, two_level, routing=r, rng=np.random.default_rng(42)).to_networkx().edges())
+        r: sorted(
+            generate.benchmark(D, two_level, routing=r, rng=np.random.default_rng(42))
+            .to_networkx()
+            .edges()
+        )
         for r in rules
     }
     assert directed["observed"] == directed["boundary"] == directed["model"]
@@ -734,8 +754,11 @@ def test_two_level_samples_are_identical_across_routing_rules() -> None:
     # ... and with the hierarchy restored the rules must genuinely diverge, or the
     # measurement that chose between them would be meaningless
     deep = {
-        r: sorted(generate.benchmark(
-            D, hier, routing=r, rng=np.random.default_rng(42)).to_networkx().edges())
+        r: sorted(
+            generate.benchmark(D, hier, routing=r, rng=np.random.default_rng(42))
+            .to_networkx()
+            .edges()
+        )
         for r in rules
     }
     assert not (deep["observed"] == deep["boundary"] == deep["model"])
@@ -751,8 +774,8 @@ def test_partition_distances_match_the_dense_flow_models() -> None:
     """
     pytest.importorskip("numpy")
     G, partition = blueprint()
-    coarse = {u: partition[u] // 2 for u in G}                 # merge pairs of blocks
-    hier = {u: (partition[u] // 2, partition[u]) for u in G}    # two planted levels
+    coarse = {u: partition[u] // 2 for u in G}  # merge pairs of blocks
+    hier = {u: (partition[u] // 2, partition[u]) for u in G}  # two planted levels
 
     for A, B in ((partition, coarse), (hier, coarse), (hier, partition)):
         PA, _, _ = generate.flow_matrix(G, A)
@@ -760,7 +783,7 @@ def test_partition_distances_match_the_dense_flow_models() -> None:
         D, d_node = generate.gmd(G, A, B, element=True)
         assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
         p = generate.ModuleTree(G, A).p
-        assert sum(p[u] * d_node[u]**2 for u in G) == pytest.approx(D**2, abs=1e-12)
+        assert sum(p[u] * d_node[u] ** 2 for u in G) == pytest.approx(D**2, abs=1e-12)
         assert generate.gms(G, A, B) == pytest.approx(1.0 - D, abs=1e-15)
         assert 0.0 <= generate.agms(G, A, B) <= 1.0
 
@@ -781,10 +804,10 @@ def test_zero_flow_nodes_carry_no_weight() -> None:
     """
     nx = pytest.importorskip("networkx")
     G = nx.Graph([(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3), (2, 3)])
-    G.add_nodes_from([6, 7, 8])                      # no links, hence no flow
+    G.add_nodes_from([6, 7, 8])  # no links, hence no flow
     base = {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1}
-    shattered = {**base, 6: 2, 7: 3, 8: 4}           # each zero-flow node its own module
-    absorbed = {**base, 6: 0, 7: 0, 8: 0}            # all three swept into module 0
+    shattered = {**base, 6: 2, 7: 3, 8: 4}  # each zero-flow node its own module
+    absorbed = {**base, 6: 0, 7: 0, 8: 0}  # all three swept into module 0
 
     assert generate.gmd(G, shattered, absorbed) == 0.0
     assert generate.gms(G, shattered, absorbed) == 1.0
@@ -834,7 +857,7 @@ def test_sampler_places_every_stub_and_keeps_every_degree() -> None:
         )
         assert info["realized_E"] == G.number_of_edges()
         assert info["dropped_stubs"] == 0
-        assert all(H.degree(u) == G.degree(u) for u in G)          # per node, not just sorted
+        assert all(H.degree(u) == G.degree(u) for u in G)  # per node, not just sorted
         assert nx.number_of_selfloops(H) == 0
         assert module_edge_counts(H, partition) == module_edge_counts(G, partition)
 
@@ -845,14 +868,16 @@ def test_directed_sampler_places_every_stub_without_a_top_up() -> None:
     G, partition = hub_blueprint()
     D = nx.DiGraph()
     D.add_edges_from(G.edges())
-    D.add_edges_from((v, u) for u, v in G.edges() if (u + v) % 3 == 0)   # some reciprocal arcs
+    D.add_edges_from((v, u) for u, v in G.edges() if (u + v) % 3 == 0)  # some reciprocal arcs
     for seed in range(3):
         H, info = as_graph_info(
             generate.benchmark(D, partition, rng=np.random.default_rng(seed), connect=False)
         )
         assert info["realized_E"] == D.number_of_edges()
         assert info["dropped_out"] == 0 and info["dropped_in"] == 0
-        assert all(H.out_degree(u) == D.out_degree(u) and H.in_degree(u) == D.in_degree(u) for u in D)
+        assert all(
+            H.out_degree(u) == D.out_degree(u) and H.in_degree(u) == D.in_degree(u) for u in D
+        )
         assert module_edge_counts(H, partition) == module_edge_counts(D, partition)
 
 
@@ -860,7 +885,9 @@ def test_pair_stubs_respects_tags_and_never_duplicates() -> None:
     np = pytest.importorskip("numpy")
     flowgen, _ = generate._modules()
     rng = np.random.default_rng(3)
-    stubs = [(u, u) for u in range(6) for _ in range(3)] + [(6, 6)] * 6        # hub of 6 among 6 degree-3 nodes: 24 stubs, graphical
+    stubs = [(u, u) for u in range(6) for _ in range(3)] + [
+        (6, 6)
+    ] * 6  # hub of 6 among 6 degree-3 nodes: 24 stubs, graphical
     pairs, leftover = flowgen._pair_stubs(stubs, rng)
     assert not leftover
     seen = set()
@@ -874,30 +901,31 @@ def test_pair_stubs_respects_tags_and_never_duplicates() -> None:
 def test_raise_clustering_matches_the_blueprint_profile_and_keeps_invariants() -> None:
     np = pytest.importorskip("numpy")
     nx = pytest.importorskip("networkx")
-    G = nx.watts_strogatz_graph(200, 6, 0.1, seed=1)        # ring lattice: C ~ 0.45 at k = 6
-    partition = {u: u // 50 for u in G}                       # four ring segments as modules
+    G = nx.watts_strogatz_graph(200, 6, 0.1, seed=1)  # ring lattice: C ~ 0.45 at k = 6
+    partition = {u: u // 50 for u in G}  # four ring segments as modules
     H, _ = as_graph_info(generate.benchmark(G, partition, rng=np.random.default_rng(1)))
     flowgen, _ = generate._modules()
     Hc, info = flowgen.raise_clustering(H, partition, np.random.default_rng(1), blueprint=G)
     cb, c0, c1 = nx.clustering(G), nx.clustering(H), nx.clustering(Hc)
     err0 = sum(abs(cb[u] - c0[u]) for u in G) / len(G)
     err1 = sum(abs(cb[u] - c1[u]) for u in G) / len(G)
-    assert err1 < 0.5 * err0                                # the profile error at least halves
+    assert err1 < 0.5 * err0  # the profile error at least halves
     assert info["swaps"] > 0
     assert all(Hc.degree(u) == H.degree(u) for u in G)
     assert module_edge_counts(Hc, partition) == module_edge_counts(H, partition)
-    assert nx.is_connected(Hc) == nx.is_connected(H)       # no bridge was removed
+    assert nx.is_connected(Hc) == nx.is_connected(H)  # no bridge was removed
     assert nx.number_of_selfloops(Hc) == 0
 
 
 def test_raise_clustering_accepts_a_parametric_profile() -> None:
     np = pytest.importorskip("numpy")
-    nx = pytest.importorskip("networkx")
+    pytest.importorskip("networkx")
     G, partition = blueprint()
     H, _ = as_graph_info(generate.benchmark(G, partition, rng=np.random.default_rng(2)))
     flowgen, _ = generate._modules()
-    Hc, info = flowgen.raise_clustering(H, partition, np.random.default_rng(2),
-                                        targets=lambda k: 0.5)
+    Hc, info = flowgen.raise_clustering(
+        H, partition, np.random.default_rng(2), targets=lambda k: 0.5
+    )
     assert info["C_after"] > info["C_before"]
     assert all(Hc.degree(u) == H.degree(u) for u in G)
 
@@ -917,7 +945,7 @@ def test_memory_benchmark_overlaps_windows_at_order_three() -> None:
     order-3 Wikispeedia blueprint came out with 1731 of 1731 links pairing incompatible
     windows).  The type is the whole (m-1)-window.
     """
-    np = pytest.importorskip("numpy")
+    pytest.importorskip("numpy")
     # order-3 windows over a 4-node cycle: every 3-path along 0->1->2->3->0
     cyc = [0, 1, 2, 3]
     windows = {}
@@ -933,9 +961,9 @@ def test_memory_benchmark_overlaps_windows_at_order_three() -> None:
     sampled, info = net.links, net.info
     assert info["dropped_stubs"] == 0
     assert sampled, "no links realized"
-    for (a, b) in sampled:
+    for a, b in sampled:
         assert net.states[a][1:] == net.states[b][:-1], (a, b)
-    assert len(cyc) == 4                      # the fixture is the 4-cycle, unchanged
+    assert len(cyc) == 4  # the fixture is the 4-cycle, unchanged
 
 
 def test_parametric_runs_the_clustering_pass_from_a_fitted_profile() -> None:
@@ -948,7 +976,7 @@ def test_parametric_runs_the_clustering_pass_from_a_fitted_profile() -> None:
     dominated by its degree-2 nodes and can ask for *less* clustering than stub matching
     already produces.
     """
-    np = pytest.importorskip("numpy")
+    pytest.importorskip("numpy")
     nx = pytest.importorskip("networkx")
     pytest.importorskip("scipy")
     deg = generate.fit_families([4] * 60)
@@ -959,12 +987,11 @@ def test_parametric_runs_the_clustering_pass_from_a_fitted_profile() -> None:
     withc, _, info1 = as_graph_partition_info(
         generate.parametric(60, deg, size, mix, seed=4, clustering_fit=flat)
     )
-    assert "connect" in info0 and "connect" in info1        # repair on by default for both
+    assert "connect" in info0 and "connect" in info1  # repair on by default for both
     assert "clustering" not in info0 and info1["clustering"]["swaps"] > 0
     assert nx.average_clustering(withc) > nx.average_clustering(plain) + 0.1
     assert sorted(d for _, d in withc.degree()) == sorted(d for _, d in plain.degree())
-    assert (nx.number_connected_components(withc)
-            == nx.number_connected_components(plain) == 1)
+    assert nx.number_connected_components(withc) == nx.number_connected_components(plain) == 1
 
 
 def test_fit_clustering_profile_recovers_a_flat_profile() -> None:
@@ -972,7 +999,7 @@ def test_fit_clustering_profile_recovers_a_flat_profile() -> None:
     pytest.importorskip("numpy")
     nx = pytest.importorskip("networkx")
     G = nx.Graph()
-    for m in range(12):                                     # disjoint triangles: c = 1 everywhere
+    for m in range(12):  # disjoint triangles: c = 1 everywhere
         b = 3 * m
         G.add_edges_from([(b, b + 1), (b + 1, b + 2), (b, b + 2)])
     fit = generate.fit_clustering_profile(G)

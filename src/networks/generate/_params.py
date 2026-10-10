@@ -40,14 +40,17 @@ def infomap_full(G, two_level, trials, seed, directed):
     if directed:
         args += " --directed"
     import infomap as _infomap
+
     im = _infomap.Infomap(args)
     for u, v, w in G.edges(data="weight", default=1.0):
         im.add_link(int(u), int(v), float(w))
     im.run()
     part = {node.node_id: tuple(node.path[:-1]) for node in im.tree if node.is_leaf}
-    stats = dict(codelength=float(im.codelength),
-                 one_level_codelength=float(im.one_level_codelength),
-                 savings=float(im.relative_codelength_savings))
+    stats = dict(
+        codelength=float(im.codelength),
+        one_level_codelength=float(im.one_level_codelength),
+        savings=float(im.relative_codelength_savings),
+    )
     return part, stats
 
 
@@ -70,8 +73,7 @@ def fit_families(values, support_min=None):
     n, m = len(k), k.mean() if len(k) else 0.0
     out = {}
     if n < 3:
-        return {"winner": "insufficient", "n_values": n,
-                "support_min": support_min}
+        return {"winner": "insufficient", "n_values": n, "support_min": support_min}
 
     # Zipf: P(k) = k^-alpha / zeta(alpha)
     sum_log = np.log(k).sum()
@@ -80,8 +82,7 @@ def fit_families(values, support_min=None):
         return n * np.log(special.zeta(a)) + a * sum_log
 
     res = optimize.minimize_scalar(nll, bounds=(1.05, 8.0), method="bounded")
-    out["powerlaw"] = dict(params={"alpha": float(res.x)},
-                           loglik=float(-res.fun), n_params=1)
+    out["powerlaw"] = dict(params={"alpha": float(res.x)}, loglik=float(-res.fun), n_params=1)
 
     # Geometric on k>=1: P(k) = (1-p)^(k-1) p, MLE p = 1/mean
     p = 1.0 / m
@@ -95,9 +96,12 @@ def fit_families(values, support_min=None):
             return lam / (1.0 - math.exp(-lam)) - m
 
         lam = optimize.brentq(f, 1e-9, m)
-        ll = float((k * np.log(lam)).sum() - n * lam
-                   - special.gammaln(k + 1).sum()
-                   - n * np.log1p(-math.exp(-lam)))
+        ll = float(
+            (k * np.log(lam)).sum()
+            - n * lam
+            - special.gammaln(k + 1).sum()
+            - n * np.log1p(-math.exp(-lam))
+        )
         out["poisson"] = dict(params={"lam": lam}, loglik=ll, n_params=1)
 
     # Discretized log-normal (approximate MLE via moments of log k)
@@ -107,8 +111,9 @@ def fit_families(values, support_min=None):
     lo = stats.norm.cdf((np.log(np.maximum(k - 0.5, 0.25)) - mu_l) / s_l)
     norm = 1.0 - stats.norm.cdf((math.log(0.5) - mu_l) / s_l)
     probs = np.maximum((hi - lo) / norm, 1e-300)
-    out["lognormal"] = dict(params={"mu": mu_l, "sigma": s_l},
-                            loglik=float(np.log(probs).sum()), n_params=2)
+    out["lognormal"] = dict(
+        params={"mu": mu_l, "sigma": s_l}, loglik=float(np.log(probs).sum()), n_params=2
+    )
 
     aics = {f: 2 * d["n_params"] - 2 * d["loglik"] for f, d in out.items()}
     amin = min(aics.values())
@@ -135,8 +140,7 @@ def fit_mixing_beta(mixing, flows):
     conc = mean * (1 - mean) / var - 1.0
     if conc <= 0:
         return dict(family="delta", mu=mean, var=var)
-    return dict(family="beta", alpha=mean * conc, beta=(1 - mean) * conc,
-                mu=mean, var=var)
+    return dict(family="beta", alpha=mean * conc, beta=(1 - mean) * conc, mu=mean, var=var)
 
 
 def _draw_from_family(family, params, size, rng, support_min=1):
@@ -154,8 +158,9 @@ def _draw_from_family(family, params, size, rng, support_min=1):
             out[todo[ok]] = draw[ok]
             todo = todo[~ok]
     elif family == "lognormal":
-        out = np.maximum(np.rint(rng.lognormal(
-            params["mu"], params["sigma"], size=size)).astype(int), 1)
+        out = np.maximum(
+            np.rint(rng.lognormal(params["mu"], params["sigma"], size=size)).astype(int), 1
+        )
     else:
         raise ValueError(f"unknown family {family!r}")
     return out + (support_min - 1)
@@ -186,7 +191,7 @@ def fit_clustering_profile(G, min_degree=2):
             ks.append(float(k))
             cs.append(float(c))
     c_mean = float(np.mean(list(cl.values()))) if cl else 0.0
-    if len(ks) < 3:                       # nothing to fit: a flat profile at the mean
+    if len(ks) < 3:  # nothing to fit: a flat profile at the mean
         return dict(c0=c_mean, alpha=0.0, n_fit=len(ks), c_mean=c_mean)
     x = np.log(np.asarray(ks))
     y = np.log(np.asarray(cs))
@@ -207,9 +212,20 @@ def clustering_profile(fit):
     return c
 
 
-def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
-                       min_size=2, connect=True, k_mean=None, k_max=None,
-                       size_max=None, clustering_fit=None, clustering_kwargs=None):
+def sample_from_params(
+    n,
+    deg_fit,
+    size_fit,
+    mixing_fit,
+    rng,
+    min_size=2,
+    connect=True,
+    k_mean=None,
+    k_max=None,
+    size_max=None,
+    clustering_fit=None,
+    clustering_kwargs=None,
+):
     """Generate a two-level benchmark purely from fitted parameters -- the
     generalized-LFR generator.  Draw module sizes and degrees from their
     families, per-module mixing from the Beta (or delta), then stub-match
@@ -224,8 +240,9 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
     smin_s = size_fit.get("support_min", 1)
     sizes = []
     while sum(sizes) < n:
-        s = int(_draw_from_family(size_fit["family"], size_fit["params"],
-                                  1, rng, support_min=smin_s)[0])
+        s = int(
+            _draw_from_family(size_fit["family"], size_fit["params"], 1, rng, support_min=smin_s)[0]
+        )
         s = max(s, min_size)
         if size_max is not None:
             s = min(s, int(size_max))
@@ -242,8 +259,9 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
     n_real = node
 
     # degrees: draw, rescale to the target mean, cap
-    k = _draw_from_family(deg_fit["family"], deg_fit["params"], n_real, rng,
-                          support_min=deg_fit.get("support_min", 1)).astype(float)
+    k = _draw_from_family(
+        deg_fit["family"], deg_fit["params"], n_real, rng, support_min=deg_fit.get("support_min", 1)
+    ).astype(float)
     if k_mean is not None and k.mean() > 0:
         k *= k_mean / k.mean()
     k = np.maximum(np.rint(k).astype(int), 1)
@@ -268,18 +286,20 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
         pairs, leftover = fg._pair_stubs(stubs, rng)
         edges.extend((a[0], b[0]) for a, b in pairs)
         pool.extend((u, (mod,)) for (u, _t) in leftover)
-        pool.extend((u, (mod,)) for u, ki, ii in zip(members, ks, ints)
-                    for _ in range(int(ki - ii)))
+        pool.extend(
+            (u, (mod,)) for u, ki, ii in zip(members, ks, ints) for _ in range(int(ki - ii))
+        )
     pairs, leftover = fg._pair_stubs(pool, rng)
     edges.extend((a[0], b[0]) for a, b in pairs)
 
     H = nx.Graph()
     H.add_nodes_from(range(n_real))
     H.add_edges_from(edges)
-    info = dict(n=n_real, realized_E=H.number_of_edges(),
-                dropped_stubs=len(leftover), n_modules=len(sizes))
+    info = dict(
+        n=n_real, realized_E=H.number_of_edges(), dropped_stubs=len(leftover), n_modules=len(sizes)
+    )
     if connect:
-        H, rep = fg.connect_components(H, rng, partition=partition)   # module-aware repair
+        H, rep = fg.connect_components(H, rng, partition=partition)  # module-aware repair
         info["connect"] = rep
     if clustering_fit is not None:
         # The same pass the blueprint sampler runs, driven by the fitted profile c(k)
@@ -287,9 +307,13 @@ def sample_from_params(n, deg_fit, size_fit, mixing_fit, rng,
         # the case c == 0.  It preserves every degree, every module's internal and
         # boundary link counts and connectivity, so the components repaired above stay
         # repaired.
-        H, cinfo = fg.raise_clustering(H, partition, rng,
-                                       targets=clustering_profile(clustering_fit),
-                                       **(clustering_kwargs or {}))
+        H, cinfo = fg.raise_clustering(
+            H,
+            partition,
+            rng,
+            targets=clustering_profile(clustering_fit),
+            **(clustering_kwargs or {}),
+        )
         info["clustering"] = cinfo
     return H, partition, info
 
@@ -311,8 +335,7 @@ def flow_edge_weights(U, partition, H):
         return memo[(A, B)]
 
     W = sum(w for _, _, w in U.edges(data="weight", default=1.0))
-    raw = {(u, v): tree.p[u] * tree.p[v] * R(paths[u], paths[v])
-           for u, v in H.edges()}
+    raw = {(u, v): tree.p[u] * tree.p[v] * R(paths[u], paths[v]) for u, v in H.edges()}
     positive = [w for w in raw.values() if w > 0]
     floor = min(positive) / 10.0 if positive else 1.0
     raw = {e: max(w, floor) for e, w in raw.items()}

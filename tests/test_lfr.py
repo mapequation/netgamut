@@ -83,7 +83,14 @@ def test_flags_are_encoded_the_way_the_programs_read_them() -> None:
     accidental ``-minc None`` is an error rather than a default.
     """
     assert _lfr._flags(N=1000, k=15.0, maxk=50, minc=None, on=0) == [
-        "-N", "1000", "-k", "15", "-maxk", "50", "-on", "0",
+        "-N",
+        "1000",
+        "-k",
+        "15",
+        "-maxk",
+        "50",
+        "-on",
+        "0",
     ]
     assert _lfr._flags(mu=0.1 + 0.2) == ["-mu", "0.30000000000000004"]
     assert _lfr._flags(sup=True, inf=False) == ["-sup"]
@@ -158,8 +165,12 @@ def test_the_pinned_upstream_revision_is_recorded() -> None:
     assert _lfr.COMMIT == "ec9a860282d8fc9d52e9e08fea9ce93ddeb473af"
     assert _lfr.URL.endswith(f"{_lfr.COMMIT}.tar.gz")
     assert set(_lfr.VARIANTS) == {
-        "undirected", "weighted", "directed", "weighted_directed",
-        "hierarchical", "multiplex",
+        "undirected",
+        "weighted",
+        "directed",
+        "weighted_directed",
+        "hierarchical",
+        "multiplex",
     }
 
 
@@ -187,9 +198,7 @@ def test_the_pin_is_visible_without_fetching_anything(
     assert f"{_lfr.COMMIT[:12]}" in str(source)
 
 
-def test_an_override_is_reported_as_such(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_an_override_is_reported_as_such(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """``NETWORKS_LFR_DIR`` wins over the pin, and the report says which is in force."""
     monkeypatch.setenv("NETWORKS_LFR_DIR", str(tmp_path))
     source = generate.lfr_source()
@@ -297,8 +306,16 @@ def test_the_hierarchical_variant_returns_nested_paths() -> None:
     numpy = pytest.importorskip("numpy")
     compiler_or_skip()
     net = generate.lfr(
-        600, 20, 50, mu1=0.1, mu2=0.3, minc=10, maxc=50,
-        min_macro=100, max_macro=300, seed=1,
+        600,
+        20,
+        50,
+        mu1=0.1,
+        mu2=0.3,
+        minc=10,
+        maxc=50,
+        min_macro=100,
+        max_macro=300,
+        seed=1,
     )
     G, partition = net.to_networkx(), net.partition
     assert {len(path) for path in partition.values()} == {2}
@@ -326,9 +343,7 @@ def test_the_multiplex_variant_returns_layers_and_a_state_partition() -> None:
     """
     pytest.importorskip("networkx")
     compiler_or_skip()
-    net = generate.lfr(
-        150, 10, 25, mu=0.2, minc=20, maxc=40, layers=2, graphs=2, seed=1
-    )
+    net = generate.lfr(150, 10, 25, mu=0.2, minc=20, maxc=40, layers=2, graphs=2, seed=1)
     assert isinstance(net, MultilayerNetwork)
     layers = {i: net.to_networkx(layer=i) for i in net.layers}
     partition = net.partition

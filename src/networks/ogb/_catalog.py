@@ -114,7 +114,8 @@ def _parse_master(family: str, text: str) -> list[Dataset]:
                 description=DESCRIPTIONS.get(name, ""),
                 # OGB adds the reverse of every stored edge exactly when undirected.
                 directed=value("add_inverse_edge", column).lower() != "true",
-                num_classes=int(classes) if classes.lstrip("-").isdigit() and classes != "-1"
+                num_classes=int(classes)
+                if classes.lstrip("-").isdigit() and classes != "-1"
                 else None,
                 task_type=value("task type", column),
                 download_name=value("download_name", column),
@@ -145,8 +146,9 @@ def build_catalog(*, timeout: float = 60.0) -> Catalog:
     """Read OGB's ``master.csv`` files and build a fresh catalog."""
     datasets: list[Dataset] = []
     for family in FAMILIES:
-        datasets.extend(_parse_master(family, fetch_text(MASTER_URL.format(family=family),
-                                                         timeout=timeout)))
+        datasets.extend(
+            _parse_master(family, fetch_text(MASTER_URL.format(family=family), timeout=timeout))
+        )
     return Catalog(
         datasets=tuple(sorted(datasets, key=lambda d: d.name)),
         retrieved=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

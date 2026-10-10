@@ -121,8 +121,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\nRefusing to pin {target[:12]}: the archive is missing", file=sys.stderr)
         for path in missing:
             print(f"  {path}", file=sys.stderr)
-        print("Upstream may have reorganised; update REQUIRED and the variant table "
-              "in _sources.py together.", file=sys.stderr)
+        print(
+            "Upstream may have reorganised; update REQUIRED and the variant table "
+            "in _sources.py together.",
+            file=sys.stderr,
+        )
         return 2
 
     if args.check:
@@ -132,8 +135,10 @@ def main(argv: list[str] | None = None) -> int:
     rewrite_pin(target, digest)
     print(f"\nPinned {target[:12]}, sha256 {digest[:12]}...")
     print(f"Rewrote {PINFILE.relative_to(ROOT)} (was {pinned[:12]}/{pinned_sha[:12]}...).")
-    print("The generators are random: run `pytest tests/test_lfr.py` and note in the "
-          "commit that seeds may now give different networks.")
+    print(
+        "The generators are random: run `pytest tests/test_lfr.py` and note in the "
+        "commit that seeds may now give different networks."
+    )
     return 0
 
 

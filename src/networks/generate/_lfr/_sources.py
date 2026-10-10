@@ -36,8 +36,14 @@ from ..._core.cache import cache_dir, file_lock, read_sidecar
 from ..._core.download import DownloadError, download
 
 __all__ = [
-    "COMMIT", "REPOSITORY", "SHA256", "URL", "VARIANTS", "Variant",
-    "sources_dir", "variant_dir",
+    "COMMIT",
+    "REPOSITORY",
+    "SHA256",
+    "URL",
+    "VARIANTS",
+    "Variant",
+    "sources_dir",
+    "variant_dir",
 ]
 
 #: The pinned upstream revision. Bumping it is a deliberate change: the generators are
@@ -87,18 +93,66 @@ _MULTI = ("network_layer_0", "community_layer_0")
 VARIANTS: dict[str, Variant] = {
     v.key: v
     for v in (
-        Variant("undirected", "unweighted_undirected", "Sources/benchm.cpp",
-                False, False, False, False, _FLAT),
-        Variant("weighted", "weighted_undirected", "Sources/benchm.cpp",
-                False, True, False, False, _FLAT),
-        Variant("directed", "unweighted_directed", "Sources/benchm.cpp",
-                True, False, False, False, _FLAT),
-        Variant("weighted_directed", "weighted_directed", "Sources/benchm.cpp",
-                True, True, False, False, _FLAT),
-        Variant("hierarchical", "hierarchical", "hier_ben_Sources/benchm.cpp",
-                False, False, True, False, _HIER),
-        Variant("multiplex", "MultiplexNMI-Benchmark/MultiplexBenchmark", "Sources/benchm.cpp",
-                False, False, False, True, _MULTI),
+        Variant(
+            "undirected",
+            "unweighted_undirected",
+            "Sources/benchm.cpp",
+            False,
+            False,
+            False,
+            False,
+            _FLAT,
+        ),
+        Variant(
+            "weighted",
+            "weighted_undirected",
+            "Sources/benchm.cpp",
+            False,
+            True,
+            False,
+            False,
+            _FLAT,
+        ),
+        Variant(
+            "directed",
+            "unweighted_directed",
+            "Sources/benchm.cpp",
+            True,
+            False,
+            False,
+            False,
+            _FLAT,
+        ),
+        Variant(
+            "weighted_directed",
+            "weighted_directed",
+            "Sources/benchm.cpp",
+            True,
+            True,
+            False,
+            False,
+            _FLAT,
+        ),
+        Variant(
+            "hierarchical",
+            "hierarchical",
+            "hier_ben_Sources/benchm.cpp",
+            False,
+            False,
+            True,
+            False,
+            _HIER,
+        ),
+        Variant(
+            "multiplex",
+            "MultiplexNMI-Benchmark/MultiplexBenchmark",
+            "Sources/benchm.cpp",
+            False,
+            False,
+            False,
+            True,
+            _MULTI,
+        ),
     )
 }
 
