@@ -20,6 +20,7 @@ from __future__ import annotations
 import errno
 import json
 import os
+import sys
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -195,13 +196,43 @@ def _lock_is_stale(lock_path: Path) -> bool:
         return False  # just created and not yet written, or unreadable
     if pid <= 0:
         return False
+    return not _process_alive(pid)
+
+
+def _process_alive(pid: int) -> bool:
+    """Whether a process with this pid runs on this machine; True when unsure."""
+    if sys.platform == "win32":
+        # os.kill(pid, 0) is not a probe on Windows: signal 0 is CTRL_C_EVENT,
+        # which would interrupt a live owner and fails for a dead one with an
+        # error that does not say "no such process".
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel32.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+        kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+        process_query_limited_information, still_active, error_invalid_parameter = 0x1000, 259, 87
+        handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+        if not handle:
+            # No such pid; any other failure (access denied) means it exists.
+            return ctypes.get_last_error() != error_invalid_parameter
+        try:
+            code = wintypes.DWORD()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(code)):
+                return True
+            # An exited process stays openable while anyone holds a handle to it.
+            return code.value == still_active
+        finally:
+            kernel32.CloseHandle(handle)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
-        return True
+        return False
     except OSError:
-        return False  # e.g. EPERM: alive but owned by someone else
-    return False
+        return True  # e.g. EPERM: alive but owned by someone else
+    return True
 
 
 @dataclass(frozen=True, slots=True)
