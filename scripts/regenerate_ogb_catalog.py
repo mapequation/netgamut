@@ -3,7 +3,7 @@
 
 Reads the ``master.csv`` files that OGB maintains as its dataset registry --
 ``ogb/nodeproppred/master.csv`` and ``ogb/linkproppred/master.csv`` -- and writes
-``src/networks/ogb/catalog.json``, which is what the installed package uses so that
+``src/netgamut/ogb/catalog.json``, which is what the installed package uses so that
 metadata lookups need no network::
 
     python scripts/regenerate_ogb_catalog.py
@@ -32,10 +32,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks.ogb import _catalog as ogb_catalog  # noqa: E402
-from networks.ogb._models import DOMAIN_MAP  # noqa: E402
+from netgamut.ogb import _catalog as ogb_catalog  # noqa: E402
+from netgamut.ogb._models import DOMAIN_MAP  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "ogb" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "ogb" / "catalog.json"
 
 #: Below this, the registry is not something we should ship.
 MIN_DATASETS = 10
@@ -47,7 +47,7 @@ def fill_stats(catalog: ogb_catalog.Catalog, *, max_bytes: int | None) -> ogb_ca
     import gzip
     import zipfile
 
-    from networks import ogb
+    from netgamut import ogb
 
     filled = []
     for dataset in catalog.datasets:
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
             f"\nRefusing to write: no domain assigned for {', '.join(unmapped)}.", file=sys.stderr
         )
         print(
-            "Add them to DOMAIN_MAP and DESCRIPTIONS in src/networks/ogb/_models.py.",
+            "Add them to DOMAIN_MAP and DESCRIPTIONS in src/netgamut/ogb/_models.py.",
             file=sys.stderr,
         )
         return 2

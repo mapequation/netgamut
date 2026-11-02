@@ -1,4 +1,4 @@
-"""The paths -> state network conversion in networks._core.state_network."""
+"""The paths -> state network conversion in netgamut._core.state_network."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from networks import StateNetwork
+from netgamut import StateNetwork
 
 
 def test_trigrams_become_state_links() -> None:

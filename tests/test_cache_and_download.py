@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from networks._core import cache as _cache
-from networks._core import download as _download
+from netgamut._core import cache as _cache
+from netgamut._core import download as _download
 
 
 # -- location -------------------------------------------------------------
@@ -25,6 +25,48 @@ def test_set_cache_dir_overrides_the_environment(tmp_path: Path) -> None:
         assert _cache.cache_dir() == elsewhere
     finally:
         _cache.set_cache_dir(None)
+
+
+@pytest.fixture
+def default_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Resolve the default (no environment, no override) cache inside tmp_path."""
+    monkeypatch.delenv(_cache.CACHE_ENV_VAR, raising=False)
+    monkeypatch.setattr(_cache, "_override", None)
+    monkeypatch.setattr(_cache, "user_cache_dir", lambda app, author: str(tmp_path / app))
+    return tmp_path
+
+
+def test_the_cache_under_the_old_name_is_moved(default_cache: Path) -> None:
+    legacy = default_cache / "networks" / "snap" / "files" / "ca-GrQc"
+    legacy.mkdir(parents=True)
+    (legacy / "ca-GrQc.txt").write_text("1 2\n")
+
+    root = _cache.cache_dir()
+
+    assert root == default_cache / "netgamut"
+    assert (root / "snap" / "files" / "ca-GrQc" / "ca-GrQc.txt").read_text() == "1 2\n"
+    assert not (default_cache / "networks").exists()
+
+
+def test_a_foreign_networks_directory_is_left_alone(default_cache: Path) -> None:
+    (default_cache / "networks" / "unrelated").mkdir(parents=True)
+
+    root = _cache.cache_dir()
+
+    assert root == default_cache / "netgamut"
+    assert (default_cache / "networks" / "unrelated").is_dir()
+    assert not any(root.iterdir())
+
+
+def test_an_existing_new_cache_is_not_replaced(default_cache: Path) -> None:
+    (default_cache / "networks" / "snap").mkdir(parents=True)
+    (default_cache / "netgamut" / "konect").mkdir(parents=True)
+
+    root = _cache.cache_dir()
+
+    assert (root / "konect").is_dir()
+    assert not (root / "snap").exists()
+    assert (default_cache / "networks" / "snap").is_dir()
 
 
 def test_cache_is_shared_not_per_project(isolated_cache: Path) -> None:

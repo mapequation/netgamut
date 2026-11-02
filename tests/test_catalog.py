@@ -6,10 +6,10 @@ import json
 
 import pytest
 
-from networks import snap
-from networks._core.models import DataFile
-from networks.snap._catalog import Catalog, load_catalog
-from networks.snap._models import Category, Dataset
+from netgamut import snap
+from netgamut._core.models import DataFile
+from netgamut.snap._catalog import Catalog, load_catalog
+from netgamut.snap._models import Category, Dataset
 
 
 def build(*datasets: Dataset, categories: tuple[Category, ...] = ()) -> Catalog:

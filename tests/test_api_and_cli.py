@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from networks import __main__ as cli
-from networks import snap
-from networks._core import download as _download
+from netgamut import __main__ as cli
+from netgamut import snap
+from netgamut._core import download as _download
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ def test_really_downloads_a_small_dataset() -> None:
 @pytest.mark.network
 def test_live_index_still_parses() -> None:
     """Fails loudly if SNAP redesigns its markup."""
-    from networks.snap._scrape import INDEX_URL, SNAP_BASE_URL, parse_index
+    from netgamut.snap._scrape import INDEX_URL, SNAP_BASE_URL, parse_index
 
     categories, datasets = parse_index(_download.fetch_text(INDEX_URL), SNAP_BASE_URL)
     assert len(categories) >= 20

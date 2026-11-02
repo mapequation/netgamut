@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from networks import InMemoryNetwork, MultilayerNetwork, StateNetwork
-from networks._core import formats
-from networks._core.columns import Columns
-from networks._core.models import DataFile
-from networks._core.network import Network
-from networks.snap._models import Dataset
+from netgamut import InMemoryNetwork, MultilayerNetwork, StateNetwork
+from netgamut._core import formats
+from netgamut._core.columns import Columns
+from netgamut._core.models import DataFile
+from netgamut._core.network import Network
+from netgamut.snap._models import Dataset
 
 
 def make_network(
@@ -330,7 +330,7 @@ def test_state_network_to_networkx_names_states() -> None:
 
 def test_multilayer_gm_is_reproducible_and_named() -> None:
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     a = generate.multilayer_gm(60, 3, p=0.8, mu=0.2, k_min=3, k_max=20, seed=4)
     b = generate.multilayer_gm(60, 3, p=0.8, mu=0.2, k_min=3, k_max=20, seed=4)
@@ -346,7 +346,7 @@ def test_multilayer_gm_is_reproducible_and_named() -> None:
 
 def test_multilayer_gm_reuses_a_partition_and_checks_its_shape() -> None:
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     net = generate.multilayer_gm(40, 2, p=0.5, seed=1)
     again = generate.multilayer_gm(40, 2, p=0.5, mu=0.5, partition=net.partition, seed=2)
@@ -360,7 +360,7 @@ def test_multilayer_gm_reuses_a_partition_and_checks_its_shape() -> None:
 
 def test_multilayer_gm_temporal_takes_per_layer_probabilities() -> None:
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     net = generate.multilayer_gm(30, 4, p=[0.9, 0.5, 0.1], coupling="temporal", seed=1)
     assert net.name == "mlgm-temporal-n30-L4-mu0.1-seed1"
@@ -369,7 +369,7 @@ def test_multilayer_gm_temporal_takes_per_layer_probabilities() -> None:
 
 def test_memory_benchmark_returns_a_state_network_with_its_partition() -> None:
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     paths = [["a", "b", "c", "a", "b", "d"], ["c", "b", "d", "b", "c"]] * 5
     blueprint = StateNetwork.from_paths(paths)
@@ -386,7 +386,7 @@ def test_memory_benchmark_returns_a_state_network_with_its_partition() -> None:
 
 def test_first_order_memory_benchmark_keys_its_partition_like_its_files() -> None:
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     net = generate.memory_benchmark(
         {(10, 11): 1.0, (11, 12): 1.0, (12, 10): 1.0, (11, 10): 1.0},
@@ -402,7 +402,7 @@ def test_first_order_memory_benchmark_keys_its_partition_like_its_files() -> Non
 def test_multinomial_benchmark_keeps_the_blueprint_labels() -> None:
     nx = pytest.importorskip("networkx")
     np = pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     G = nx.relabel_nodes(nx.karate_club_graph(), {i: f"n{i}" for i in range(34)})
     partition = {u: (0,) if G.nodes[u]["club"] == "Mr. Hi" else (1,) for u in G}
@@ -417,7 +417,7 @@ def test_multinomial_benchmark_keeps_the_blueprint_labels() -> None:
 def test_multilayer_benchmark_reports_the_partition_it_planted() -> None:
     nx = pytest.importorskip("networkx")
     pytest.importorskip("numpy")
-    from networks import generate
+    from netgamut import generate
 
     K = nx.karate_club_graph()
     layers = {0: K, 1: K.copy()}

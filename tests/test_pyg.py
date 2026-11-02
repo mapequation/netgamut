@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from networks import pyg
-from networks.pyg import _scrape
+from netgamut import pyg
+from netgamut.pyg import _scrape
 
 SINGLE = '''
 class Planetoid(InMemoryDataset):
@@ -322,8 +322,8 @@ def test_reloading_a_materialised_dataset_never_imports_torch() -> None:
 
     pyg.load("KarateClub")  # make sure it is materialised
     code = (
-        "import sys, networks;"
-        "net = networks.load('KarateClub', source='pyg');"
+        "import sys, netgamut;"
+        "net = netgamut.load('KarateClub', source='pyg');"
         "assert net.nodes().partition('label');"
         "assert 'torch' not in sys.modules, 'torch was imported on reload';"
         "assert 'torch_geometric' not in sys.modules;"

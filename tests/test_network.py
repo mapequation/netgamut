@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from networks._core.models import DataFile
-from networks._core.network import Network
-from networks.snap._models import Dataset
+from netgamut._core.models import DataFile
+from netgamut._core.network import Network
+from netgamut.snap._models import Dataset
 
 
 def make_network(path: Path, *, type_: str | None = "Undirected", name: str = "toy") -> Network:

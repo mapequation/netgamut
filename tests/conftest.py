@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 
-from networks._core import cache as _cache
-from networks.ahorn import _catalog as _ahorn_catalog
-from networks.konect import _catalog as _konect_catalog
-from networks.netzschleuder import _catalog as _nz_catalog
-from networks.paths import _catalog as _paths_catalog
-from networks.snap import _catalog
+from netgamut._core import cache as _cache
+from netgamut.ahorn import _catalog as _ahorn_catalog
+from netgamut.konect import _catalog as _konect_catalog
+from netgamut.netzschleuder import _catalog as _nz_catalog
+from netgamut.paths import _catalog as _paths_catalog
+from netgamut.snap import _catalog
 
 INDEX_HTML = """
 <html><body>

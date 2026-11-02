@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Renamed to netgamut
+
+The package, its import name, its command and its repository are now all
+`netgamut`. Nothing else changed, so migrating is a search and replace:
+
+| Before | Now |
+| --- | --- |
+| `pip install mapequation-networks` | `pip install netgamut` |
+| `import networks`, `from networks.snap import ...` | `import netgamut`, `from netgamut.snap import ...` |
+| `networks list ...` on the command line | `netgamut list ...` |
+| `NETWORKS_CACHE_DIR`, `NETWORKS_LFR_DIR` | `NETGAMUT_CACHE_DIR`, `NETGAMUT_LFR_DIR` |
+| `github.com/mapequation/networks` | `github.com/mapequation/netgamut` |
+
+The default cache moves from `.../networks` to `.../netgamut` the first time
+the new package uses it, so no dataset is downloaded again. A cache you
+pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
+`NETGAMUT_CACHE_DIR` to the same path to keep using it.
+
+### Added
+
 - `generate.overlapping_memory_benchmark`: second-order memory networks with
   communities that overlap on the physical nodes and are disjoint on the states,
   from Andrea Lancichinetti's trigram sampler, seeded. Returns a `StateNetwork`

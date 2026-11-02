@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from networks import netzschleuder as nz
-from networks._core.domains import DOMAINS
-from networks.netzschleuder._catalog import Catalog, load_catalog
-from networks.netzschleuder._models import Dataset
+from netgamut import netzschleuder as nz
+from netgamut._core.domains import DOMAINS
+from netgamut.netzschleuder._catalog import Catalog, load_catalog
+from netgamut.netzschleuder._models import Dataset
 
 
 def make(name: str = "toy", **overrides) -> Dataset:
@@ -179,8 +179,8 @@ def test_live_api_still_matches_the_vendored_shape() -> None:
     """Fails loudly if Netzschleuder changes its API."""
     import json
 
-    from networks._core.download import fetch_text
-    from networks.netzschleuder._catalog import API_URL
+    from netgamut._core.download import fetch_text
+    from netgamut.netzschleuder._catalog import API_URL
 
     names = json.loads(fetch_text(f"{API_URL}/nets"))
     assert len(names) >= 250

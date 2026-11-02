@@ -20,9 +20,9 @@ from typing import Any
 
 import pytest
 
-from networks import MultilayerNetwork, generate
-from networks.generate import _lfr
-from networks.generate._lfr import _io
+from netgamut import MultilayerNetwork, generate
+from netgamut.generate import _lfr
+from netgamut.generate._lfr import _io
 
 
 # ---------------------------------------------------------------------------- #
@@ -182,9 +182,9 @@ def test_the_pin_is_visible_without_fetching_anything(
     Pointed at an empty cache it reports "not fetched" rather than fetching, which is
     what makes it safe to call from a notebook header or a CI summary.
     """
-    monkeypatch.setenv("NETWORKS_CACHE_DIR", str(tmp_path))
-    monkeypatch.delenv("NETWORKS_LFR_DIR", raising=False)
-    from networks._core import cache
+    monkeypatch.setenv("NETGAMUT_CACHE_DIR", str(tmp_path))
+    monkeypatch.delenv("NETGAMUT_LFR_DIR", raising=False)
+    from netgamut._core import cache
 
     monkeypatch.setattr(cache, "_override", None)
 
@@ -199,20 +199,20 @@ def test_the_pin_is_visible_without_fetching_anything(
 
 
 def test_an_override_is_reported_as_such(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """``NETWORKS_LFR_DIR`` wins over the pin, and the report says which is in force."""
-    monkeypatch.setenv("NETWORKS_LFR_DIR", str(tmp_path))
+    """``NETGAMUT_LFR_DIR`` wins over the pin, and the report says which is in force."""
+    monkeypatch.setenv("NETGAMUT_LFR_DIR", str(tmp_path))
     source = generate.lfr_source()
     assert source.overridden is True
     assert source.directory == tmp_path
     assert source.fetched is True  # the directory exists, whatever is in it
-    assert "NETWORKS_LFR_DIR" in str(source)
+    assert "NETGAMUT_LFR_DIR" in str(source)
 
 
 # ---------------------------------------------------------------------------- #
 # The generators themselves
 # ---------------------------------------------------------------------------- #
 def compiler_or_skip() -> None:
-    from networks.generate._lfr._build import CompilerNotFound, compiler
+    from netgamut.generate._lfr._build import CompilerNotFound, compiler
 
     try:
         compiler()

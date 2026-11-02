@@ -2,7 +2,7 @@
 """Rebuild the vendored SNAP catalog.
 
 Scrapes snap.stanford.edu -- the index page plus every dataset's detail page --
-and writes the result to ``src/networks/snap/catalog.json``. That file is what
+and writes the result to ``src/netgamut/snap/catalog.json``. That file is what
 the installed package reads, which is why metadata lookups need no network.
 
 Run it after SNAP publishes new datasets:
@@ -25,9 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks.snap._catalog import build_catalog  # noqa: E402
+from netgamut.snap._catalog import build_catalog  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "snap" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "snap" / "catalog.json"
 
 # Floors, not exact counts: the point is to catch a scrape that broke, not to
 # pin the collection's current size.
@@ -71,7 +71,7 @@ def main() -> int:
         print("\nRefusing to write, the scrape looks wrong:", file=sys.stderr)
         for problem in problems:
             print(f"  - {problem}", file=sys.stderr)
-        print("SNAP may have changed its markup; check networks/snap/_scrape.py.", file=sys.stderr)
+        print("SNAP may have changed its markup; check netgamut/snap/_scrape.py.", file=sys.stderr)
         return 1
 
     payload = catalog.to_dict()

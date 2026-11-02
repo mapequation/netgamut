@@ -4,7 +4,7 @@
 Reads the dataset records from the repository behind ahorn.rwth-aachen.de --
 one ``src/datasets/<slug>.mdx`` per dataset, YAML frontmatter -- plus the site
 index for per-revision file sizes, and writes
-``src/networks/ahorn/catalog.json``. That file is what the installed package
+``src/netgamut/ahorn/catalog.json``. That file is what the installed package
 reads, which is why metadata lookups need no network.
 
 Run it after AHORN publishes new datasets or revisions:
@@ -29,9 +29,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks.ahorn._catalog import build_catalog  # noqa: E402
+from netgamut.ahorn._catalog import build_catalog  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "ahorn" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "ahorn" / "catalog.json"
 
 # Floors, not exact counts: the point is to catch a build that broke, not to pin
 # the collection's current size. AHORN held 83 datasets at the time of its

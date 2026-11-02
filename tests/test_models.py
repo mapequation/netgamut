@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from networks._core.models import DataFile
-from networks.snap._models import Category, Dataset
-from networks.snap._scrape import parse_dataset_page, parse_index
+from netgamut._core.models import DataFile
+from netgamut.snap._models import Category, Dataset
+from netgamut.snap._scrape import parse_dataset_page, parse_index
 
 BASE = "https://snap.stanford.edu/data/"
 

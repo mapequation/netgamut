@@ -15,12 +15,12 @@ from pathlib import Path
 
 import pytest
 
-from networks import ahorn
-from networks._core.domains import domains_for_ahorn
-from networks._core.hypergraph import Hypergraph
-from networks._core.models import DataFile
-from networks.ahorn._catalog import Catalog, load_catalog
-from networks.ahorn._models import Dataset, Revision
+from netgamut import ahorn
+from netgamut._core.domains import domains_for_ahorn
+from netgamut._core.hypergraph import Hypergraph
+from netgamut._core.models import DataFile
+from netgamut.ahorn._catalog import Catalog, load_catalog
+from netgamut.ahorn._models import Dataset, Revision
 
 # The reserved keys are spelled the way every published file spells them:
 # underscore-prefixed, from format version 0.2. The specification documents 0.3
@@ -339,17 +339,17 @@ def test_is_cached_is_false_for_an_unknown_dataset() -> None:
 
 # -- registration ---------------------------------------------------------
 def test_ahorn_is_a_source_of_the_top_level_package() -> None:
-    import networks
+    import netgamut
 
-    assert "ahorn" in networks.sources()
-    assert networks.search(source="ahorn", max_nodes=100)
+    assert "ahorn" in netgamut.sources()
+    assert netgamut.search(source="ahorn", max_nodes=100)
 
 
 # -- live ----------------------------------------------------------------
 @pytest.mark.network
 def test_building_the_catalog_matches_the_bundled_one() -> None:
     pytest.importorskip("yaml")
-    from networks.ahorn._catalog import build_catalog
+    from netgamut.ahorn._catalog import build_catalog
 
     fresh = build_catalog(sizes=False)
     bundled = load_catalog()

@@ -3,7 +3,7 @@
 
 Reads ``torch_geometric/datasets/*.py`` from GitHub and parses the statistics tables
 PyG keeps in its class docstrings -- the same source its documentation cheatsheet is
-generated from -- and writes ``src/networks/pyg/catalog.json``::
+generated from -- and writes ``src/netgamut/pyg/catalog.json``::
 
     python scripts/regenerate_pyg_catalog.py
     python scripts/regenerate_pyg_catalog.py --show-omitted
@@ -22,7 +22,7 @@ opt-in and keeps whatever a previous run established for datasets it cannot reac
 Only single-graph datasets are catalogued. A class whose statistics table reports more
 than one graph per dataset is a collection -- thousands of molecules or meshes -- and
 cannot be one :class:`Network`. A class with no statistics table at all is catalogued
-only if ``DOMAIN_MAP`` in ``src/networks/pyg/_models.py`` vouches for it, since
+only if ``DOMAIN_MAP`` in ``src/netgamut/pyg/_models.py`` vouches for it, since
 otherwise there is no way to tell the two apart.
 
 Exits non-zero if the result looks implausible, so a PyG reorganisation fails the job
@@ -41,9 +41,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks.pyg import _catalog as pyg_catalog  # noqa: E402
+from netgamut.pyg import _catalog as pyg_catalog  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "pyg" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "pyg" / "catalog.json"
 
 #: Below this, PyG has been reorganised and the parse has failed.
 MIN_DATASETS = 40
@@ -58,7 +58,7 @@ def fill_direction(catalog: pyg_catalog.Catalog, *, max_edges: int | None) -> py
     """
     import dataclasses
 
-    from networks import pyg
+    from netgamut import pyg
 
     # The cap can only act on sizes PyG publishes. A dataset with no published size is
     # attempted whatever its true size, because that is the thing being measured -- so
@@ -187,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
             f"\n{len(unmapped)} classes have no domain and will not match domain "
             f"queries:\n  {', '.join(unmapped)}"
         )
-        print("Add them to DOMAIN_MAP in src/networks/pyg/_models.py.")
+        print("Add them to DOMAIN_MAP in src/netgamut/pyg/_models.py.")
 
     unsized = sum(1 for d in catalog.datasets if d.nodes is None)
     unknown = sum(1 for d in catalog.datasets if d.directed is None)

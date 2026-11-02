@@ -2,7 +2,7 @@
 """Rebuild the vendored KONECT catalog.
 
 Reads konect.cc's network index and each network's page, and writes
-``src/networks/konect/catalog.json``, which is what the installed
+``src/netgamut/konect/catalog.json``, which is what the installed
 package uses so that metadata lookups need no network.
 
     python scripts/regenerate_konect_catalog.py
@@ -25,10 +25,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks._core.domains import DOMAINS  # noqa: E402
-from networks.konect._catalog import Catalog, build_catalog  # noqa: E402
+from netgamut._core.domains import DOMAINS  # noqa: E402
+from netgamut.konect._catalog import Catalog, build_catalog  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "konect" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "konect" / "catalog.json"
 
 MIN_NETWORKS = 250
 MIN_WITH_SIZE = 250
