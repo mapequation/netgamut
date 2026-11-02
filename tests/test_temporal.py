@@ -46,7 +46,9 @@ def test_a_timestamp_is_not_a_weight(contacts: Network, tmp_path: Path) -> None:
         if not line.startswith("#")
     ] == ["1 2", "2 3", "2 1", "3 4", "1 3"]
     pytest.importorskip("infomap")
-    im = contacts.to_infomap(silent=True, num_trials=1)
+    # Directed, so the count does not depend on whether Infomap merges the pair
+    # listed as 1 2 and 2 1, which it does on undirected input from 2.16.
+    im = contacts.to_infomap(directed=True, silent=True, num_trials=1)
     im.run()
     assert im.num_links == 5 and im.num_nodes == 4
 
