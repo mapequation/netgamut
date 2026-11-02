@@ -22,7 +22,7 @@ Each repository lives in its own subpackage:
 * :mod:`netgamut.ahorn` -- the Aachen Higher-Order Repository of Networks, 83
   hypergraphs and simplicial complexes. Its unit is a *set* of nodes rather than
   a pair, so it returns a
-  :class:`~netgamut._core.hypergraph.Hypergraph` rather than a ``Network``.
+  :class:`~netgamut.Hypergraph` rather than a ``Network``.
 
 Metadata for every source ships inside the package, so browsing is offline and
 instant; only ``load()`` touches the network, and it caches into a shared

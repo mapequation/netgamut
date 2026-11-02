@@ -3,7 +3,7 @@
 A path dataset is not an edge list: the unit of observation is a whole
 trajectory. The :class:`Dataset` here therefore carries a *parser* name --
 the recipe that turns the cached download into a stream of paths -- and
-:class:`PathData` is the :class:`~netgamut._core.network.Network` handle
+:class:`PathData` is the :class:`~netgamut.Network` handle
 extended with that stream and the conversion to a state network.
 """
 
@@ -186,7 +186,7 @@ class Dataset:
 class PathData(Network):
     """A downloaded path dataset on local disk.
 
-    Everything a :class:`~netgamut._core.network.Network` offers, plus the
+    Everything a :class:`~netgamut.Network` offers, plus the
     stream of trajectories and the conversion into a memory network::
 
         data = paths.load("wikispeedia")

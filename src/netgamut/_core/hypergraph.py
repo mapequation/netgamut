@@ -4,7 +4,7 @@ An edge list says two things met. A hypergraph says *how many* met at once, and
 that is not recoverable afterwards: three authors on one paper and three authors
 on three pairwise papers project onto the same triangle. Sources that publish
 higher-order data -- :mod:`netgamut.ahorn` -- hand back a :class:`Hypergraph`
-rather than a :class:`~netgamut._core.network.Network` so the interaction stays
+rather than a :class:`~netgamut.Network` so the interaction stays
 whole until you choose to flatten it.
 
 The handle is the same bargain as ``Network``: a thin wrapper around a cached
@@ -304,7 +304,7 @@ class Hypergraph:
     def nodes(self) -> NodeTable:
         """Read per-node metadata into the shape every source uses.
 
-        Delegates to the source, as :meth:`netgamut._core.network.Network.nodes`
+        Delegates to the source, as :meth:`netgamut.Network.nodes`
         does. Node metadata is not ground truth for community structure; see
         :mod:`netgamut._core.nodes`.
 

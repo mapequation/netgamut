@@ -20,7 +20,7 @@ structure only implicit"::
     im = h.to_infomap()             # bipartite, so interaction sizes survive
     im.run()
 
-:func:`load` returns a :class:`~netgamut._core.hypergraph.Hypergraph`, not a
+:func:`load` returns a :class:`~netgamut.Hypergraph`, not a
 ``Network``: flattening is a choice you make with ``to_networkx(projection=...)``
 or ``to_network(...)``, not something this does behind your back.
 

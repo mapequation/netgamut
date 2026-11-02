@@ -24,7 +24,7 @@ are a machine-learning concern this package has no use for.
 
 Not everything OGB publishes is loadable. The ``graphproppred`` family -- 15
 collections of thousands of small molecule graphs -- is not catalogued at all, since a
-:class:`~netgamut._core.network.Network` is one graph. Heterogeneous datasets
+:class:`~netgamut.Network` is one graph. Heterogeneous datasets
 (``ogbn-mag``, ``ogbl-biokg``) and the two stored as ``data.npz``
 (``ogbn-papers100M``, ``ogbl-vessel``) are catalogued but refused, each with its
 reason; ``search(supported=True)`` filters them out.
