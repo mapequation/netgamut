@@ -590,9 +590,9 @@ def fit_families(values: Any, support_min: int | None = None) -> dict[str, Any]:
             ``min(values)``.
 
     Returns:
-        ``{family: {"params", "loglik", "aic", "aic_weight"}, "winner",
-        "support_min", "n_values"}``. Feed the whole dict to
-        :func:`parametric`, which uses the winner.
+        One ``{"params", "loglik", "aic", "aic_weight"}`` per family, plus
+        ``"winner"``, ``"support_min"`` and ``"n_values"``. Feed the whole dict
+        to :func:`parametric`, which uses the winner.
 
     Raises:
         ImportError: numpy or scipy is missing.

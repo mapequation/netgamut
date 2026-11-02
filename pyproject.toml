@@ -53,6 +53,8 @@ netgamut = "netgamut.__main__:main"
 # *build* needs it -- reading the vendored snapshot and downloading datasets
 # need nothing. See scripts/regenerate_ahorn_catalog.py.
 dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "pyyaml>=6", "types-PyYAML>=6"]
+# The documentation site; .github/workflows/pages.yml builds it.
+docs = ["sphinx>=8.2", "furo>=2025.12.19", "myst-nb>=1.4", "sphinx-copybutton>=0.5.2"]
 
 [tool.hatch.version]
 path = "src/netgamut/__init__.py"
