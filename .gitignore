@@ -22,6 +22,15 @@ htmlcov/
 .vscode/
 .DS_Store
 
+# Documentation site: the Sphinx output, and the explorer bundle and exported
+# index that pages.yml builds into it
+docs/_build/
+docs/_static/explorer/
+docs/jupyter_execute/
+site/explorer/node_modules/
+site/explorer/public/catalog.json
+site/explorer/*.tsbuildinfo
+
 # Notebook by-products
 .ipynb_checkpoints/
 examples/*.net

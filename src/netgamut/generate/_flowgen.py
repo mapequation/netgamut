@@ -147,14 +147,14 @@ class ModuleTree:
     stationary-walk based: the microcanonical sampler constrains degree sequences and
     per-module mixing, both count quantities, so no teleportation parameter enters.
 
-    Attributes
-    ----------
-    p, paths                   node -> visit rate (undirected: s_u/2W; directed: mean of
-                               p_out and p_in), node -> module path tuple
-    flow, enter, exit          module path -> p_nu, q_nu^enter, q_nu^exit
-    q                          alias of ``exit`` (undirected: enter == exit)
-    flow_out, flow_in          module path -> out-/in-endpoint flow (directed)
-    children, nodes_in, leaves tree structure
+    Attributes::
+
+        p, paths                   node -> visit rate (undirected: s_u/2W; directed: mean of
+                                   p_out and p_in), node -> module path tuple
+        flow, enter, exit          module path -> p_nu, q_nu^enter, q_nu^exit
+        q                          alias of ``exit`` (undirected: enter == exit)
+        flow_out, flow_in          module path -> out-/in-endpoint flow (directed)
+        children, nodes_in, leaves tree structure
     """
 
     def __init__(self, G, partition, directed=None, flow_stats="stationary", p=None):
@@ -1634,7 +1634,7 @@ def raise_clustering(H, partition, rng, blueprint=None, targets=None, swap_facto
     available (same code otherwise).  Undirected only.  Returns ``(nx.Graph, info)``.
 
     Measured 2026-09-05 on samples of the sequential sampler (output/sampler_study/
-    clustering_v2): mean |c_u - c_u^bp| polbooks 0.180 -> 0.026, email 0.149 -> 0.017,
+    clustering_v2): mean ``|c_u - c_u^bp|`` polbooks 0.180 -> 0.026, email 0.149 -> 0.017,
     polblogs 0.147 -> 0.007; recovery AMI unchanged or higher and the number of modules
     Infomap finds stays at the planted count, where the earlier within-module wedge pass
     (transitivity target, no per-node profile, no block constraint) inflated it (email 31.5
