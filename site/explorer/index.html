@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>netgamut explorer (development)</title>
+    <style>
+      /* Stand-ins for the furo variables the explorer reads on the docs site. */
+      body {
+        margin: 0 auto;
+        max-width: 72em;
+        padding: 1rem;
+        font-family: system-ui, sans-serif;
+        --color-foreground-primary: #000;
+        --color-foreground-secondary: #5a5c63;
+        --color-foreground-muted: #6b6f76;
+        --color-foreground-border: #878787;
+        --color-background-primary: #fff;
+        --color-background-secondary: #f8f9fb;
+        --color-background-hover: #efeff4;
+        --color-background-border: #eeebee;
+        --color-brand-primary: #0a4bff;
+        --color-brand-content: #2757dd;
+        color: var(--color-foreground-primary);
+        background: var(--color-background-primary);
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          --color-foreground-primary: #cfd0d0;
+          --color-foreground-secondary: #9ca0a5;
+          --color-foreground-muted: #81868d;
+          --color-foreground-border: #666;
+          --color-background-primary: #131416;
+          --color-background-secondary: #1a1c1e;
+          --color-background-hover: #1e2124;
+          --color-background-border: #303335;
+          --color-brand-primary: #3d94ff;
+          --color-brand-content: #5ca5ff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="netgamut-explorer" data-index="/catalog.json"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
