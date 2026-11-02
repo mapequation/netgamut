@@ -2,7 +2,7 @@
 
 Each source (``netgamut.snap``, ``netgamut.netzschleuder``) has its own
 ``Dataset`` carrying whatever metadata that site publishes. What they agree on
-lives here, so the cache, downloader and :class:`~netgamut._core.network.Network`
+lives here, so the cache, downloader and :class:`~netgamut.Network`
 handle can work with any of them.
 """
 

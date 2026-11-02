@@ -13,7 +13,7 @@ has no ``Name`` column and exactly one row (``KarateClub``).
 
 A ``#graphs`` column above 1 marks a *collection* -- thousands of small molecule or
 mesh graphs, with ``~`` averages in the node and edge columns. Those are dropped:
-a :class:`~netgamut._core.network.Network` is one graph, so a collection would be an
+a :class:`~netgamut.Network` is one graph, so a collection would be an
 unloadable row.
 """
 

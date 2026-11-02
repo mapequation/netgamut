@@ -38,7 +38,7 @@ class Dataset:
     name: str
     #: ``nodeproppred`` or ``linkproppred``. The ``graphproppred`` family is not
     #: catalogued: those are collections of thousands of small graphs, which the
-    #: one-graph :class:`~netgamut._core.network.Network` model has nowhere to put.
+    #: one-graph :class:`~netgamut.Network` model has nowhere to put.
     family: str = ""
     description: str = ""
     #: ``False`` exactly when OGB adds the reverse of every stored edge.

@@ -2,7 +2,7 @@
 
 PyG is where most of the graph-learning literature's networks live. This catalogues the
 single-graph ones -- the collections of thousands of molecules or meshes are left out,
-since a :class:`~netgamut._core.network.Network` is one graph -- and loads them through
+since a :class:`~netgamut.Network` is one graph -- and loads them through
 the same call as every other source::
 
     net   = netgamut.load("Planetoid/Cora")
