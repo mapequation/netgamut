@@ -26,6 +26,14 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   communities that overlap on the physical nodes and are disjoint on the states,
   from Andrea Lancichinetti's trigram sampler, seeded. Returns a `StateNetwork`
   with the planted state partition. Needs only the standard library.
+- `Match.to_dict()`: a JSON-ready summary of a dataset, the same shape for every
+  source -- the fields `search()` filters on, plus description, citations and
+  links.
+- `netgamut export-index [--output FILE]`: every source's catalog as one JSON
+  document of those summaries. KONECT's copies of other sources' networks are
+  included and name the network they defer to in `duplicate_of`.
+- A documentation site, with a catalog explorer for every dataset, built from
+  `docs/` and `site/explorer/` and published to GitHub Pages.
 
 ## 0.3.0
 

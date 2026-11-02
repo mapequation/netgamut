@@ -1,0 +1,78 @@
+name: Pages
+
+# Builds the documentation site -- the Sphinx docs with the catalog explorer as
+# one of its pages -- and publishes it to GitHub Pages. The explorer reads an
+# index exported from the vendored catalogs, so every push to main redeploys it,
+# including the merge of the monthly "refresh the vendored catalogs" pull request
+# that refresh-catalog.yml opens. Pull requests build the site without deploying,
+# so a docstring that breaks the build fails before it merges.
+#
+# Needs Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # A deployment in progress is left to finish; superseded PR builds are not.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Sphinx 9 needs Python 3.13.
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/explorer/package-lock.json
+
+      - name: Install
+        run: uv sync --group docs
+
+      - name: Export the catalog index
+        run: uv run --group docs netgamut export-index --output site/explorer/public/catalog.json
+
+      # Writes the bundle and the index into docs/_static/explorer.
+      - name: Build the explorer
+        working-directory: site/explorer
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Build the docs
+        run: uv run --group docs sphinx-build -W --keep-going docs docs/_build/html
+
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
