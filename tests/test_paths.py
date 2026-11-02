@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-import networks
-from networks import paths
-from networks.__main__ import main
-from networks.paths import _parsers
-from networks.paths._models import PathData
+import netgamut
+from netgamut import paths
+from netgamut.__main__ import main
+from netgamut.paths import _parsers
+from netgamut.paths._models import PathData
 
 # -- fixtures shaped like the real downloads --------------------------------
 
@@ -117,9 +117,9 @@ def _handle(name: str, archive: Path) -> PathData:
 
 
 def test_source_is_registered_everywhere() -> None:
-    assert "paths" in networks.sources()
-    assert networks.domains()  # must not KeyError on the new source's domains
-    found = networks.search(domain="Transportation", source="paths")
+    assert "paths" in netgamut.sources()
+    assert netgamut.domains()  # must not KeyError on the new source's domains
+    found = netgamut.search(domain="Transportation", source="paths")
     assert [match.name for match in found] == ["db1b-coupon", "db1b-city"]
     assert found[0].key == "paths/db1b-coupon"
 
@@ -140,7 +140,7 @@ def test_catalog_entries_are_complete() -> None:
 def test_wikispeedia_is_ambiguous_across_sources() -> None:
     # SNAP lists wikispeedia too; the top level must refuse to guess.
     with pytest.raises(KeyError, match="several sources"):
-        networks.load("wikispeedia")
+        netgamut.load("wikispeedia")
 
 
 def test_unknown_name_suggests_alternatives() -> None:
@@ -413,7 +413,7 @@ def test_coordinates_come_from_openflights(tmp_path: Path) -> None:
 def test_side_tables_are_fetched_once_next_to_the_download(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from networks.paths import _models
+    from netgamut.paths import _models
 
     archive = _db1b_archive(tmp_path)
     fetched: list[str] = []
@@ -529,7 +529,7 @@ def test_wikispeedia_downloads_and_converts() -> None:
 
 @pytest.mark.network
 def test_db1b_url_is_alive_without_downloading() -> None:
-    from networks._core.download import head
+    from netgamut._core.download import head
 
     dataset = paths.info("db1b-coupon")
     size = head(dataset.files[0].url)["bytes"]

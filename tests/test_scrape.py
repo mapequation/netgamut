@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from networks.snap._scrape import parse_dataset_page, parse_index
+from netgamut.snap._scrape import parse_dataset_page, parse_index
 
 BASE = "https://snap.stanford.edu/data/"
 

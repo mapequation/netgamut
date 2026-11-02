@@ -1,4 +1,4 @@
-# networks
+# netgamut
 
 Browse, download and cache network datasets from Python.
 
@@ -6,13 +6,13 @@ Seven sources are indexed, each in its own subpackage:
 
 | Source | Datasets | Strength |
 |---|---|---|
-| [`networks.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
-| [`networks.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
-| [`networks.konect`](http://konect.cc) | 300 | one fixed vocabulary of format, edge type and **loops**; signed and temporal |
-| [`networks.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
-| [`networks.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
-| `networks.paths` | 3 | curated path data (flight itineraries, navigation trails) for memory networks |
-| [`networks.ahorn`](https://ahorn.rwth-aachen.de) | 83 | higher-order data: hypergraphs, simplicial complexes, revision-pinned |
+| [`netgamut.snap`](https://snap.stanford.edu/data/index.html) | 109 | large, well-known social / web / technological networks |
+| [`netgamut.netzschleuder`](https://networks.skewed.de) | 286 | domain-tagged, incl. biological, transport and multilayer |
+| [`netgamut.konect`](http://konect.cc) | 300 | one fixed vocabulary of format, edge type and **loops**; signed and temporal |
+| [`netgamut.ogb`](https://ogb.stanford.edu) | 12 | graph-learning benchmarks, with **named** node categories |
+| [`netgamut.pyg`](https://pytorch-geometric.readthedocs.io) | 99 | the graph-learning corpus: citation, web, social, heterophilous |
+| `netgamut.paths` | 3 | curated path data (flight itineraries, navigation trails) for memory networks |
+| [`netgamut.ahorn`](https://ahorn.rwth-aachen.de) | 83 | higher-order data: hypergraphs, simplicial complexes, revision-pinned |
 
 Metadata for all seven **ships inside the package**, so you can explore every
 dataset — domains, sizes, statistics, citations — without downloading anything.
@@ -21,10 +21,9 @@ fetched once per machine no matter how many projects, notebooks or virtualenvs
 use it.
 
 ```bash
-pip install mapequation-networks
+pip install netgamut
 ```
 
-The distribution is `mapequation-networks`; the import name is `networks`.
 For a runnable tour — browsing, loading, and building memory networks from
 path data — see [`examples/tutorial.ipynb`](examples/tutorial.ipynb).
 Upgrading from 0.2? Generators now return network objects rather than tuples,
@@ -41,9 +40,9 @@ That makes it possible to compare methods across *kinds of system* rather than
 kinds of provenance:
 
 ```python
-import networks
+import netgamut
 
-networks.domains()
+netgamut.domains()
 ```
 
 ```
@@ -52,27 +51,27 @@ networks.domains()
 ```
 
 ```python
-for match in networks.search(domain="Biological", max_nodes=500):
+for match in netgamut.search(domain="Biological", max_nodes=500):
     print(match)
 # netzschleuder/blumenau_drug [Biological] (75 nodes, 181 edges)
 # netzschleuder/celegans_2019 [Biological] (453 nodes, 4,879 edges)
 # netzschleuder/celegans_metabolic [Biological] (453 nodes, 4,596 edges)
 # ...
 
-net = networks.load("celegans_metabolic")
+net = netgamut.load("celegans_metabolic")
 ```
 
 Note `Biological: 51` — 36 from Netzschleuder, 5 each from KONECT and OGB, 4
 from AHORN, 1 from PyG, and none at all from SNAP. That imbalance is why the other sources exist.
 The mapping is deliberately visible in
-`networks/_core/domains.py` rather than buried per source, so it can be argued
+`netgamut/_core/domains.py` rather than buried per source, so it can be argued
 with in one place.
 
 For anything source-specific, use that source's own `search()`:
 
 ```python
-from networks import netzschleuder as nz
-from networks import snap
+from netgamut import netzschleuder as nz
+from netgamut import snap
 
 nz.search(multilayer=True)  # 17 multiplex networks; SNAP has none
 nz.search(subtype="Food web")
@@ -82,7 +81,7 @@ snap.search(ground_truth=True)  # reference partitions
 ## Look before you download (SNAP)
 
 ```python
-from networks import snap
+from netgamut import snap
 
 for category in snap.categories():
     print(category)
@@ -193,8 +192,8 @@ for fields in net.rows():  # full records: timestamps, signs, weights
 Conversions are lazy and optional:
 
 ```python
-graph = net.to_networkx()  # pip install "mapequation-networks[networkx]"
-im = net.to_infomap()  # pip install "mapequation-networks[infomap]"
+graph = net.to_networkx()  # pip install "netgamut[networkx]"
+im = net.to_infomap()  # pip install "netgamut[infomap]"
 im.run()
 ```
 
@@ -264,12 +263,12 @@ The same bins, or a layer column, make a multilayer network:
 ml = net.to_multilayer(bins=12)          # layer i = bin i; ml.info["bin_edges"]
 ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)  # couple adjacent bins
 
-networks.load("london_transport").to_multilayer()             # its layer column
+netgamut.load("london_transport").to_multilayer()             # its layer column
 snap.load("higgs-twitter").to_multilayer(layer="interaction") # any categorical column
 ```
 
 If a source has a column wrong, or you know better, declare it yourself:
-`dataclasses.replace(net, columns=networks.Columns(time=2))`.
+`dataclasses.replace(net, columns=netgamut.Columns(time=2))`.
 
 Some entries are multi-file bundles:
 
@@ -341,12 +340,12 @@ Treat those with care: node metadata is **not** guaranteed to be the community
 structure, a point reviewers will raise. Use synthetic benchmarks with planted
 communities for the quantitative claim, and this pool for generality — reported
 via codelength against baselines. Neither source provides synthetic generators —
-that is what [`networks.generate`](#generating-benchmarks) is for.
+that is what [`netgamut.generate`](#generating-benchmarks) is for.
 
 ## Netzschleuder
 
 ```python
-from networks import netzschleuder as nz
+from netgamut import netzschleuder as nz
 
 nz.domains()
 # {'Social': 148, 'Informational': 53, 'Biological': 36,
@@ -388,7 +387,7 @@ with the same two codes, `% asym multisigned`. That makes it the one source here
 that says, for every network, whether it contains **loops**:
 
 ```python
-from networks import konect
+from netgamut import konect
 
 konect.search(loops=True, max_nodes=10_000)  # self-links, by KONECT's own check
 konect.search(signed=True, temporal=True)
@@ -396,7 +395,7 @@ konect.search(bipartite=True, domain="Economic")
 print(konect.describe("chess"))
 ```
 
-The loop check also reaches the cross-source search, `networks.search(loops=True)`,
+The loop check also reaches the cross-source search, `netgamut.search(loops=True)`,
 including for a Netzschleuder or SNAP network whenever KONECT holds the identical
 edge list. Networks no source has checked are left out of either filter.
 
@@ -406,7 +405,7 @@ edition — of which only the English editions are kept.
 
 **Overlap.** Netzschleuder imported a third of KONECT, and some of KONECT is
 SNAP's. Such a network stays in `konect.search()`, but the cross-source
-`networks.search`, `networks.domains` and `networks.load` use the other copy, so
+`netgamut.search`, `netgamut.domains` and `netgamut.load` use the other copy, so
 nothing is counted twice. A duplicate is decided on evidence, never on name —
 KONECT's `twitter` is Netzschleuder's `twitter_social`, and Netzschleuder's
 `twitter` is KONECT's `munmun_twitter_social`:
@@ -460,7 +459,7 @@ a member of a Netzschleuder bundle, KONECT's `ent.*` files, OGB's `raw/` and
 `mapping/` folders, a materialised PyG table. `Network.nodes()` reads all of them the same way:
 
 ```python
-nodes = networks.load("ogbn-arxiv").nodes()
+nodes = netgamut.load("ogbn-arxiv").nodes()
 
 nodes.columns                       # ('arxiv_category', 'year', 'paper')
 nodes["arxiv_category"]             # {0: 'arxiv cs cr', ...}  decoded where named
@@ -476,19 +475,19 @@ lines up with. They always agree —
 The same four calls, whatever the source:
 
 ```python
-networks.load("email-Eu-core").nodes()["department"]        # SNAP
-networks.load("karate", source="netzschleuder").nodes()["groups"]
-networks.load("ogbn-arxiv").nodes()["arxiv_category"]       # OGB
-networks.load("Planetoid/Cora", source="pyg").nodes()["label"]
+netgamut.load("email-Eu-core").nodes()["department"]        # SNAP
+netgamut.load("karate", source="netzschleuder").nodes()["groups"]
+netgamut.load("ogbn-arxiv").nodes()["arxiv_category"]       # OGB
+netgamut.load("Planetoid/Cora", source="pyg").nodes()["label"]
 ```
 
 To find datasets that have node metadata before downloading anything, ask
 across sources — by presence, or by column name:
 
 ```python
-networks.search(node_metadata=True)  # 240 datasets known to carry some
-networks.search(node_attribute="gender")  # something to score a partition against
-networks.search("karate")[0].node_attributes  # ('name', 'groups')
+netgamut.search(node_metadata=True)  # 240 datasets known to carry some
+netgamut.search(node_attribute="gender")  # something to score a partition against
+netgamut.search("karate")[0].node_attributes  # ('name', 'groups')
 ```
 
 Each source answers from its own catalog: Netzschleuder from the site's analyses,
@@ -517,7 +516,7 @@ column.
 
 ## Graph-learning benchmarks
 
-`networks.ogb` and `networks.pyg` index the datasets the graph-neural-network
+`netgamut.ogb` and `netgamut.pyg` index the datasets the graph-neural-network
 literature is benchmarked on — which is where most empirical networks *with node
 labels* now live.
 
@@ -548,7 +547,7 @@ pyg.describe("WikipediaNetwork/chameleon")
 ```
 
 Loading materialises once: the first call needs `pip install
-"mapequation-networks[pyg]"`, runs PyG's own downloader, and writes `edges.csv.gz` and
+"netgamut[pyg]"`, runs PyG's own downloader, and writes `edges.csv.gz` and
 `nodes.csv.gz` into the cache. **Every call after that reads those files and never
 imports torch** — the heavy dependency is a one-time cost, and the result is a plain,
 archivable network like any other. The dense feature matrix is deliberately not
@@ -592,10 +591,10 @@ degrees, module sizes, per-module mixing — and samples fresh networks with the
 same statistics, so ground truth is known while realism is kept:
 
 ```python
-import networks
-from networks import generate
+import netgamut
+from netgamut import generate
 
-G = networks.load("polbooks").to_networkx()
+G = netgamut.load("polbooks").to_networkx()
 partition = generate.detect(G)                # Infomap, or bring your own
 net = generate.benchmark(G, partition)        # degree- and mixing-preserving
 
@@ -663,7 +662,7 @@ the original script run with that seed.
 The flow model itself is public as well (`generate.flow_matrix`,
 `generate.ModuleTree`, `generate.cross_R`) for callers who want the joint
 distribution rather than a sample of it. Everything here needs the extras:
-`pip install "mapequation-networks[generate]"`.
+`pip install "netgamut[generate]"`.
 
 ### The original LFR benchmarks
 
@@ -707,8 +706,8 @@ the price is a download and a build on the first call, both cached next to the
 datasets:
 
 ```
-~/.cache/networks/lfr/src/<commit>/     the sources, fetched once
-~/.cache/networks/lfr/bin/<key>/        one binary per variant and toolchain
+~/.cache/netgamut/lfr/src/<commit>/     the sources, fetched once
+~/.cache/netgamut/lfr/bin/<key>/        one binary per variant and toolchain
 ```
 
 The first call takes about four seconds — Xcode command line tools on macOS,
@@ -765,7 +764,7 @@ print(generate.lfr_source())
 # andrealancichinetti/LFRbenchmarks@ec9a860282d8 (pinned, fetched)
 #   url       https://github.com/.../archive/ec9a8602....tar.gz
 #   sha256    ad13a354c2cfbb1de299dcb13caadd5801243b9041cd0e7e89852b9aeb384f76
-#   sources   ~/.cache/networks/lfr/src/ec9a8602...
+#   sources   ~/.cache/netgamut/lfr/src/ec9a8602...
 #   compiler  Apple clang version 17.0.0
 #   variants  undirected, weighted, directed, weighted_directed, hierarchical, multiplex
 ```
@@ -780,12 +779,12 @@ python scripts/update_lfr_pin.py --commit <sha>   # pin something specific
 
 The script asks GitHub what the default branch points at, downloads that
 archive, refuses to pin one that is missing any of the six generators, and
-rewrites `COMMIT` and `SHA256` in `src/networks/generate/_lfr/_sources.py`.
+rewrites `COMMIT` and `SHA256` in `src/netgamut/generate/_lfr/_sources.py`.
 Bumping the pin is a real change rather than housekeeping: these generators are
 random, so a different revision can give a different network for the same seed.
 Run `pytest tests/test_lfr.py` after, and say so in the commit message.
 
-To try a revision without moving the pin, point `NETWORKS_LFR_DIR` at a
+To try a revision without moving the pin, point `NETGAMUT_LFR_DIR` at a
 checkout — the wrapper builds from there and skips the download entirely.
 
 ### Comparing partitions as flow models
@@ -827,7 +826,7 @@ finds the overlapping, memory-aware modules described in Rosvall et al.,
 detection*, Nat. Commun. 5, 4630 (2014).
 
 ```python
-from networks import paths
+from netgamut import paths
 
 data = paths.load("wikispeedia")      # 9.5 MB, 51,318 finished navigation trails
 memory = data.to_state_network(order=2)
@@ -868,7 +867,7 @@ path file next to the download; later calls stream it directly. From the
 shell:
 
 ```bash
-networks get db1b-coupon --year 2023 --quarter 3
+netgamut get db1b-coupon --year 2023 --quarter 3
 ```
 
 The same itineraries exist at the level of metropolitan areas, and airports
@@ -897,7 +896,7 @@ model is for.
 
 Note that `wikispeedia` now exists in two sources — the navigation *paths*
 here, the article *hyperlink graph* in SNAP — so the top-level
-`networks.load("wikispeedia")` asks you to pass `source="paths"` or
+`netgamut.load("wikispeedia")` asks you to pass `source="paths"` or
 `source="snap"` rather than guessing.
 
 
@@ -911,7 +910,7 @@ Repository of Networks: 83 datasets whose unit of observation is a **set** of
 nodes, so `load` returns a `Hypergraph`, not a `Network`.
 
 ```python
-from networks import ahorn
+from netgamut import ahorn
 
 ahorn.search(network_type="simplicial-complex", max_nodes=1000)
 ahorn.search(tag="benson")          # everything from the Benson collection
@@ -1023,8 +1022,8 @@ net = snap.load("com-Friendster", max_bytes=2_000_000_000)
 ## The cache
 
 ```python
-snap.cache_dir()  # ~/Library/Caches/networks on macOS
-# ~/.cache/networks on Linux
+snap.cache_dir()  # ~/Library/Caches/netgamut on macOS
+# ~/.cache/netgamut on Linux
 snap.is_cached("ca-GrQc")
 snap.clear_cache("ca-GrQc")
 
@@ -1032,7 +1031,7 @@ info = snap.cache_info()
 info.bytes, info.datasets["ca-GrQc"].files
 ```
 
-Point it somewhere else with the `NETWORKS_CACHE_DIR` environment variable, or
+Point it somewhere else with the `NETGAMUT_CACHE_DIR` environment variable, or
 `snap.set_cache_dir(...)` at runtime — useful for a shared cache on a cluster.
 
 Downloads are published with an atomic rename and coordinated by a lock file,
@@ -1059,14 +1058,14 @@ breaking.
 ## Command line
 
 ```bash
-networks categories
-networks list --category "Collaboration networks"
-networks list --directed --max-edges 100000
-networks info ca-GrQc
-networks get ca-GrQc            # prints the cached path
-networks get algebra-questions --revision 1   # pin an AHORN revision
-networks cache
-networks refresh
+netgamut categories
+netgamut list --category "Collaboration networks"
+netgamut list --directed --max-edges 100000
+netgamut info ca-GrQc
+netgamut get ca-GrQc            # prints the cached path
+netgamut get algebra-questions --revision 1   # pin an AHORN revision
+netgamut cache
+netgamut refresh
 ```
 
 ## Development

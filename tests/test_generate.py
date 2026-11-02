@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from networks import InMemoryNetwork, MultilayerNetwork, StateNetwork, generate
+from netgamut import InMemoryNetwork, MultilayerNetwork, StateNetwork, generate
 
 
 def blueprint() -> tuple[Any, dict[int, int]]:
@@ -244,15 +244,15 @@ def test_import_networks_does_not_need_the_extras() -> None:
         "        if name.split('.')[0] in {'numpy', 'networkx', 'scipy', 'infomap'}:\n"
         "            raise ImportError(name + ' is blocked')\n"
         "sys.meta_path.insert(0, Block())\n"
-        "import networks\n"
-        "import networks.generate\n"
+        "import netgamut\n"
+        "import netgamut.generate\n"
         "try:\n"
-        "    networks.generate.benchmark(None)\n"
+        "    netgamut.generate.benchmark(None)\n"
         "except ImportError as error:\n"
-        "    assert 'mapequation-networks[generate]' in str(error), error\n"
+        "    assert 'netgamut[generate]' in str(error), error\n"
         "else:\n"
         "    raise SystemExit('expected an ImportError with install advice')\n"
-        "networks.generate.overlapping_memory_benchmark(2, 300, n_nodes=32, community_size=8)\n"
+        "netgamut.generate.overlapping_memory_benchmark(2, 300, n_nodes=32, community_size=8)\n"
         "print('ok')\n"
     )
     result = subprocess.run(

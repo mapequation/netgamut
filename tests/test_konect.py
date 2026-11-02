@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-import networks
-from networks import konect
-from networks._core.domains import DOMAINS
-from networks.konect import _catalog, _ent, _scrape
-from networks.konect._models import Dataset, attribute_name, is_edge_list_header
+import netgamut
+from netgamut import konect
+from netgamut._core.domains import DOMAINS
+from netgamut.konect import _catalog, _ent, _scrape
+from netgamut.konect._models import Dataset, attribute_name, is_edge_list_header
 
 INDEX_ROW = (
     '<TR><TD><CODE>MB</CODE><TD><A href="moreno_bison/">Bison</A><TD>'
@@ -220,16 +220,16 @@ def test_duplicates_rest_on_evidence_not_names() -> None:
 
 
 def test_cross_source_queries_use_the_other_copy() -> None:
-    keys = [match.key for match in networks.search("dolphins")]
+    keys = [match.key for match in netgamut.search("dolphins")]
     assert keys == ["netzschleuder/dolphins"]
-    assert networks.search("dolphins", source="konect")
+    assert netgamut.search("dolphins", source="konect")
     shadowed = sum(1 for item in konect.datasets() if item.duplicate_of)
-    total = sum(len(module.datasets()) for module in networks._SOURCES.values())
-    assert len(networks.search()) == total - shadowed
+    total = sum(len(module.datasets()) for module in netgamut._SOURCES.values())
+    assert len(netgamut.search()) == total - shadowed
 
 
 def test_loops_filter_spans_sources() -> None:
-    with_loops = networks.search(loops=True)
+    with_loops = netgamut.search(loops=True)
     assert with_loops
     assert all(match.loops is True for match in with_loops)
     # A Netzschleuder network inherits KONECT's check through an exact twin.
@@ -443,7 +443,7 @@ def test_really_downloads_a_small_network() -> None:
 
 @pytest.mark.network
 def test_live_page_still_parses() -> None:
-    from networks._core.download import fetch_text
+    from netgamut._core.download import fetch_text
 
     page = _scrape.parse_page(fetch_text(f"{konect.SITE_URL}/networks/moreno_bison/"))
     assert (page["format"], page["edge_type"], page["loops"]) == ("asym", "posweighted", False)

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from networks._core.nodes import NodeTable
+from netgamut._core.nodes import NodeTable
 
 
 def table() -> NodeTable:

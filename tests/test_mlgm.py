@@ -8,9 +8,9 @@ import random
 import numpy as np
 import pytest
 
-from networks.generate._mlgm._dcsbm import sample_edges
-from networks.generate._mlgm._partition import DirichletNull, sample_partition
-from networks.generate._mlgm._tensors import (
+from netgamut.generate._mlgm._dcsbm import sample_edges
+from netgamut.generate._mlgm._partition import DirichletNull, sample_partition
+from netgamut.generate._mlgm._tensors import (
     DependencyTensor,
     MultiAspect,
     Temporal,

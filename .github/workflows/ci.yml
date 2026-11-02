@@ -93,10 +93,10 @@ jobs:
       - name: Check the wheel contents
         run: |
           python -m zipfile -l dist/*.whl | tee contents.txt
-          grep -q 'networks/snap/catalog.json' contents.txt
-          grep -q 'networks/netzschleuder/catalog.json' contents.txt
-          grep -q 'networks/konect/catalog.json' contents.txt
-          grep -q 'networks/py.typed' contents.txt
+          grep -q 'netgamut/snap/catalog.json' contents.txt
+          grep -q 'netgamut/netzschleuder/catalog.json' contents.txt
+          grep -q 'netgamut/konect/catalog.json' contents.txt
+          grep -q 'netgamut/py.typed' contents.txt
 
       - name: Validate metadata
         run: |

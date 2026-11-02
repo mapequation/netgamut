@@ -2,7 +2,7 @@
 """Rebuild the vendored Netzschleuder catalog.
 
 Reads networks.skewed.de's JSON API and writes
-``src/networks/netzschleuder/catalog.json``, which is what the installed
+``src/netgamut/netzschleuder/catalog.json``, which is what the installed
 package uses so that metadata lookups need no network.
 
     python scripts/regenerate_netzschleuder_catalog.py
@@ -21,10 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from networks._core.domains import DOMAINS  # noqa: E402
-from networks.netzschleuder._catalog import build_catalog  # noqa: E402
+from netgamut._core.domains import DOMAINS  # noqa: E402
+from netgamut.netzschleuder._catalog import build_catalog  # noqa: E402
 
-TARGET = ROOT / "src" / "networks" / "netzschleuder" / "catalog.json"
+TARGET = ROOT / "src" / "netgamut" / "netzschleuder" / "catalog.json"
 
 MIN_NETWORKS = 250
 MIN_WITH_SIZE = 200

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from networks import ogb
-from networks.ogb._catalog import _parse_master
+from netgamut import ogb
+from netgamut.ogb._catalog import _parse_master
 
 MASTER = """,ogbn-demo,ogbn-hetero
 num classes,7,3

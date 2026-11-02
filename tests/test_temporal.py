@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from networks import InMemoryNetwork, MultilayerNetwork
-from networks._core.columns import Columns
-from networks._core.models import DataFile
-from networks._core.network import Network
-from networks.snap._models import Dataset
+from netgamut import InMemoryNetwork, MultilayerNetwork
+from netgamut._core.columns import Columns
+from netgamut._core.models import DataFile
+from netgamut._core.network import Network
+from netgamut.snap._models import Dataset
 
 np = pytest.importorskip("numpy")
 
@@ -176,16 +176,16 @@ def test_columns_describe_themselves() -> None:
 
 
 def test_every_snap_layout_names_a_real_file() -> None:
-    from networks import snap
-    from networks.snap import _COLUMNS
+    from netgamut import snap
+    from netgamut.snap import _COLUMNS
 
     files = {f.name for dataset in snap.datasets() for f in dataset.files}
     assert set(_COLUMNS) <= files
 
 
 def _nz_network(tmp_path: Path, header: str, properties: list[list[str]]) -> Network:
-    from networks import netzschleuder
-    from networks.netzschleuder import _columns as nz_columns
+    from netgamut import netzschleuder
+    from netgamut.netzschleuder import _columns as nz_columns
 
     path = tmp_path / "edges.csv"
     path.write_text(f"# {header}\n0,1,1,5\n")
@@ -212,8 +212,8 @@ def test_netzschleuder_roles_come_from_the_file_header(tmp_path: Path) -> None:
 
 
 def test_signed_netzschleuder_weights_are_not_weights(tmp_path: Path) -> None:
-    from networks import netzschleuder
-    from networks.netzschleuder import _columns as nz_columns
+    from netgamut import netzschleuder
+    from netgamut.netzschleuder import _columns as nz_columns
 
     path = tmp_path / "edges.csv"
     path.write_text("# source, target, weight\n0,1,-1\n1,2,1\n")
@@ -287,6 +287,6 @@ def test_leading_zero_labels_stay_strings_everywhere(tmp_path: Path) -> None:
 
 
 def test_higgs_interactions_are_its_layers() -> None:
-    from networks.snap import _COLUMNS
+    from netgamut.snap import _COLUMNS
 
     assert _COLUMNS["higgs-activity_time.txt.gz"].layer == 3

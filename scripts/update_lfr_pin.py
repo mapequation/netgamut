@@ -3,10 +3,10 @@
 
 The LFR generators are fetched, not vendored, from
 https://github.com/andrealancichinetti/LFRbenchmarks. That repository publishes no
-releases, so ``networks.generate`` pins a commit hash and its archive's SHA-256. This
+releases, so ``netgamut.generate`` pins a commit hash and its archive's SHA-256. This
 script looks up what upstream's default branch points at today, downloads that
 archive, checks it holds all six generators, and rewrites the two constants in
-``src/networks/generate/_lfr/_sources.py``::
+``src/netgamut/generate/_lfr/_sources.py``::
 
     python scripts/update_lfr_pin.py            # move the pin, if it has moved
     python scripts/update_lfr_pin.py --check    # report only; exit 1 if outdated
@@ -33,7 +33,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PINFILE = ROOT / "src" / "networks" / "generate" / "_lfr" / "_sources.py"
+PINFILE = ROOT / "src" / "netgamut" / "generate" / "_lfr" / "_sources.py"
 
 REPOSITORY = "andrealancichinetti/LFRbenchmarks"
 API = f"https://api.github.com/repos/{REPOSITORY}"
@@ -52,7 +52,7 @@ REQUIRED = (
 
 
 def _fetch(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": "mapequation-networks"})
+    request = urllib.request.Request(url, headers={"User-Agent": "netgamut"})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:  # noqa: S310
         data: bytes = response.read()
     return data

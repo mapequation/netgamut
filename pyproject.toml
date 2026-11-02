@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mapequation-networks"
+name = "netgamut"
 dynamic = ["version"]
 description = "Browse, download and cache network datasets, starting with the Stanford SNAP collection"
 readme = "README.md"
@@ -42,11 +42,11 @@ all = ["networkx>=3.0", "infomap>=2.8", "numpy>=1.24", "scipy>=1.10", "numba>=0.
 
 [project.urls]
 Homepage = "https://www.mapequation.org"
-Repository = "https://github.com/mapequation/networks"
-Issues = "https://github.com/mapequation/networks/issues"
+Repository = "https://github.com/mapequation/netgamut"
+Issues = "https://github.com/mapequation/netgamut/issues"
 
 [project.scripts]
-networks = "networks.__main__:main"
+netgamut = "netgamut.__main__:main"
 
 [dependency-groups]
 # pyyaml is here rather than in the extras because only the AHORN catalog
@@ -55,13 +55,13 @@ networks = "networks.__main__:main"
 dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "pyyaml>=6", "types-PyYAML>=6"]
 
 [tool.hatch.version]
-path = "src/networks/__init__.py"
+path = "src/netgamut/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/networks"]
+packages = ["src/netgamut"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/networks", "tests", "scripts", "README.md", "LICENSE"]
+include = ["src/netgamut", "tests", "scripts", "README.md", "LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -78,20 +78,20 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 # The sampler internals are the reference implementation of the generative map
 # equation; their style is kept close to the derivations they implement.
 [tool.ruff.lint.per-file-ignores]
-"src/networks/generate/_flowgen.py" = ["B905", "E501", "E702", "SIM300"]
-"src/networks/generate/_params.py" = ["B905", "B007"]
+"src/netgamut/generate/_flowgen.py" = ["B905", "E501", "E702", "SIM300"]
+"src/netgamut/generate/_params.py" = ["B905", "B007"]
 
 # The same goes for their hand-aligned comments, and for the README's examples.
 [tool.ruff.format]
-exclude = ["src/networks/generate/_flowgen.py", "*.md"]
+exclude = ["src/netgamut/generate/_flowgen.py", "*.md"]
 
 [tool.mypy]
 python_version = "3.11"
-packages = ["networks"]
+packages = ["netgamut"]
 strict = true
 
 # Optional extras used only behind lazy imports in Network.to_*() and
-# networks.generate. numpy's stubs use 3.12+ syntax that python_version 3.11
+# netgamut.generate. numpy's stubs use 3.12+ syntax that python_version 3.11
 # rejects, so its stubs are skipped, not followed.
 [[tool.mypy.overrides]]
 module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*", "numba.*", "torch_geometric.*"]
@@ -103,10 +103,10 @@ follow_imports_for_stubs = true
 # equation; kept untyped so they read like the maths they implement.
 [[tool.mypy.overrides]]
 module = [
-  "networks.generate._flowgen",
-  "networks.generate._higher_order",
-  "networks.generate._params",
-  "networks.generate._partdist",
+  "netgamut.generate._flowgen",
+  "netgamut.generate._higher_order",
+  "netgamut.generate._params",
+  "netgamut.generate._partdist",
 ]
 ignore_errors = true
 disallow_untyped_defs = false
