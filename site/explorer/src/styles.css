@@ -1,0 +1,85 @@
+/*
+ * The explorer renders inside a furo page, so it takes no reset (no preflight)
+ * and reads furo's own colour and font variables: it follows the site's light,
+ * dark and auto themes without a theme of its own. The utilities are left
+ * unlayered so furo's unlayered element styles cannot outrank them.
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css";
+
+@theme {
+  --color-*: initial;
+}
+
+@theme inline {
+  --color-fg: var(--color-foreground-primary);
+  --color-fg-2: var(--color-foreground-secondary);
+  --color-fg-muted: var(--color-foreground-muted);
+  --color-bg: var(--color-background-primary);
+  --color-bg-2: var(--color-background-secondary);
+  --color-bg-hover: var(--color-background-hover);
+  --color-line: var(--color-background-border);
+  --color-line-strong: var(--color-foreground-border);
+  --color-brand: var(--color-brand-content);
+  --font-mono: var(
+    --font-stack--monospace,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
+}
+
+/* One categorical slot per source, in the index's source order. Validated for
+ * colour-vision deficiency against white and against furo's dark background. */
+#netgamut-explorer {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --series-other: #8a8a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) #netgamut-explorer {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+  }
+}
+
+body[data-theme="dark"] #netgamut-explorer {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+}
+
+/* Element weight only, so a utility class still sets a control's colour. */
+:where(#netgamut-explorer) :is(button, input, select) {
+  font: inherit;
+  color: inherit;
+}
+
+#netgamut-explorer dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+/* The explorer needs more room than furo's reading column. This stylesheet is
+ * only loaded on the explorer page, so the wider column stays there. */
+@media (min-width: 63em) {
+  .content {
+    width: min(72em, 100%);
+  }
+}
