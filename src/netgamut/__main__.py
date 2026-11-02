@@ -8,13 +8,16 @@ writing any code::
     netgamut info celegansneural
     netgamut get ca-GrQc
     netgamut cache
+    netgamut export-index --output catalog.json
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 
 import netgamut
@@ -179,6 +182,32 @@ def _cmd_cache(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_export_index(args: argparse.Namespace) -> int:
+    # Every source's full listing, KONECT's copies included: each copy carries
+    # duplicate_of, so a reader can hide it exactly as search() does.
+    datasets = [match.to_dict() for name in _SOURCES for match in netgamut.search(source=name)]
+    document = {
+        "netgamut": __version__,
+        "domains": list(netgamut.DOMAINS),
+        "sources": [
+            {
+                "name": name,
+                "summary": (module.__doc__ or "").strip().splitlines()[0],
+                "retrieved": module.catalog().retrieved,
+            }
+            for name, module in _SOURCES.items()
+        ],
+        "datasets": datasets,
+    }
+    text = json.dumps(document, ensure_ascii=False, separators=(",", ":"))
+    if args.output is None:
+        print(text)
+    else:
+        Path(args.output).write_text(text + "\n", encoding="utf-8")
+        print(f"{len(datasets)} datasets written to {args.output}", file=sys.stderr)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="netgamut",
@@ -231,6 +260,12 @@ def build_parser() -> argparse.ArgumentParser:
     cache.add_argument("-s", "--source", choices=list(_SOURCES))
     cache.add_argument("name", nargs="?", help="limit --clear to one dataset")
     cache.set_defaults(func=_cmd_cache)
+
+    export = subparsers.add_parser(
+        "export-index", help="write every source's catalog as one JSON document"
+    )
+    export.add_argument("-o", "--output", help="file to write; prints to stdout if omitted")
+    export.set_defaults(func=_cmd_export_index)
 
     return parser
 

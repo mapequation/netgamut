@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import gzip
+import json
 from pathlib import Path
 
 import pytest
 
+import netgamut
 from netgamut import __main__ as cli
 from netgamut import snap
 from netgamut._core import download as _download
@@ -103,6 +105,40 @@ def test_benchmark_selection_is_deduplicated_and_bounded() -> None:
     assert all(item.has_ground_truth for item in suite)
 
 
+def test_every_match_serialises_to_the_same_json_shape() -> None:
+    keys = None
+    for source in netgamut.sources():
+        for match in netgamut.search(source=source):
+            summary = match.to_dict()
+            assert json.loads(json.dumps(summary)) == summary
+            assert summary["key"] == match.key and summary["url"].startswith("http")
+            keys = keys or summary.keys()
+            assert summary.keys() == keys, match.key
+
+
+def test_to_dict_carries_what_a_reader_needs_to_cite() -> None:
+    (match,) = netgamut.search("ego-Facebook", source="snap")
+    summary = match.to_dict()
+    assert summary["nodes"] == match.nodes and summary["directed"] is False
+    assert summary["citations"][0]["text"].startswith("J. McAuley")
+    assert summary["url"] == "https://snap.stanford.edu/data/ego-Facebook.html"
+
+
+def test_to_dict_splits_netzschleuder_citations_into_text_and_link() -> None:
+    (match,) = netgamut.search("7th_graders", source="netzschleuder")
+    citation = match.to_dict()["citations"][0]
+    assert citation["text"].startswith("M. Vickers")
+    assert citation["url"].startswith("https://")
+
+
+def test_to_dict_points_a_konect_copy_at_the_network_it_defers_to() -> None:
+    copies = [m for m in netgamut.search(source="konect") if m.to_dict()["duplicate_of"]]
+    assert copies
+    keys = {match.key for match in netgamut.search()}
+    assert all(copy.key not in keys for copy in copies)
+    assert all(copy.to_dict()["duplicate_of"] in keys for copy in copies)
+
+
 # -- CLI ------------------------------------------------------------------
 def test_cli_categories(capsys) -> None:
     assert cli.main(["categories"]) == 0
@@ -139,6 +175,26 @@ def test_cli_cache_reports_state(offline_snap, capsys) -> None:
     out = capsys.readouterr().out
     assert "ca-GrQc" in out
     assert "Location" in out
+
+
+def test_cli_export_index_writes_every_source(tmp_path, capsys) -> None:
+    target = tmp_path / "catalog.json"
+    assert cli.main(["export-index", "--output", str(target)]) == 0
+    assert "datasets written" in capsys.readouterr().err
+    document = json.loads(target.read_text(encoding="utf-8"))
+
+    assert [source["name"] for source in document["sources"]] == list(netgamut.sources())
+    assert document["domains"] == list(netgamut.DOMAINS)
+    total = sum(len(netgamut.search(source=source)) for source in netgamut.sources())
+    assert len(document["datasets"]) == total
+    # Hiding the KONECT copies leaves exactly what a cross-source search returns.
+    shown = [entry["key"] for entry in document["datasets"] if not entry["duplicate_of"]]
+    assert shown == [match.key for match in netgamut.search()]
+
+
+def test_cli_export_index_prints_to_stdout(capsys) -> None:
+    assert cli.main(["export-index"]) == 0
+    assert json.loads(capsys.readouterr().out)["netgamut"] == netgamut.__version__
 
 
 # -- opt-in network tests -------------------------------------------------
