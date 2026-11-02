@@ -220,6 +220,37 @@ class Match:
         result: Network = _SOURCES[self.source].load(self.name, **kwargs)
         return result
 
+    def to_dict(self) -> dict[str, Any]:
+        """A JSON-serialisable summary, the same shape for every source.
+
+        Holds the fields :func:`search` filters on plus what a reader needs to
+        choose and cite a dataset: its description, citations, its page at the
+        source (``url``) and, where the catalog records it, the original
+        publisher (``upstream_url``). ``duplicate_of`` is the key of the network a
+        KONECT copy defers to (see :func:`netgamut.konect.duplicates`), else ``None``.
+        """
+        dataset = self.dataset
+        attributes = self.node_attributes
+        upstream = getattr(dataset, "upstream_url", "") or getattr(dataset, "source_url", "")
+        return {
+            "key": self.key,
+            "source": self.source,
+            "name": self.name,
+            "title": getattr(dataset, "title", ""),
+            "domains": list(self.domains),
+            "nodes": self.nodes,
+            "edges": self.edges,
+            "directed": self.directed,
+            "loops": self.loops,
+            "node_metadata": self.node_metadata,
+            "node_attributes": None if attributes is None else list(attributes),
+            "description": getattr(dataset, "description", ""),
+            "citations": [_citation(entry) for entry in getattr(dataset, "citations", ())],
+            "url": dataset.url,
+            "upstream_url": upstream,
+            "duplicate_of": getattr(dataset, "duplicate_of", None),
+        }
+
     def __str__(self) -> str:
         shape = []
         if self.nodes is not None:
@@ -229,6 +260,14 @@ class Match:
         domains = "/".join(self.domains) or "uncategorised"
         tail = f" ({', '.join(shape)})" if shape else ""
         return f"{self.key} [{domains}]{tail}"
+
+
+def _citation(entry: Any) -> dict[str, str]:
+    """One citation as ``{"text", "url"}``: Netzschleuder pairs each text with a link."""
+    if isinstance(entry, str):
+        return {"text": entry, "url": ""}
+    text, *link = entry
+    return {"text": str(text), "url": str(link[0]) if link else ""}
 
 
 def domains() -> dict[str, int]:
