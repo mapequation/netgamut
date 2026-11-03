@@ -109,6 +109,20 @@ def test_writes_gzipped_pajek_with_attribution(tmp_path, catalog) -> None:
     assert json.loads((tmp_path / "index.json").read_text()) == document
 
 
+def test_keeps_the_source_ids_and_says_where_they_run(tmp_path) -> None:
+    # Ambassador's 1985-1989 snapshot: 11 of its 16 actors have links, and they
+    # keep the ids they have in every other snapshot.
+    pajek = tmp_path / "ambassador.net"
+    pajek.write_text('# ambassador\n*Vertices 3\n0 "0"\n4 "4"\n14 "14"\n*Edges\n0 4\n4 14\n')
+    assert _export._id_note(pajek) == [
+        "Node ids are the source's own, so they can start at 0 and skip numbers: "
+        "3 nodes, ids 0 to 14."
+    ]
+    packed = tmp_path / "ambassador.net.gz"
+    _export._compress(pajek, packed, _export._id_note(pajek))
+    assert "\n0 4\n4 14\n" in gzip.decompress(packed.read_bytes()).decode()
+
+
 def test_leaves_out_copies_non_graphs_and_unknown_sizes(tmp_path, catalog) -> None:
     document = _export.export_networks(tmp_path)
     assert {entry["key"] for entry in document["skipped"]} == {"konect/unsized"}

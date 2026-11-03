@@ -185,7 +185,8 @@ def _convert(
         network = match.load(progress=False, max_bytes=max_download)
         pajek = network.to_pajek(scratch, name=match.name)
         packed = Path(scratch) / f"{pajek.name}.gz"
-        nodes, edges, directed = _compress(pajek, packed, _attribution(meta))
+        header = _attribution(meta) + _id_note(pajek)
+        nodes, edges, directed = _compress(pajek, packed, header)
         size = packed.stat().st_size
         if size > max_file:
             raise _TooLarge(f"too large: {size:,} bytes gzipped, over {max_file:,}")
@@ -214,6 +215,30 @@ def _attribution(meta: dict[str, Any]) -> list[str]:
     )
     # One comment line each: a newline inside a citation would end the comment.
     return [" ".join(line.split()) for line in lines]
+
+
+def _id_note(pajek: Path) -> list[str]:
+    """Say where the node ids run, since they are the source's own.
+
+    They are kept rather than renumbered ``1..N``, so a node keeps its id across
+    the subgraphs of a dataset -- the snapshots of a temporal network, say --
+    even where it has no links in some of them. A reader keys nodes by id, as
+    Infomap does.
+    """
+    ids = []
+    with pajek.open("rb") as lines:
+        for line in lines:
+            if line.startswith(b"*"):
+                if not line.lower().startswith(b"*vertices"):
+                    break  # the links follow the vertices
+            elif line.strip() and not line.startswith(b"#"):
+                ids.append(int(line.split(maxsplit=1)[0]))
+    if not ids:
+        return []
+    return [
+        "Node ids are the source's own, so they can start at 0 and skip numbers: "
+        f"{len(ids):,} nodes, ids {min(ids)} to {max(ids)}."
+    ]
 
 
 def _compress(source: Path, target: Path, header: list[str]) -> tuple[int, int, bool]:
