@@ -219,8 +219,9 @@ def _attribution(meta: dict[str, Any]) -> list[str]:
 def _compress(source: Path, target: Path, header: list[str]) -> tuple[int, int, bool]:
     """Gzip *source* behind *header* comments; return its node and link counts.
 
-    The gzip header carries no name or time, so an unchanged network gives the
-    same bytes on every build.
+    The gzip header carries no name or time and every line ends in ``\\n``,
+    whatever the platform wrote, so an unchanged network gives the same bytes
+    on every build.
     """
     nodes = links = 0
     directed = in_links = False
@@ -232,6 +233,7 @@ def _compress(source: Path, target: Path, header: list[str]) -> tuple[int, int, 
         for comment in header:
             packed.write(f"# {comment}\n".encode())
         for line in lines:
+            line = line.rstrip(b"\r\n") + b"\n"
             packed.write(line)
             if line.startswith(b"*"):
                 keyword, *rest = line.split()
