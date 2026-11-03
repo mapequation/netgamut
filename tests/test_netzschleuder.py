@@ -56,6 +56,11 @@ def test_csv_bundle_is_the_default_download() -> None:
     assert dataset.primary_file.url.endswith("/celegansneural.csv.zip")
 
 
+def test_page_url_includes_the_net_path() -> None:
+    # https://networks.skewed.de/celegansneural is a 404.
+    assert make("celegansneural").url == "https://networks.skewed.de/net/celegansneural"
+
+
 def test_other_formats_are_reachable_by_suffix() -> None:
     dataset = make("power")
     assert dataset.file("gml.zst").name == "power.gml.zst"

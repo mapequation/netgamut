@@ -112,7 +112,8 @@ class Dataset:
 
     @property
     def url(self) -> str:
-        return f"{SITE_URL}/{self.name}"
+        """The dataset's page; ``SITE_URL/<name>`` without ``net/`` is a 404."""
+        return f"{SITE_URL}/net/{self.name}"
 
     def subgraph_names(self) -> tuple[str, ...]:
         """Every subgraph name, fetched from the API on demand.
