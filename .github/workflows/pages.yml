@@ -28,8 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Sphinx 9 needs Python 3.13.
-      - uses: astral-sh/setup-uv@v10
+      # Sphinx 9 needs Python 3.13. setup-uv has no floating major tag after v7,
+      # so this pins the release.
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           python-version: "3.13"
