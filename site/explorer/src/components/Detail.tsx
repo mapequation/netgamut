@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type Dataset, navigatorUrl } from "../catalog";
 import {
   cliSnippet,
@@ -6,9 +6,11 @@ import {
   loadSnippet,
   sourceColor,
   sourceLabel,
+  subgraphsSnippet,
   yesNo,
 } from "../format";
-import { CopyBlock, Swatch } from "./Controls";
+import { Chip, CopyBlock, Swatch } from "./Controls";
+import { Description } from "./Description";
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
@@ -34,6 +36,8 @@ export function Detail({
   onSelect: (key: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  // Keyed by dataset, so opening another one starts from its first subgraph.
+  const [picked, setPicked] = useState<{ key: string; name: string }>();
 
   useEffect(() => {
     const element = dialog.current;
@@ -45,6 +49,12 @@ export function Detail({
 
   const section = "mx-0 mt-5 mb-1.5 p-0 text-[0.8rem] font-semibold text-fg-2";
   const link = "text-brand underline-offset-2 hover:underline break-all";
+  const several = dataset !== null && dataset.subgraph_count > 1;
+  const first = dataset?.subgraphs[0];
+  const subgraph = picked && picked.key === dataset?.key ? picked.name : first;
+  const unlisted = dataset
+    ? dataset.subgraph_count - dataset.subgraphs.length
+    : 0;
   // furo indents the dd of a classed dl unless it is "simple", and pads headings.
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes a modal dialog natively; this adds the backdrop click
@@ -131,24 +141,61 @@ export function Detail({
               ))}
             </p>
           )}
-
-          {dataset.description && (
-            <p className="mt-4 mb-0 leading-relaxed whitespace-pre-line">
-              {dataset.description}
+          {several && (
+            <p className="mt-3 mb-0 text-[0.8rem] text-fg-2">
+              This name holds {count(dataset.subgraph_count)} networks; the
+              figures describe the first,{" "}
+              <code className="font-mono">{first}</code>.
             </p>
           )}
 
+          {dataset.description && <Description text={dataset.description} />}
+
           <h3 className={section}>Load it</h3>
+          {several && (
+            <fieldset className="m-0 mb-2 min-w-0 border-0 p-0">
+              <legend className="mb-1 p-0 text-[0.75rem] font-semibold text-fg-2">
+                Subgraph
+              </legend>
+              <div className="flex flex-wrap gap-1.5">
+                {dataset.subgraphs.map((name) => (
+                  <Chip
+                    key={name}
+                    pressed={name === subgraph}
+                    onClick={() => setPicked({ key: dataset.key, name })}
+                  >
+                    <span className="font-mono">{name}</span>
+                  </Chip>
+                ))}
+              </div>
+              {unlisted > 0 && (
+                <p className="mt-1.5 mb-0 text-[0.8rem] text-fg-2">
+                  And {count(unlisted)} more, which{" "}
+                  <code className="font-mono">
+                    {subgraphsSnippet(dataset.name, dataset.source)}
+                  </code>{" "}
+                  names.
+                </p>
+              )}
+            </fieldset>
+          )}
           <CopyBlock
-            code={loadSnippet(dataset.name, dataset.source)}
+            code={loadSnippet(
+              dataset.name,
+              dataset.source,
+              subgraph === first ? undefined : subgraph,
+            )}
             label="Python code"
           />
-          <div className="mt-2">
-            <CopyBlock
-              code={cliSnippet(dataset.name, dataset.source)}
-              label="shell command"
-            />
-          </div>
+          {/* The command line fetches the first subgraph only. */}
+          {subgraph === first && (
+            <div className="mt-2">
+              <CopyBlock
+                code={cliSnippet(dataset.name, dataset.source)}
+                label="shell command"
+              />
+            </div>
+          )}
 
           {mirrored && (
             <>
@@ -163,6 +210,13 @@ export function Detail({
               </a>
               <p className="mt-1.5 mb-0 text-[0.8rem] text-fg-2">
                 Finds its modules with Infomap, in your browser.
+                {several && (
+                  <>
+                    {" "}
+                    The mirror holds the first network,{" "}
+                    <code className="font-mono">{first}</code>.
+                  </>
+                )}
               </p>
             </>
           )}

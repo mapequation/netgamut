@@ -34,7 +34,9 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   document of those summaries. KONECT's copies of other sources' networks are
   included and name the network they defer to in `duplicate_of`.
 - A documentation site, with a catalog explorer for every dataset, built from
-  `docs/` and `site/explorer/` and published to GitHub Pages.
+  `docs/` and `site/explorer/` and published to GitHub Pages. The explorer
+  renders descriptions as Markdown and, for a Netzschleuder entry holding
+  several networks, lets you pick the subgraph its load snippet fetches.
 - `netgamut export-networks --output DIR`: the web mirror. Netzschleuder, KONECT
   and SNAP networks as gzipped Pajek files a browser can load, smallest first
   within a size budget, each opening with its citation, plus an `index.json`
