@@ -131,6 +131,16 @@ def test_to_dict_splits_netzschleuder_citations_into_text_and_link() -> None:
     assert citation["url"].startswith("https://")
 
 
+def test_to_dict_names_the_subgraphs_a_netzschleuder_entry_holds() -> None:
+    (match,) = netgamut.search("ambassador", source="netzschleuder")
+    summary = match.to_dict()
+    assert summary["subgraph_count"] > 1
+    assert summary["subgraphs"][0] == match.dataset.default_subgraph == "1985_1989"
+    (single,) = netgamut.search("ego-Facebook", source="snap")
+    assert single.to_dict()["subgraph_count"] == 1
+    assert single.to_dict()["subgraphs"] == []
+
+
 def test_to_dict_points_a_konect_copy_at_the_network_it_defers_to() -> None:
     copies = [m for m in netgamut.search(source="konect") if m.to_dict()["duplicate_of"]]
     assert copies

@@ -228,6 +228,10 @@ class Match:
         source (``url``) and, where the catalog records it, the original
         publisher (``upstream_url``). ``duplicate_of`` is the key of the network a
         KONECT copy defers to (see :func:`netgamut.konect.duplicates`), else ``None``.
+        ``subgraph_count`` is how many networks the name holds: a Netzschleuder
+        entry can hold several, the first few named in ``subgraphs``, and the
+        statistics describe the first, which :meth:`load` fetches by default.
+        Other sources hold one and name none.
         """
         dataset = self.dataset
         attributes = self.node_attributes
@@ -244,6 +248,8 @@ class Match:
             "loops": self.loops,
             "node_metadata": self.node_metadata,
             "node_attributes": None if attributes is None else list(attributes),
+            "subgraph_count": getattr(dataset, "subgraph_count", 1),
+            "subgraphs": list(getattr(dataset, "subgraphs", ())),
             "description": getattr(dataset, "description", ""),
             "citations": [_citation(entry) for entry in getattr(dataset, "citations", ())],
             "url": dataset.url,

@@ -28,7 +28,8 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   with the planted state partition. Needs only the standard library.
 - `Match.to_dict()`: a JSON-ready summary of a dataset, the same shape for every
   source -- the fields `search()` filters on, plus description, citations and
-  links.
+  links. `subgraph_count` says how many networks the name holds; a
+  Netzschleuder entry can hold several, the first few named in `subgraphs`.
 - `netgamut export-index [--output FILE]`: every source's catalog as one JSON
   document of those summaries. KONECT's copies of other sources' networks are
   included and name the network they defer to in `duplicate_of`.
