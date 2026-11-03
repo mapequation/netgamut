@@ -152,6 +152,27 @@ def test_future_schema_is_rejected() -> None:
         Catalog.from_dict({"schema": 999, "datasets": []})
 
 
+def test_build_reads_single_and_multiple_upstream_urls(monkeypatch) -> None:
+    """The API gives ``url`` as a string, or as a list for multi-publisher entries."""
+    import json
+
+    from netgamut.netzschleuder import _catalog
+
+    pages = {
+        "nets": ["one", "many"],
+        "net/one": {"url": "https://a.example/one", "nets": ["one"]},
+        "net/many": {"url": ["https://b.example/x", "https://c.example/y"], "nets": ["x", "y"]},
+    }
+    monkeypatch.setattr(
+        _catalog,
+        "fetch_text",
+        lambda url: json.dumps(pages[url.removeprefix(f"{_catalog.API_URL}/")]),
+    )
+    catalog = _catalog.build_catalog(workers=1)
+    assert catalog["one"].upstream_url == "https://a.example/one"
+    assert catalog["many"].upstream_url == "https://b.example/x"
+
+
 def test_cached_catalog_overrides_the_vendored_one(isolated_cache) -> None:
     Catalog(datasets=(make("only-me"),)).write(isolated_cache / "netzschleuder" / "catalog.json")
     catalog = load_catalog(reload=True)
