@@ -75,11 +75,26 @@ netgamut get algebra-questions --revision 1   # pin an AHORN revision
 netgamut cache
 netgamut refresh
 netgamut export-index --output catalog.json
+netgamut export-networks --output mirror
 ```
 
 `export-index` writes every source's catalog as one JSON document. Each dataset
 is the output of `Match.to_dict()`, and KONECT copies of networks held by another
 source carry `duplicate_of`. The {doc}`explorer <../explorer>` reads this file.
+
+`export-networks` builds the web mirror. The upstream hosts don't let a web page
+read their files, so it converts Netzschleuder, KONECT and SNAP networks to
+gzipped Pajek, smallest first, until `--budget` (4,000 MB) is spent. No file
+may be over `--max-file` (95 MB, below GitHub's 100 MiB limit). Each file opens
+with comment lines that name its source and citations. Next to the files,
+`index.json` lists every network with its file, size, counts and citations,
+and says why each other one was left out. Run it again on the same directory to
+update it: a network whose catalog entry is unchanged keeps its file without a
+download, and one that fails keeps its previous file. The mirror is committed
+to the `mirror` branch of
+[mapequation/netgamut-networks](https://github.com/mapequation/netgamut-networks).
+The explorer links each of its networks to the
+[Network Navigator](https://mapequation.org/navigator/).
 
 ## Development
 
