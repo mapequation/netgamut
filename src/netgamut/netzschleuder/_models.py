@@ -52,9 +52,10 @@ class Dataset:
     analyses: dict[str, Any] = field(default_factory=dict)
     #: How many subgraphs the entry holds.
     subgraph_count: int = 0
-    #: The first few subgraph names, as a preview. The full list is not
-    #: vendored: ``openstreetmap`` alone has over 90,000 subgraphs, which would
-    #: dominate the shipped catalog. Use :meth:`subgraph_names` for all of them.
+    #: Up to the first 100 subgraph names, which is all of them for most
+    #: entries. Longer lists are cut: ``openstreetmap`` alone has over 90,000
+    #: subgraphs, which would dominate the shipped catalog. Use
+    #: :meth:`subgraph_names` for all of them.
     subgraphs: tuple[str, ...] = ()
     citations: tuple[str, ...] = ()
     upstream_url: str = ""
