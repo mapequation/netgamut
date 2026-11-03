@@ -78,6 +78,20 @@ net = snap.load("ego-Facebook", file="facebook.tar.gz")
 directory = net.extract()
 ```
 
+A Netzschleuder entry can hold several networks under one name, which it calls
+subgraphs: one per community for `add_health`, one per period for
+`ambassador`. The catalog's figures describe the first, and `load` fetches the
+first unless you name another:
+
+```python
+netgamut.netzschleuder.info("ambassador").subgraph_names()  # ('1985_1989', …, 'KINSHIP', 'ties')
+net = netgamut.load("ambassador", source="netzschleuder", subgraph="2000")
+```
+
+Each subgraph loads as a network of its own. netgamut does not combine them,
+because what they share differs by entry: `ambassador`'s are mostly periods,
+plus a kinship network and a list of every tie.
+
 ## Node metadata, in one shape
 
 Every source stores node attributes somewhere different — a separate SNAP artifact,
