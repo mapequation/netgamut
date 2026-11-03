@@ -31,8 +31,9 @@ SCHEMA_VERSION = 1
 _VENDORED_NAME = "catalog.json"
 API_URL = f"{SITE_URL}/api"
 _REFRESH_WORKERS = 8
-# Entries can hold tens of thousands of subgraphs; vendor a sample.
-_SUBGRAPH_PREVIEW = 10
+# Enough to list nearly every entry in full. The cap is for the few with
+# thousands of subgraphs, such as openstreetmap's ~91,000.
+_SUBGRAPH_PREVIEW = 100
 
 _cached: Catalog | None = None
 
