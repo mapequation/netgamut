@@ -37,8 +37,18 @@ export function yesNo(value: boolean | null): string {
 }
 
 /** The Python call that loads a dataset, with the name as a string literal. */
-export function loadSnippet(name: string, source: string): string {
-  return `import netgamut\n\nnet = netgamut.load(${JSON.stringify(name)}, source=${JSON.stringify(source)})`;
+export function loadSnippet(
+  name: string,
+  source: string,
+  subgraph?: string,
+): string {
+  const pick = subgraph ? `, subgraph=${JSON.stringify(subgraph)}` : "";
+  return `import netgamut\n\nnet = netgamut.load(${JSON.stringify(name)}, source=${JSON.stringify(source)}${pick})`;
+}
+
+/** The Python call that names every subgraph, past the index's preview. */
+export function subgraphsSnippet(name: string, source: string): string {
+  return `netgamut.${source}.info(${JSON.stringify(name)}).subgraph_names()`;
 }
 
 export function cliSnippet(name: string, source: string): string {

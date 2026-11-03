@@ -19,6 +19,10 @@ export interface Dataset {
   loops: boolean | null;
   node_metadata: boolean | null;
   node_attributes: string[] | null;
+  /** How many networks the name holds; the figures describe the first. */
+  subgraph_count: number;
+  /** The first few of them, by name; empty where the source names none. */
+  subgraphs: string[];
   description: string;
   citations: Citation[];
   url: string;
