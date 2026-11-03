@@ -203,7 +203,9 @@ def _cmd_export_index(args: argparse.Namespace) -> int:
     if args.output is None:
         print(text)
     else:
-        Path(args.output).write_text(text + "\n", encoding="utf-8")
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text + "\n", encoding="utf-8")
         print(f"{len(datasets)} datasets written to {args.output}", file=sys.stderr)
     return 0
 
