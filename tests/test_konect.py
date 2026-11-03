@@ -208,8 +208,9 @@ def test_duplicates_rest_on_evidence_not_names() -> None:
     # Imported by Netzschleuder, under another name.
     assert found["moreno_lesmis"] == "netzschleuder/lesmis"
     # Names cross over: Netzschleuder's "epinions" and "twitter" are other
-    # networks, while these are held under other names.
-    assert found["epinions"] == "snap/soc-sign-epinions"
+    # networks, while these are held under other names. SNAP holds this one
+    # too, but Netzschleuder wins the size tie.
+    assert found["epinions"] == "netzschleuder/signed_social_media"
     assert found["twitter"] == "netzschleuder/twitter_social"
     assert found["munmun_twitter_social"] == "netzschleuder/twitter"
     # Same name as a SNAP or Netzschleuder entry, different size: kept.
@@ -221,7 +222,8 @@ def test_duplicates_rest_on_evidence_not_names() -> None:
 
 def test_cross_source_queries_use_the_other_copy() -> None:
     keys = [match.key for match in netgamut.search("dolphins")]
-    assert keys == ["netzschleuder/dolphins"]
+    assert "netzschleuder/dolphins" in keys
+    assert not any(key.startswith("konect/") for key in keys)
     assert netgamut.search("dolphins", source="konect")
     shadowed = sum(1 for item in konect.datasets() if item.duplicate_of)
     total = sum(len(module.datasets()) for module in netgamut._SOURCES.values())

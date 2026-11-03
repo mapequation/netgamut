@@ -43,6 +43,25 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
 - The explorer links every mirrored network to the Network Navigator, which
   opens it and finds its modules with Infomap in the browser.
 
+### Changed
+
+- The vendored Netzschleuder catalog is refreshed to 2026-11-03: 793 networks,
+  up from 286. Sixteen entries were withdrawn upstream and no longer load; most
+  live on as a subgraph of a collection:
+
+  | Removed | Now |
+  | --- | --- |
+  | `bison`, `cattle` | `dom`, subgraphs `Lott_1979`, `ScheinFohrman_1955` |
+  | `eu_procurements_alt` | `eu_procurements`, subgraphs `AT_2008` ... |
+  | `flickr_groups` | `mislove_osn`, subgraph `flickr_groups` |
+  | `foodweb_baywet` | `foodweb_ulanowicz`, subgraph `baywet` |
+  | `football_tsevans` | `football` |
+  | `foursquare_friendships` | `foursquare_global`, subgraphs `friendship_old`, `friendship_new` |
+  | `fresh_webs`, `plant_pol_kato`, `plant_pol_robertson`, `plant_pol_vazquez` | `iwdb`, subgraphs `food_web_thompson_*`, `pollination_*` |
+  | `jdk`, `jung` | `software_dependencies`, subgraphs `jdk`, `jung` |
+  | `movielens_100k` | `movielens_ratings`, subgraph `100k` |
+  | `dblp_coauthor_snap`, `revolution` | none; SNAP's `com-DBLP` and KONECT's `brunson_revolution` remain |
+
 ## 0.3.0
 
 Every network -- downloaded, generated, built from paths or binned from time --
