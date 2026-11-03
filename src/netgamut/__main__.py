@@ -9,6 +9,7 @@ writing any code::
     netgamut get ca-GrQc
     netgamut cache
     netgamut export-index --output catalog.json
+    netgamut export-networks --output mirror
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from typing import Any
 import netgamut
 
 from . import __version__, snap
+from ._export import DEFAULT_BUDGET, MAX_FILE, MIRRORED_SOURCES, export_networks
 
 # The package's own registry, so the CLI cannot drift behind a new source.
 _SOURCES = netgamut._SOURCES
@@ -210,6 +212,24 @@ def _cmd_export_index(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_export_networks(args: argparse.Namespace) -> int:
+    document = export_networks(
+        args.output,
+        sources=args.source or MIRRORED_SOURCES,
+        budget=args.budget * 1_000_000,
+        max_file=args.max_file * 1_000_000,
+        force=args.force,
+        clear_cache=args.clear_cache,
+        log=lambda message: print(message, file=sys.stderr),
+    )
+    print(
+        f"{len(document['datasets'])} networks ({document['bytes'] / 1e6:.0f} MB) written "
+        f"to {args.output}; {len(document['skipped'])} skipped",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="netgamut",
@@ -268,6 +288,34 @@ def build_parser() -> argparse.ArgumentParser:
     )
     export.add_argument("-o", "--output", help="file to write; prints to stdout if omitted")
     export.set_defaults(func=_cmd_export_index)
+
+    mirror = subparsers.add_parser(
+        "export-networks",
+        help="write or update the web mirror: networks as gzipped Pajek, smallest first",
+    )
+    mirror.add_argument("-o", "--output", required=True, help="directory to write or update")
+    mirror.add_argument(
+        "-s", "--source", action="append", choices=MIRRORED_SOURCES, help="repeatable"
+    )
+    mirror.add_argument(
+        "--budget",
+        type=int,
+        default=DEFAULT_BUDGET // 1_000_000,
+        help="total size in MB (default: %(default)s)",
+    )
+    mirror.add_argument(
+        "--max-file",
+        type=int,
+        default=MAX_FILE // 1_000_000,
+        help="largest file in MB (default: %(default)s; GitHub rejects 100 MiB)",
+    )
+    mirror.add_argument(
+        "--force", action="store_true", help="rebuild networks whose catalog entry is unchanged"
+    )
+    mirror.add_argument(
+        "--clear-cache", action="store_true", help="delete each download once converted"
+    )
+    mirror.set_defaults(func=_cmd_export_networks)
 
     return parser
 
