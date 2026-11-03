@@ -10,6 +10,7 @@ import {
   type Filters,
   filterDatasets,
   type Index,
+  type Mirror,
   NO_FILTERS,
   type Sort,
   sortDatasets,
@@ -31,8 +32,15 @@ function hashKey(): string | null {
 
 const wide = () => window.matchMedia("(min-width: 640px)").matches;
 
-export function App({ indexUrl }: { indexUrl: string }) {
+export function App({
+  indexUrl,
+  mirrorUrl,
+}: {
+  indexUrl: string;
+  mirrorUrl: string;
+}) {
   const [index, setIndex] = useState<Index | null>(null);
+  const [mirrored, setMirrored] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sort, setSort] = useState<Sort>({ key: "name", descending: false });
@@ -52,6 +60,20 @@ export function App({ indexUrl }: { indexUrl: string }) {
       .then(setIndex)
       .catch((reason: unknown) => setError(String(reason)));
   }, [indexUrl]);
+
+  // Optional: without the mirror the explorer works as before, minus the
+  // Navigator links.
+  useEffect(() => {
+    fetch(mirrorUrl)
+      .then((response) =>
+        response.ok ? (response.json() as Promise<Mirror>) : null,
+      )
+      .then((mirror) => {
+        if (mirror)
+          setMirrored(new Set(mirror.datasets.map((entry) => entry.key)));
+      })
+      .catch(() => {});
+  }, [mirrorUrl]);
 
   useEffect(() => {
     const follow = () => setSelected(hashKey());
@@ -239,6 +261,7 @@ export function App({ indexUrl }: { indexUrl: string }) {
 
       <Detail
         dataset={current}
+        mirrored={current !== null && mirrored.has(current.key)}
         order={order}
         onClose={() => select(null)}
         onSelect={select}

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { Dataset } from "../catalog";
+import { type Dataset, navigatorUrl } from "../catalog";
 import {
   cliSnippet,
   count,
@@ -21,11 +21,14 @@ function Fact({ label, value }: { label: string; value: string }) {
 
 export function Detail({
   dataset,
+  mirrored,
   order,
   onClose,
   onSelect,
 }: {
   dataset: Dataset | null;
+  /** Whether the web mirror holds this network, so the Navigator can open it. */
+  mirrored: boolean;
   order: string[];
   onClose: () => void;
   onSelect: (key: string) => void;
@@ -146,6 +149,23 @@ export function Detail({
               label="shell command"
             />
           </div>
+
+          {mirrored && (
+            <>
+              <h3 className={section}>Explore it</h3>
+              <a
+                className="inline-flex min-h-9 items-center rounded-md border border-line bg-bg px-3 text-[0.85rem] font-semibold text-brand no-underline hover:bg-bg-hover"
+                href={navigatorUrl(dataset.key)}
+                target="_blank"
+                rel="noopener"
+              >
+                Open in the Network Navigator ↗
+              </a>
+              <p className="mt-1.5 mb-0 text-[0.8rem] text-fg-2">
+                Finds its modules with Infomap, in your browser.
+              </p>
+            </>
+          )}
 
           {dataset.citations.length > 0 && (
             <>

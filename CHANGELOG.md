@@ -34,6 +34,14 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   included and name the network they defer to in `duplicate_of`.
 - A documentation site, with a catalog explorer for every dataset, built from
   `docs/` and `site/explorer/` and published to GitHub Pages.
+- `netgamut export-networks --output DIR`: the web mirror. Netzschleuder, KONECT
+  and SNAP networks as gzipped Pajek files a browser can load, smallest first
+  within a size budget, each opening with its citation, plus an `index.json`
+  manifest. Run again on the same directory, it rebuilds only networks whose
+  catalog entry changed. The mirror lives on the `mirror` branch of
+  `mapequation/netgamut-networks`.
+- The explorer links every mirrored network to the Network Navigator, which
+  opens it and finds its modules with Infomap in the browser.
 
 ## 0.3.0
 
