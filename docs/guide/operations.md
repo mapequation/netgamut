@@ -86,7 +86,10 @@ source carry `duplicate_of`. The {doc}`explorer <../explorer>` reads this file.
 read their files, so it converts Netzschleuder, KONECT and SNAP networks to
 gzipped Pajek, smallest first, until `--budget` (4,000 MB) is spent. No file
 may be over `--max-file` (95 MB, below GitHub's 100 MiB limit). Each file opens
-with comment lines that name its source and citations. Next to the files,
+with comment lines that name its source and citations. Node ids are the
+source's own, as `to_pajek` writes them, so a node keeps its id across a
+dataset's snapshots. They can start at 0 and skip numbers; a comment line gives
+their range. Next to the files,
 `index.json` lists every network with its file, size, counts and citations,
 and says why each other one was left out. Run it again on the same directory to
 update it: a network whose catalog entry is unchanged keeps its file without a
