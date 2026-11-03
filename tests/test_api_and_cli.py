@@ -178,7 +178,8 @@ def test_cli_cache_reports_state(offline_snap, capsys) -> None:
 
 
 def test_cli_export_index_writes_every_source(tmp_path, capsys) -> None:
-    target = tmp_path / "catalog.json"
+    # A fresh checkout has no site/explorer/public, so the command makes it.
+    target = tmp_path / "public" / "catalog.json"
     assert cli.main(["export-index", "--output", str(target)]) == 0
     assert "datasets written" in capsys.readouterr().err
     document = json.loads(target.read_text(encoding="utf-8"))
