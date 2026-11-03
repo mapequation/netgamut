@@ -228,6 +228,10 @@ def build_catalog(*, workers: int = _REFRESH_WORKERS) -> Catalog:
             return None
         analyses = payload.get("analyses") or {}
         nets = tuple(payload.get("nets") or ())
+        # Entries drawn from several publishers list one URL each; keep the first.
+        url = payload.get("url") or ""
+        if isinstance(url, list):
+            url = url[0] if url else ""
         return Dataset(
             name=name,
             tags=tuple(payload.get("tags") or ()),
@@ -237,7 +241,7 @@ def build_catalog(*, workers: int = _REFRESH_WORKERS) -> Catalog:
             # A preview only; see Dataset.subgraphs for why.
             subgraphs=nets[:_SUBGRAPH_PREVIEW],
             citations=tuple(payload.get("citation") or ()),
-            upstream_url=payload.get("url") or "",
+            upstream_url=url,
         )
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
