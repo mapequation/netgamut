@@ -39,6 +39,18 @@ export interface Index {
   datasets: Dataset[];
 }
 
+/** The web mirror's manifest (`netgamut export-networks`): networks a browser can load. */
+export interface Mirror {
+  datasets: { key: string }[];
+}
+
+const NAVIGATOR = "https://mapequation.org/navigator/";
+
+/** Opens a mirrored network in the Network Navigator, which runs Infomap on it. */
+export function navigatorUrl(key: string): string {
+  return `${NAVIGATOR}?netgamut=${encodeURIComponent(key).replace("%2F", "/")}`;
+}
+
 /** Yes / no / either, for the boolean fields where the index may say "unknown". */
 export type Tristate = "any" | "yes" | "no";
 

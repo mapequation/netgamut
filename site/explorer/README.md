@@ -22,6 +22,13 @@ uv run --group docs sphinx-build -W docs docs/_build/html
 
 `.github/workflows/pages.yml` runs the same steps and deploys the result.
 
+The explorer also reads the web mirror's manifest, which `netgamut
+export-networks` writes and the `mirror` branch of
+`mapequation/netgamut-networks` serves. Every network listed there gets a link
+to the Network Navigator. The page's `data-mirror` attribute overrides the
+manifest's URL. If the manifest fails to load, the links don't appear and
+nothing else changes.
+
 The page renders inside the furo theme, so the stylesheet has no reset and its
 colours are furo's own variables; the categorical colours for the seven sources
 are validated for colour-vision deficiency in light and dark mode.
