@@ -71,6 +71,8 @@ export interface Filters {
   minEdges: string;
   maxEdges: string;
   copies: boolean;
+  /** Whether the web mirror holds it, so the Network Navigator can open it. */
+  navigator: Tristate;
 }
 
 export const NO_FILTERS: Filters = {
@@ -86,6 +88,7 @@ export const NO_FILTERS: Filters = {
   minEdges: "",
   maxEdges: "",
   copies: false,
+  navigator: "any",
 };
 
 export type SortKey = "name" | "source" | "nodes" | "edges";
@@ -116,9 +119,11 @@ function matches(value: boolean | null, wanted: Tristate): boolean {
   return wanted === "any" || value === (wanted === "yes");
 }
 
+/** *mirrored* holds the keys in the web mirror's manifest. */
 export function filterDatasets(
   datasets: Dataset[],
   filters: Filters,
+  mirrored: ReadonlySet<string>,
 ): Dataset[] {
   const needle = filters.query.trim().toLocaleLowerCase();
   const attribute = filters.nodeAttribute.trim().toLocaleLowerCase();
@@ -138,6 +143,7 @@ export function filterDatasets(
       matches(dataset.directed, filters.directed) &&
       matches(dataset.loops, filters.loops) &&
       matches(dataset.node_metadata, filters.nodeMetadata) &&
+      matches(mirrored.has(dataset.key), filters.navigator) &&
       (attribute === "" ||
         (dataset.node_attributes ?? []).some(
           (column) => column.toLocaleLowerCase() === attribute,

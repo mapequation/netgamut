@@ -44,7 +44,8 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   catalog entry changed. The mirror lives on the `mirror` branch of
   `mapequation/netgamut-networks`.
 - The explorer links every mirrored network to the Network Navigator, which
-  opens it and finds its modules with Infomap in the browser.
+  opens it and finds its modules with Infomap in the browser. An "In Navigator"
+  filter keeps or leaves out those networks.
 
 ### Changed
 
