@@ -219,12 +219,15 @@ def _cmd_export_networks(args: argparse.Namespace) -> int:
         budget=args.budget * 1_000_000,
         max_file=args.max_file * 1_000_000,
         force=args.force,
+        stop_after=None if args.stop_after is None else args.stop_after * 60,
         clear_cache=args.clear_cache,
         log=lambda message: print(message, file=sys.stderr),
     )
+    waiting = sum(entry["reason"] == "not built yet" for entry in document["skipped"])
     print(
         f"{len(document['datasets'])} networks ({document['bytes'] / 1e6:.0f} MB) written "
-        f"to {args.output}; {len(document['skipped'])} skipped",
+        f"to {args.output}; {len(document['skipped'])} skipped"
+        + ("" if document["complete"] else f", {waiting} not built yet"),
         file=sys.stderr,
     )
     return 0
@@ -311,6 +314,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     mirror.add_argument(
         "--force", action="store_true", help="rebuild networks whose catalog entry is unchanged"
+    )
+    mirror.add_argument(
+        "--stop-after",
+        type=float,
+        metavar="MINUTES",
+        help="start no new download after this long; the next run continues",
     )
     mirror.add_argument(
         "--clear-cache", action="store_true", help="delete each download once converted"

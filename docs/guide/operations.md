@@ -93,8 +93,12 @@ their range. Next to the files,
 `index.json` lists every network with its file, size, counts and citations,
 and says why each other one was left out. Run it again on the same directory to
 update it: a network whose catalog entry is unchanged keeps its file without a
-download, and one that fails keeps its previous file. The mirror is committed
-to the `mirror` branch of
+download, and one that fails keeps its previous file. With `--stop-after
+MINUTES`, it starts no new download once that time is up and leaves the rest
+for the next run, which continues where it stopped. The manifest's `complete`
+stays false until a run gets through every network, and a run that changes
+nothing leaves `index.json` as it was. The mirror is committed to the `mirror`
+branch of
 [mapequation/netgamut-networks](https://github.com/mapequation/netgamut-networks).
 The explorer links each of its networks to the
 [Network Navigator](https://mapequation.org/navigator/).
