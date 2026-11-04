@@ -25,8 +25,9 @@ uv run --group docs sphinx-build -W docs docs/_build/html
 The explorer also reads the web mirror's manifest, which `netgamut
 export-networks` writes and the `mirror` branch of
 `mapequation/netgamut-networks` serves. Every network listed there gets a link
-to the Network Navigator. The page's `data-mirror` attribute overrides the
-manifest's URL. If the manifest fails to load, the links don't appear and
+to the Network Navigator, and the "In Navigator" filter keeps or leaves out
+those networks. The page's `data-mirror` attribute overrides the manifest's
+URL. If the manifest fails to load, the links and the filter don't appear and
 nothing else changes.
 
 The page renders inside the furo theme, so the stylesheet has no reset and its

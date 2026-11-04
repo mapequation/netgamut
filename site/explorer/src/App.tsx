@@ -101,8 +101,8 @@ export function App({
     [index, deferred.copies],
   );
   const filtered = useMemo(
-    () => (index ? filterDatasets(index.datasets, deferred) : []),
-    [index, deferred],
+    () => (index ? filterDatasets(index.datasets, deferred, mirrored) : []),
+    [index, deferred, mirrored],
   );
   const sorted = useMemo(
     () => sortDatasets(filtered, sort, order),
@@ -183,6 +183,7 @@ export function App({
           index={index}
           filters={filters}
           attributes={attributes}
+          mirror={mirrored.size > 0}
           onChange={change}
         />
       )}

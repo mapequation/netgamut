@@ -12,11 +12,14 @@ export function FilterPanel({
   index,
   filters,
   attributes,
+  mirror,
   onChange,
 }: {
   index: Index;
   filters: Filters;
   attributes: string[];
+  /** Whether the web mirror's manifest loaded; without it the filter is moot. */
+  mirror: boolean;
   onChange: (patch: Partial<Filters>) => void;
 }) {
   const order = index.sources.map((source) => source.name);
@@ -116,6 +119,13 @@ export function FilterPanel({
             ))}
           </datalist>
         </label>
+        {mirror && (
+          <Choice
+            label="In Navigator"
+            value={filters.navigator}
+            onChange={(navigator) => onChange({ navigator })}
+          />
+        )}
       </div>
       <p className="m-0 text-[0.75rem] text-fg-muted">
         As in <code>netgamut.search()</code>: a size bound leaves out datasets
