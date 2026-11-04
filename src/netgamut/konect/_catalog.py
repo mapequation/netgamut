@@ -31,6 +31,7 @@ from .._core import cache as _cache
 from .._core.domains import DOMAINS
 from .._core.download import fetch_text, head, open_stream
 from . import _ent
+from ._copies import Pair
 from ._models import SITE_URL, Dataset, is_edge_list_header
 from ._scrape import is_series, parse_index, parse_page
 
@@ -57,6 +58,10 @@ class Catalog:
     source: str = INDEX_URL
     retrieved: str = ""
     origin: str = "package"
+    #: Every pair of a KONECT network and a network elsewhere that may be its
+    #: copy, with the verdict the catalog build reached; see
+    #: :func:`netgamut.konect.duplicates`.
+    copies: tuple[Pair, ...] = ()
 
     _by_name: dict[str, Dataset] = field(
         init=False, repr=False, compare=False, default_factory=dict
@@ -178,6 +183,7 @@ class Catalog:
             "source": self.source,
             "retrieved": self.retrieved,
             "datasets": [item.to_dict() for item in self.datasets],
+            "copies": [pair.to_dict() for pair in self.copies],
         }
 
     @classmethod
@@ -192,6 +198,7 @@ class Catalog:
             source=data.get("source", INDEX_URL),
             retrieved=data.get("retrieved", ""),
             origin=origin,
+            copies=tuple(Pair.from_dict(item) for item in data.get("copies", [])),
         )
 
     def write(self, path: Path) -> Path:
@@ -309,7 +316,8 @@ def build_catalog(
 
     *previous* supplies archive listings to reuse; with none, every archive up to
     *list_cap* bytes is downloaded once to list it. ``list_cap=None`` skips
-    listing entirely.
+    listing entirely. The verdicts on copies are carried over from *previous*
+    as they stand; ``scripts/regenerate_konect_catalog.py`` judges them anew.
     """
     rows = [
         row
@@ -335,11 +343,13 @@ def build_catalog(
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
         fetched = [item for item in pool.map(fetch, rows) if item is not None]
 
+    names = {item.name for item in fetched}
     return Catalog(
         datasets=tuple(fetched),
         source=INDEX_URL,
         retrieved=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         origin="cache",
+        copies=tuple(pair for pair in previous.copies if pair.name in names) if previous else (),
     )
 
 

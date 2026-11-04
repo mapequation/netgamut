@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import io
+import random
 import tarfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 import netgamut
 from netgamut import konect
 from netgamut._core.domains import DOMAINS
-from netgamut.konect import _catalog, _ent, _scrape
+from netgamut.konect import _catalog, _copies, _ent, _scrape
 from netgamut.konect._models import Dataset, attribute_name, is_edge_list_header
 
 INDEX_ROW = (
@@ -205,14 +207,12 @@ def test_vendored_catalog_lists_archive_contents() -> None:
 
 def test_duplicates_rest_on_evidence_not_names() -> None:
     found = konect.duplicates()
-    # Imported by Netzschleuder, under another name.
+    # Held by Netzschleuder under another name.
     assert found["moreno_lesmis"] == "netzschleuder/lesmis"
-    # Names cross over: Netzschleuder's "epinions" and "twitter" are other
-    # networks, while these are held under other names. SNAP holds this one
-    # too, but Netzschleuder wins the size tie.
-    assert found["epinions"] == "netzschleuder/signed_social_media"
-    assert found["twitter"] == "netzschleuder/twitter_social"
+    # Names cross over: Netzschleuder's "twitter" is this one, while KONECT's
+    # "twitter" is another network.
     assert found["munmun_twitter_social"] == "netzschleuder/twitter"
+    assert found.get("twitter") != "netzschleuder/twitter"
     # Same name as a SNAP or Netzschleuder entry, different size: kept.
     assert "ego-twitter" not in found
     assert "openflights" not in found
@@ -220,11 +220,220 @@ def test_duplicates_rest_on_evidence_not_names() -> None:
     assert "wikipedia_link_en" not in found
 
 
+# -- copies -------------------------------------------------------------------
+# Two networks of 10 nodes and 14 edges: a bipartite one, five women and five
+# events with the events numbered 6-10 as KONECT's loaded file has them, and
+# one with triangles. Equal counts, unrelated networks.
+BIPARTITE_10_14 = [
+    (1, 6), (1, 7), (1, 8), (2, 6), (2, 7), (2, 9), (3, 7), (3, 8),
+    (3, 10), (4, 8), (4, 9), (5, 9), (5, 10), (4, 10),
+]  # fmt: skip
+TRIANGLES_10_14 = [
+    (0, 1), (0, 2), (1, 2), (2, 3), (3, 4), (2, 4), (4, 5), (5, 6),
+    (4, 6), (6, 7), (1, 3), (0, 3), (8, 9), (7, 8),
+]  # fmt: skip
+
+
+def _text(edges: list[tuple[int, int]]) -> list[tuple[str, str]]:
+    return [(str(u), str(v)) for u, v in edges]
+
+
+def _relabel(edges: list[tuple[int, int]], seed: int = 1) -> list[tuple[str, str]]:
+    nodes = sorted({node for edge in edges for node in edge})
+    shuffled = nodes[:]
+    random.Random(seed).shuffle(shuffled)
+    new = dict(zip(nodes, shuffled, strict=True))
+    rows = [(new[u], new[v]) for u, v in edges]
+    random.Random(seed).shuffle(rows)
+    return [(str(u + 100), str(v + 100)) for u, v in rows]
+
+
+def test_same_size_networks_are_told_apart_by_their_edges() -> None:
+    same, note = _copies.compare_edges(
+        _text(BIPARTITE_10_14), _text(TRIANGLES_10_14), directed=False, simple=True, shift=1
+    )
+    assert not same
+    assert note == "degree sequences differ"
+
+
+def test_a_copy_matches_with_netzschleuder_ids_one_lower() -> None:
+    zero_based = [(u - 1, v - 1) for u, v in BIPARTITE_10_14]
+    assert _copies.compare_edges(
+        _text(BIPARTITE_10_14), _text(zero_based), directed=False, simple=True, shift=1
+    ) == (True, "same ids, offset by 1")
+    # Undirected edges may be listed either way round, or both.
+    both_ways = [(v, u) for u, v in BIPARTITE_10_14] + BIPARTITE_10_14
+    assert _copies.compare_edges(
+        _text(BIPARTITE_10_14), _text(both_ways), directed=False, simple=True
+    ) == (True, "same ids")
+    # Directed, a link's direction counts: a star pointing out is not one
+    # pointing in.
+    out_star = [(1, 2), (1, 3), (1, 4)]
+    in_star = [(v, u) for u, v in out_star]
+    assert _copies.compare_edges(_text(out_star), _text(in_star), directed=True, simple=True) == (
+        False,
+        "degree sequences differ",
+    )
+    assert _copies.compare_edges(_text(out_star), _text(in_star), directed=False, simple=True)[0]
+
+
+def test_a_copy_matches_up_to_relabelling() -> None:
+    same, note = _copies.compare_edges(
+        _text(TRIANGLES_10_14),
+        _relabel(TRIANGLES_10_14),
+        directed=False,
+        simple=True,
+        isomorphism_cap=0,
+    )
+    assert same
+    assert note.startswith("equal up to relabelling")
+
+
+def test_a_multigraph_counts_its_repeated_edges() -> None:
+    doubled_first, doubled_last = [(1, 2), (1, 2), (2, 3)], [(1, 2), (2, 3), (2, 3)]
+    # As sets of edges the two are one network ...
+    assert _copies.compare_edges(
+        _text(doubled_first), _text(doubled_last), directed=False, simple=True
+    ) == (True, "same ids")
+    # ... as multigraphs, only up to swapping nodes 1 and 3.
+    same, note = _copies.compare_edges(
+        _text(doubled_first), _text(doubled_last), directed=False, simple=False, isomorphism_cap=0
+    )
+    assert same
+    assert note.startswith("equal up to relabelling")
+    triangle = [(1, 2), (2, 3), (3, 1)]
+    assert not _copies.compare_edges(
+        _text(doubled_first), _text(triangle), directed=False, simple=False
+    )[0]
+
+
+def test_small_pairs_need_an_exact_isomorphism() -> None:
+    pytest.importorskip("networkx")
+    cycle = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0)]
+    triangles = [(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)]
+    # Colour refinement alone takes these for one network.
+    loose = _copies.compare_edges(
+        _text(cycle), _text(triangles), directed=False, simple=True, isomorphism_cap=0
+    )
+    assert loose[0]
+    assert _copies.compare_edges(_text(cycle), _text(triangles), directed=False, simple=True) == (
+        False,
+        "not isomorphic",
+    )
+    assert _copies.compare_edges(
+        _text(TRIANGLES_10_14), _relabel(TRIANGLES_10_14), directed=False, simple=True
+    ) == (True, "isomorphic after relabelling")
+
+
+def _fake(name: str, nodes: int, edges: int, **flags: object) -> SimpleNamespace:
+    defaults = {"directed": False, "bipartite": False, "subgraph_count": 1, "upstream_url": ""}
+    return SimpleNamespace(name=name, nodes=nodes, edges=edges, **{**defaults, **flags})
+
+
+def test_judge_needs_evidence_for_a_copy() -> None:
+    konect_side = {
+        "women": _fake("women", 10, 14, bipartite=True),
+        "lesmis": _fake("lesmis", 77, 254),
+        "karate": _fake("karate", 34, 78),
+        "huge": _fake("huge", 10**6, 10**8),
+    }
+    netzschleuder_side = [
+        _fake("attacks", 10, 14, bipartite=False),
+        _fake("les_mis", 77, 254),
+        _fake("imported", 70, 250, upstream_url="http://konect.cc/networks/karate/"),
+        _fake("big", 10**6, 10**8),
+    ]
+    snap_side = [_fake("zachary", 34, 78, bipartite=None)]
+    candidates = _copies.nominate(konect_side.values(), netzschleuder_side, snap_side)
+    assert [(c.name, c.of, c.imported, c.same_size) for c in candidates] == [
+        ("women", "netzschleuder/attacks", False, True),
+        ("lesmis", "netzschleuder/les_mis", False, True),
+        ("karate", "netzschleuder/imported", True, False),
+        ("karate", "snap/zachary", False, True),
+        ("huge", "netzschleuder/big", False, True),
+    ]
+    others = {f"netzschleuder/{item.name}": item for item in netzschleuder_side}
+    others["snap/zachary"] = snap_side[0]
+    compared: list[str] = []
+
+    def check(candidate: _copies.Candidate) -> tuple[bool, str]:
+        compared.append(candidate.of)
+        return candidate.of == "netzschleuder/les_mis", "by hand"
+
+    def verdicts(**options: object) -> dict[str, str]:
+        found = _copies.judge(candidates, konect=konect_side, others=others, **options)
+        return {pair.of: pair.verdict for pair in found}
+
+    # Without comparing edge lists, only provenance makes a copy.
+    assert verdicts() == {
+        "netzschleuder/attacks": "different",  # bipartite against triangles
+        "netzschleuder/les_mis": "unverified",
+        "netzschleuder/imported": "imported",
+        "snap/zachary": "unverified",
+        "netzschleuder/big": "unverified",
+    }
+    found = verdicts(check=check, max_edges=1000)
+    assert found["netzschleuder/les_mis"] == "same-edges"
+    assert found["snap/zachary"] == "different"
+    assert found["netzschleuder/big"] == "unverified"  # above the cap
+    # Statistics rejected the first pair without a download, and the cap the last.
+    assert compared == ["netzschleuder/les_mis", "snap/zachary"]
+
+    # A comparison is reused; a recorded override wins.
+    previous = [_copies.Pair("lesmis", "netzschleuder/les_mis", "same-edges", "by hand")]
+    override = {("huge", "netzschleuder/big"): ("override", "checked once by hand")}
+    compared.clear()
+    found = verdicts(check=check, max_edges=1000, previous=previous, overrides=override)
+    assert found["netzschleuder/les_mis"] == "same-edges"
+    assert found["netzschleuder/big"] == "override"
+    assert compared == ["snap/zachary"]
+
+    def broken(candidate: _copies.Candidate) -> tuple[bool, str]:
+        raise OSError("connection reset")
+
+    assert verdicts(check=broken)["netzschleuder/les_mis"] == "unverified"
+
+
+def test_duplicates_rest_on_evidence_not_size() -> None:
+    found = konect.duplicates()
+    # Same 10 nodes and 14 edges, but bipartite here and full of triangles there.
+    assert "brunson_southern-women" not in found
+    # Compared edge by edge.
+    assert found["opsahl-southernwomen"] == "netzschleuder/davis_southern_women"
+    pairs = {(pair.name, pair.of): pair for pair in konect.catalog().copies}
+    assert pairs["opsahl-southernwomen", "netzschleuder/davis_southern_women"].verdict == (
+        "same-edges"
+    )
+    assert pairs["brunson_southern-women", "netzschleuder/global_suicide_attacks"].verdict == (
+        "different"
+    )
+    # Every import Netzschleuder records is a copy, compared or not.
+    imported = [pair for pair in konect.catalog().copies if pair.verdict == "imported"]
+    assert all(found[pair.name] == pair.of for pair in imported)
+    # Only verdicts make copies.
+    assert set(found) == {pair.name for pair in konect.catalog().copies if pair.is_copy}
+
+
+def test_loops_carry_over_only_to_a_compared_copy() -> None:
+    copies = konect.catalog().copies
+    compared = {pair.of for pair in copies if pair.verdict == "same-edges"}
+    assert compared
+    for pair in copies:
+        if pair.of not in compared:
+            assert konect.loops_for(pair.of) is None, pair
+    assert konect.loops_for("netzschleuder/global_suicide_attacks") is None
+    assert konect.loops_for("netzschleuder/davis_southern_women") is False
+
+
 def test_cross_source_queries_use_the_other_copy() -> None:
-    keys = [match.key for match in netgamut.search("dolphins")]
-    assert "netzschleuder/dolphins" in keys
-    assert not any(key.startswith("konect/") for key in keys)
-    assert netgamut.search("dolphins", source="konect")
+    keys = [match.key for match in netgamut.search("southern")]
+    # Davis's women and events, compared edge by edge, are listed once ...
+    assert "netzschleuder/davis_southern_women" in keys
+    assert "konect/opsahl-southernwomen" not in keys
+    # ... and Brunson's smaller network, which only shares a size with
+    # another, is listed in its own right.
+    assert "konect/brunson_southern-women" in keys
+    assert netgamut.search("opsahl-southernwomen", source="konect")
     shadowed = sum(1 for item in konect.datasets() if item.duplicate_of)
     total = sum(len(module.datasets()) for module in netgamut._SOURCES.values())
     assert len(netgamut.search()) == total - shadowed

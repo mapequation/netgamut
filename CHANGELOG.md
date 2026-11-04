@@ -65,6 +65,22 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   | `movielens_100k` | `movielens_ratings`, subgraph `100k` |
   | `dblp_coauthor_snap`, `revolution` | none; SNAP's `com-DBLP` and KONECT's `brunson_revolution` remain |
 
+### Fixed
+
+- A KONECT network is no longer taken for a copy of a Netzschleuder or SNAP
+  network because both have the same node and edge count. KONECT's
+  `brunson_southern-women` (bipartite, 10 nodes, 14 edges) was hidden from
+  `netgamut.search()` and the explorer as a copy of Netzschleuder's unrelated
+  `global_suicide_attacks`. Equal sizes now only nominate a pair; the catalog
+  build compares the two edge lists and vendors a verdict per pair in
+  `konect.catalog().copies`, which `konect.duplicates()` and the cross-source
+  loop check read. A pair not compared yet stays two networks. Of the 155
+  networks the old rule called copies, 66 still are: 46 compared edge by edge
+  and 20 on Netzschleuder's record of importing them. Three are distinct:
+  `brunson_southern-women`, `contact` (undirected in KONECT, directed in
+  Netzschleuder) and `facebook-wosn-wall` (the same links, each pointing the
+  other way). The other 86 are listed in their own right until compared.
+
 ## 0.3.0
 
 Every network -- downloaded, generated, built from paths or binned from time --
