@@ -200,8 +200,58 @@ def test_one_source_at_a_time_keeps_the_others(tmp_path, catalog) -> None:
     assert {entry["key"] for entry in document["skipped"]} == {"konect/unsized"}
 
 
+def test_starts_no_download_after_the_time_limit(tmp_path, catalog) -> None:
+    stopped = _export.export_networks(tmp_path, sources=("snap",), stop_after=0)
+    assert stopped["complete"] is False
+    assert stopped["datasets"] == []
+    assert stopped["skipped"] == [
+        {"key": "snap/middle", "reason": "not built yet"},
+        {"key": "snap/tiny", "reason": "not built yet"},
+    ]
+    assert catalog["snap"][0].loads == []
+
+    finished = _export.export_networks(tmp_path, sources=("snap",))
+    assert finished["complete"] is True
+    assert _keys(finished) == ["snap/middle", "snap/tiny"]
+
+
+def test_a_stopped_run_keeps_what_earlier_runs_built(tmp_path, catalog) -> None:
+    first = _export.export_networks(tmp_path, sources=("snap",))
+    catalog["snap"][1].dataset.edges = 12  # middle changed upstream
+    stopped = _export.export_networks(tmp_path, sources=("snap",), stop_after=0)
+    # Out of time: the stale file stays listed rather than vanishing.
+    assert stopped["complete"] is False
+    assert stopped["datasets"] == first["datasets"]
+    assert (tmp_path / "snap" / "middle.net.gz").is_file()
+
+    resumed = _export.export_networks(tmp_path, sources=("snap",))
+    assert resumed["complete"] is True
+    middle = next(entry for entry in resumed["datasets"] if entry["key"] == "snap/middle")
+    assert middle["edges"] == 12
+
+
+def test_an_idle_run_leaves_the_manifest_untouched(tmp_path, catalog) -> None:
+    _export.export_networks(tmp_path, sources=("snap",))
+    manifest = tmp_path / "index.json"
+    earlier = json.loads(manifest.read_text())
+    manifest.write_text(json.dumps({**earlier, "built": "2026-01-01T00:00:00+00:00"}))
+    before = manifest.read_bytes()
+
+    again = _export.export_networks(tmp_path, sources=("snap",))
+    assert again["built"] == "2026-01-01T00:00:00+00:00"
+    assert json.loads(manifest.read_bytes()) == json.loads(before)
+
+
 def test_cli_export_networks(tmp_path, catalog, capsys) -> None:
     target = tmp_path / "mirror"
     assert cli.main(["export-networks", "--output", str(target), "--source", "snap"]) == 0
     assert "2 networks" in capsys.readouterr().err
     assert len(json.loads((target / "index.json").read_text())["datasets"]) == 2
+
+
+def test_cli_says_how_many_wait_for_the_next_run(tmp_path, catalog, capsys) -> None:
+    target = tmp_path / "mirror"
+    argv = ["export-networks", "--output", str(target), "--source", "snap", "--stop-after", "0"]
+    assert cli.main(argv) == 0
+    assert "0 networks (0 MB) written" in (err := capsys.readouterr().err)
+    assert "2 not built yet" in err
