@@ -21,6 +21,7 @@ import re
 import shutil
 import tempfile
 import time
+import urllib.error
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,6 +30,7 @@ from typing import Any
 import netgamut
 
 from . import __version__
+from ._core.download import DownloadError
 
 #: The sources whose networks are first-order graphs the Navigator can load.
 MIRRORED_SOURCES = ("netzschleuder", "konect", "snap")
@@ -116,8 +118,12 @@ def export_networks(
                 candidates.append((match, fingerprint))
     candidates.sort(key=lambda pair: (pair[0].edges, pair[0].nodes or 0, pair[0].key))
 
+    down: set[str] = set()  # sources whose host stopped answering in this run
+    reserved = 0
     for position, (match, fingerprint) in enumerate(candidates):
         previous = kept.get(match.key)
+        entry: dict[str, Any] | None
+        reason = ""
         if previous is not None and previous.get("fingerprint") == fingerprint and not force:
             entry = previous
         elif deadline is not None and time.monotonic() >= deadline:
@@ -126,6 +132,11 @@ def export_networks(
                 skipped.append({"key": match.key, "reason": "not built yet"})
                 continue
             entry = previous
+        elif match.source in down:
+            # Each attempt at a host that does not answer waits out three
+            # timeouts, so the source waits for the next run instead.
+            entry = previous
+            reason = f"{match.source} unreachable in this run"
         else:
             try:
                 entry = _convert(match, folder, fingerprint, max_file, max_download)
@@ -134,21 +145,33 @@ def export_networks(
                     error if isinstance(error, _TooLarge) else f"{type(error).__name__}: {error}"
                 )
                 reason = " ".join(str(described).split())[:300]
-                if previous is None:
+                if _unreachable(error):
+                    down.add(match.source)
+                    log(f"{match.source} does not answer; its other networks wait for a later run")
+                entry = previous
+                if previous is not None:
+                    log(f"{match.key}: {reason}; kept the previous file")
+                elif match.source not in down:
                     skipped.append({"key": match.key, "reason": reason, "fingerprint": fingerprint})
                     log(f"{match.key}: skipped, {reason}")
                     continue
-                entry = previous
-                log(f"{match.key}: {reason}; kept the previous file")
             finally:
                 if clear_cache:
                     netgamut.clear_cache(match.name, source=match.source)
-        if total + entry["bytes"] > budget:
+        size = entry["bytes"] if entry is not None else _estimate(match)
+        if total + size > budget:
             skipped.extend(
                 {"key": rest.key, "reason": "over budget"} for rest, _ in candidates[position:]
             )
             break
-        total += entry["bytes"]
+        total += size
+        if entry is None:
+            # Unreachable and never built: its estimated space is held, so that
+            # building it in a later run pushes out no file already pushed.
+            reserved += size
+            skipped.append({"key": match.key, "reason": reason, "reserved": size})
+            log(f"{match.key}: skipped, {reason}")
+            continue
         entries.append(entry)
         log(f"{match.key}: {entry['nodes']:,} nodes, {entry['edges']:,} links")
 
@@ -157,7 +180,8 @@ def export_networks(
         "netgamut": __version__,
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
         "complete": complete,
-        "bytes": total,
+        "bytes": total - reserved,
+        "reserved": reserved,
         "datasets": sorted(entries, key=lambda entry: str(entry["key"])),
         "skipped": sorted(skipped, key=lambda entry: str(entry["key"])),
     }
@@ -171,6 +195,21 @@ def export_networks(
 
 class _TooLarge(ValueError):
     """The gzipped file would be over the per-file limit."""
+
+
+def _unreachable(error: Exception) -> bool:
+    """Whether the host did not answer, rather than refusing this one file."""
+    if not isinstance(error, DownloadError):
+        return False
+    cause = error.__cause__
+    if isinstance(cause, urllib.error.HTTPError):
+        return cause.code >= 500
+    return isinstance(cause, (urllib.error.URLError, TimeoutError, OSError))
+
+
+def _estimate(match: Any) -> int:
+    """A network's likely file size: gzipped Pajek measured about 3.9 bytes a link."""
+    return int(match.edges) * 4
 
 
 def _source(key: str) -> str:

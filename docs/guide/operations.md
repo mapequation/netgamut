@@ -97,7 +97,11 @@ download, and one that fails keeps its previous file. With `--stop-after
 MINUTES`, it starts no new download once that time is up and leaves the rest
 for the next run, which continues where it stopped. The manifest's `complete`
 stays false until a run gets through every network, and a run that changes
-nothing leaves `index.json` as it was. The mirror is committed to the `mirror`
+nothing leaves `index.json` as it was. When a source's host stops answering
+(a timeout, a failed connection or a 5xx), the rest of that source waits for a
+later run instead of three timeouts each. Its unbuilt networks keep their
+estimated size reserved in the budget (`reserved` in the manifest), so building
+them later deletes no file already published. The mirror is committed to the `mirror`
 branch of
 [mapequation/netgamut-networks](https://github.com/mapequation/netgamut-networks).
 The explorer links each of its networks to the
