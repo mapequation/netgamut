@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import urllib.error
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ import netgamut
 from netgamut import __main__ as cli
 from netgamut import _export
 from netgamut._core import formats
+from netgamut._core.download import DownloadError
 
 
 @dataclass
@@ -25,6 +27,16 @@ class FakeDataset:
     duplicate_of: str | None = None
     type: str = "Undirected"
     fails: bool = False
+    #: Raised by the download, as the real loaders raise DownloadError.
+    error: Exception | None = None
+
+
+def download_error(cause: Exception) -> DownloadError:
+    """A DownloadError chained to *cause*, as ``_core.download._open`` raises it."""
+    try:
+        raise DownloadError(f"Could not fetch http://example.org: {cause}") from cause
+    except DownloadError as error:
+        return error
 
 
 @dataclass
@@ -57,6 +69,8 @@ class FakeMatch:
 
     def load(self, **kwargs: Any) -> FakeNetwork:
         self.loads.append(kwargs)
+        if self.dataset.error is not None:
+            raise self.dataset.error
         return FakeNetwork(self.dataset)
 
     def to_dict(self) -> dict[str, Any]:
@@ -240,6 +254,45 @@ def test_an_idle_run_leaves_the_manifest_untouched(tmp_path, catalog) -> None:
     again = _export.export_networks(tmp_path, sources=("snap",))
     assert again["built"] == "2026-01-01T00:00:00+00:00"
     assert json.loads(manifest.read_bytes()) == json.loads(before)
+
+
+def test_a_source_that_stops_answering_waits_for_a_later_run(tmp_path, catalog) -> None:
+    tiny, middle = catalog["snap"][0], catalog["snap"][1]
+    tiny.dataset.error = download_error(urllib.error.URLError("timed out"))
+    document = _export.export_networks(tmp_path)
+
+    # One host that does not answer is enough: middle is not tried at all.
+    assert middle.loads == []
+    assert _keys(document) == ["konect/large"]
+    skipped = {entry["key"]: entry for entry in document["skipped"]}
+    assert skipped["snap/tiny"]["reason"].startswith("DownloadError: Could not fetch")
+    assert skipped["snap/middle"]["reason"] == "snap unreachable in this run"
+    # Their estimated space is held, so building them later evicts nothing.
+    assert document["reserved"] == (2 + 10) * 4
+    assert document["bytes"] == document["datasets"][0]["bytes"]
+    assert document["complete"] is True
+
+    tiny.dataset.error = None
+    again = _export.export_networks(tmp_path)
+    assert _keys(again) == ["konect/large", "snap/middle", "snap/tiny"]
+    assert again["reserved"] == 0
+
+
+def test_a_missing_file_does_not_stop_its_source(tmp_path, catalog) -> None:
+    gone = urllib.error.HTTPError("http://example.org", 404, "Not Found", None, None)  # type: ignore[arg-type]
+    catalog["snap"][0].dataset.error = download_error(gone)
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert _keys(document) == ["snap/middle"]
+    assert document["reserved"] == 0
+
+
+def test_an_unreachable_source_keeps_its_earlier_files(tmp_path, catalog) -> None:
+    first = _export.export_networks(tmp_path, sources=("snap",))
+    # A changed catalog entry asks for a rebuild, but the host does not answer.
+    catalog["snap"][0].dataset.error = download_error(TimeoutError("timed out"))
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert document["datasets"] == first["datasets"]
+    assert document["reserved"] == 0
 
 
 def test_cli_export_networks(tmp_path, catalog, capsys) -> None:
