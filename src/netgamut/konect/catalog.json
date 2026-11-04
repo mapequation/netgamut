@@ -21919,5 +21919,883 @@
    "edge_member": "",
    "node_attributes": null
   }
+ ],
+ "copies": [
+  {
+   "name": "brunson_south-africa",
+   "of": "netzschleuder/sa_companies",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "brunson_southern-women",
+   "of": "netzschleuder/global_suicide_attacks",
+   "verdict": "different",
+   "note": "bipartite in KONECT, not 2-colourable in the other"
+  },
+  {
+   "name": "hiv",
+   "of": "netzschleuder/hiv_cluster_1984",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "ucidata-gama",
+   "of": "netzschleuder/new_guinea_tribes",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_taro",
+   "of": "netzschleuder/moreno_taro",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "opsahl-southernwomen",
+   "of": "netzschleuder/davis_southern_women",
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
+  },
+  {
+   "name": "moreno_zebra",
+   "of": "netzschleuder/zebras",
+   "verdict": "unverified"
+  },
+  {
+   "name": "brunson_corporate-leadership",
+   "of": "netzschleuder/elite",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_kangaroo",
+   "of": "netzschleuder/kangaroo",
+   "verdict": "unverified"
+  },
+  {
+   "name": "iceland",
+   "of": "netzschleuder/iceland_sexual_contacts",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "contiguous-usa",
+   "of": "netzschleuder/contiguous_usa",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "moreno_rhesus",
+   "of": "netzschleuder/rhesus_monkey",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dolphins",
+   "of": "netzschleuder/dolphins",
+   "verdict": "unverified"
+  },
+  {
+   "name": "maayan-pdzbase",
+   "of": "netzschleuder/interactome_pdz",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "league-be1-2016",
+   "of": "netzschleuder/football_league_results",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "moreno_train",
+   "of": "netzschleuder/train_terrorists",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_sheep",
+   "of": "netzschleuder/moreno_sheep",
+   "verdict": "unverified"
+  },
+  {
+   "name": "gene_fusion",
+   "of": "netzschleuder/gene_fusion",
+   "verdict": "imported"
+  },
+  {
+   "name": "moreno_lesmis",
+   "of": "netzschleuder/lesmis",
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
+  },
+  {
+   "name": "adjnoun_adjacency",
+   "of": "netzschleuder/adjnoun",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_beach",
+   "of": "netzschleuder/windsurfers",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dimacs10-polbooks",
+   "of": "netzschleuder/polbooks",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_highschool",
+   "of": "netzschleuder/highschool",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_hens",
+   "of": "netzschleuder/hens",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dimacs10-football",
+   "of": "netzschleuder/football",
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
+  },
+  {
+   "name": "convote",
+   "of": "netzschleuder/convote_mentions",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_innovation",
+   "of": "netzschleuder/physician_trust",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_mac",
+   "of": "netzschleuder/macaques",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "moreno_crime",
+   "of": "netzschleuder/crime",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "librec-filmtrust-trust",
+   "of": "netzschleuder/librec_trust",
+   "verdict": "unverified"
+  },
+  {
+   "name": "unicodelang",
+   "of": "netzschleuder/unicodelang",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "arenas-jazz",
+   "of": "netzschleuder/jazz_collab",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "moreno_propro",
+   "of": "netzschleuder/interactome_yeast",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "maayan-foodweb",
+   "of": "netzschleuder/foodweb_little_rock",
+   "verdict": "unverified"
+  },
+  {
+   "name": "maayan-faa",
+   "of": "netzschleuder/faa_routes",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_oz",
+   "of": "netzschleuder/residence_hall",
+   "verdict": "unverified"
+  },
+  {
+   "name": "arenas-meta",
+   "of": "netzschleuder/celegans_metabolic",
+   "verdict": "unverified"
+  },
+  {
+   "name": "moreno_vdb",
+   "of": "netzschleuder/college_freshmen",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "maayan-Stelzl",
+   "of": "netzschleuder/interactome_stelzl",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "maayan-vidal",
+   "of": "netzschleuder/interactome_vidal",
+   "verdict": "unverified"
+  },
+  {
+   "name": "maayan-figeys",
+   "of": "netzschleuder/interactome_figeys",
+   "verdict": "unverified"
+  },
+  {
+   "name": "opsahl-powergrid",
+   "of": "netzschleuder/power",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dnc-corecipient",
+   "of": "netzschleuder/dnc",
+   "verdict": "imported"
+  },
+  {
+   "name": "petster-hamster",
+   "of": "netzschleuder/hamsterster",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "p2p-Gnutella08",
+   "of": "snap/p2p-Gnutella08",
+   "verdict": "unverified"
+  },
+  {
+   "name": "twin",
+   "of": "netzschleuder/sister_cities",
+   "verdict": "unverified"
+  },
+  {
+   "name": "arenas-pgp",
+   "of": "netzschleuder/pgp_2004",
+   "verdict": "unverified"
+  },
+  {
+   "name": "p2p-Gnutella09",
+   "of": "snap/p2p-Gnutella09",
+   "verdict": "unverified"
+  },
+  {
+   "name": "p2p-Gnutella06",
+   "of": "snap/p2p-Gnutella06",
+   "verdict": "unverified"
+  },
+  {
+   "name": "p2p-Gnutella05",
+   "of": "snap/p2p-Gnutella05",
+   "verdict": "unverified"
+  },
+  {
+   "name": "p2p-Gnutella04",
+   "of": "snap/p2p-Gnutella04",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "sociopatterns-hypertext",
+   "of": "netzschleuder/sp_hypertext",
+   "verdict": "unverified"
+  },
+  {
+   "name": "contact",
+   "of": "netzschleuder/contact",
+   "verdict": "different",
+   "note": "undirected in KONECT, directed in the other"
+  },
+  {
+   "name": "tntp-ChicagoRegional",
+   "of": "netzschleuder/chicago_road",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dimacs10-as-22july06",
+   "of": "netzschleuder/internet_as",
+   "verdict": "unverified"
+  },
+  {
+   "name": "soc-sign-bitcoinalpha",
+   "of": "netzschleuder/bitcoin_alpha",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "soc-sign-bitcoinalpha",
+   "of": "snap/soc-sign-bitcoin-alpha",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "p2p-Gnutella25",
+   "of": "snap/p2p-Gnutella25",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "wikilens-ratings",
+   "of": "netzschleuder/wikilens_ratings",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "opsahl-ucforum",
+   "of": "netzschleuder/uci_forum",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "p2p-Gnutella24",
+   "of": "snap/p2p-Gnutella24",
+   "verdict": "unverified"
+  },
+  {
+   "name": "p2p-Gnutella30",
+   "of": "snap/p2p-Gnutella30",
+   "verdict": "unverified"
+  },
+  {
+   "name": "soc-sign-bitcoinotc",
+   "of": "netzschleuder/bitcoin_trust",
+   "verdict": "unverified"
+  },
+  {
+   "name": "soc-sign-bitcoinotc",
+   "of": "snap/soc-sign-bitcoin-otc",
+   "verdict": "unverified"
+  },
+  {
+   "name": "subelj_cora",
+   "of": "netzschleuder/cora",
+   "verdict": "unverified"
+  },
+  {
+   "name": "escorts",
+   "of": "netzschleuder/escorts",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "opsahl-ucsocial",
+   "of": "netzschleuder/uc_irvine_messages",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "opsahl-ucsocial",
+   "of": "snap/CollegeMsg",
+   "verdict": "same-edges",
+   "note": "same ids"
+  },
+  {
+   "name": "reactome",
+   "of": "netzschleuder/reactome",
+   "verdict": "unverified"
+  },
+  {
+   "name": "chess",
+   "of": "netzschleuder/chess",
+   "verdict": "imported"
+  },
+  {
+   "name": "p2p-Gnutella31",
+   "of": "snap/p2p-Gnutella31",
+   "verdict": "unverified"
+  },
+  {
+   "name": "radoslaw_email",
+   "of": "netzschleuder/email_company",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "dbpedia-writer",
+   "of": "netzschleuder/dbpedia_writer",
+   "verdict": "unverified"
+  },
+  {
+   "name": "cfinder-google",
+   "of": "netzschleuder/google",
+   "verdict": "unverified"
+  },
+  {
+   "name": "movielens-100k_rating",
+   "of": "netzschleuder/movielens_ratings",
+   "verdict": "unverified"
+  },
+  {
+   "name": "munmun_digg_reply",
+   "of": "netzschleuder/digg_reply",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "linux",
+   "of": "netzschleuder/linux",
+   "verdict": "unverified"
+  },
+  {
+   "name": "loc-brightkite_edges",
+   "of": "snap/loc-Brightkite",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "elec",
+   "of": "netzschleuder/elec",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-producer",
+   "of": "netzschleuder/dbpedia_producer",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "dbpedia-recordlabel",
+   "of": "netzschleuder/dbpedia_recordlabel",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-occupation",
+   "of": "netzschleuder/dbpedia_occupation",
+   "verdict": "unverified"
+  },
+  {
+   "name": "slashdot-threads",
+   "of": "netzschleuder/slashdot_threads",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "dbpedia-starring",
+   "of": "netzschleuder/dbpedia_starring",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-location",
+   "of": "netzschleuder/dbpedia_location",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "cit-HepTh",
+   "of": "snap/cit-HepTh",
+   "verdict": "unverified"
+  },
+  {
+   "name": "topology",
+   "of": "netzschleuder/topology",
+   "verdict": "imported"
+  },
+  {
+   "name": "douban",
+   "of": "netzschleuder/douban",
+   "verdict": "unverified"
+  },
+  {
+   "name": "cit-HepPh",
+   "of": "netzschleuder/arxiv_citation",
+   "verdict": "unverified"
+  },
+  {
+   "name": "cit-HepPh",
+   "of": "snap/cit-HepPh",
+   "verdict": "unverified"
+  },
+  {
+   "name": "email-EuAll",
+   "of": "netzschleuder/email_eu",
+   "verdict": "unverified"
+  },
+  {
+   "name": "email-EuAll",
+   "of": "snap/email-EuAll",
+   "verdict": "unverified"
+  },
+  {
+   "name": "github",
+   "of": "netzschleuder/github",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "soc-Epinions1",
+   "of": "snap/soc-Epinions1",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-genre",
+   "of": "netzschleuder/dbpedia_genre",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "dbpedia-country",
+   "of": "netzschleuder/dbpedia_country",
+   "verdict": "unverified"
+  },
+  {
+   "name": "slashdot-zoo",
+   "of": "netzschleuder/slashdot_zoo",
+   "verdict": "imported"
+  },
+  {
+   "name": "wordnet-words",
+   "of": "netzschleuder/wordnet",
+   "verdict": "unverified"
+  },
+  {
+   "name": "wikisigned-k2",
+   "of": "netzschleuder/wiki_users",
+   "verdict": "imported"
+  },
+  {
+   "name": "loc-gowalla_edges",
+   "of": "snap/loc-Gowalla",
+   "verdict": "unverified"
+  },
+  {
+   "name": "munmun_twitter_social",
+   "of": "netzschleuder/twitter",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "com-amazon",
+   "of": "snap/com-Amazon",
+   "verdict": "unverified"
+  },
+  {
+   "name": "com-dblp",
+   "of": "snap/com-DBLP",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "bookcrossing_full-rating",
+   "of": "netzschleuder/bookcrossing",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "dbpedia-team",
+   "of": "netzschleuder/dbpedia_team",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "actor-movie",
+   "of": "netzschleuder/actor_movie",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "epinions",
+   "of": "netzschleuder/signed_social_media",
+   "verdict": "unverified"
+  },
+  {
+   "name": "epinions",
+   "of": "snap/soc-sign-epinions",
+   "verdict": "unverified"
+  },
+  {
+   "name": "web-NotreDame",
+   "of": "netzschleuder/notre_dame_web",
+   "verdict": "unverified"
+  },
+  {
+   "name": "web-NotreDame",
+   "of": "snap/web-NotreDame",
+   "verdict": "unverified"
+  },
+  {
+   "name": "mit",
+   "of": "netzschleuder/reality_mining",
+   "verdict": "imported"
+  },
+  {
+   "name": "roadNet-PA",
+   "of": "snap/roadNet-PA",
+   "verdict": "unverified"
+  },
+  {
+   "name": "facebook-wosn-wall",
+   "of": "netzschleuder/facebook_wall",
+   "verdict": "different",
+   "note": "the same links, each pointing the other way"
+  },
+  {
+   "name": "citeseer",
+   "of": "netzschleuder/citeseer",
+   "verdict": "imported"
+  },
+  {
+   "name": "lkml-reply",
+   "of": "netzschleuder/lkml_reply",
+   "verdict": "imported"
+  },
+  {
+   "name": "flickrEdges",
+   "of": "netzschleuder/flickr_images",
+   "verdict": "unverified"
+  },
+  {
+   "name": "flickrEdges",
+   "of": "snap/web-flickr",
+   "verdict": "unverified"
+  },
+  {
+   "name": "livemocha",
+   "of": "netzschleuder/livemocha",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "pics_ti",
+   "of": "netzschleuder/visualizeus",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "roadNet-TX",
+   "of": "snap/roadNet-TX",
+   "verdict": "unverified"
+  },
+  {
+   "name": "web-Stanford",
+   "of": "snap/web-Stanford",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "dbtropes-feature",
+   "of": "netzschleuder/dbtropes_feature",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "lasagne-yahoo",
+   "of": "netzschleuder/yahoo_ads",
+   "verdict": "imported"
+  },
+  {
+   "name": "lkml_person-thread",
+   "of": "netzschleuder/lkml_thread",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "com-youtube",
+   "of": "snap/com-Youtube",
+   "verdict": "unverified"
+  },
+  {
+   "name": "hyves",
+   "of": "netzschleuder/hyves",
+   "verdict": "unverified"
+  },
+  {
+   "name": "roadNet-CA",
+   "of": "snap/roadNet-CA",
+   "verdict": "unverified"
+  },
+  {
+   "name": "amazon0601",
+   "of": "snap/amazon0601",
+   "verdict": "unverified"
+  },
+  {
+   "name": "gottron-excellent",
+   "of": "netzschleuder/wiki_article_words",
+   "verdict": "imported"
+  },
+  {
+   "name": "wiki-en-cat",
+   "of": "netzschleuder/wiki_categories",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "jester1",
+   "of": "netzschleuder/jester",
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
+  },
+  {
+   "name": "bibsonomy-2ti",
+   "of": "netzschleuder/bibsonomy",
+   "verdict": "imported"
+  },
+  {
+   "name": "wiki-Talk",
+   "of": "netzschleuder/wikipedia-en-talk",
+   "verdict": "unverified"
+  },
+  {
+   "name": "wiki-Talk",
+   "of": "snap/wiki-Talk",
+   "verdict": "unverified"
+  },
+  {
+   "name": "web-Google",
+   "of": "snap/web-Google",
+   "verdict": "unverified"
+  },
+  {
+   "name": "digg-votes",
+   "of": "netzschleuder/digg_votes",
+   "verdict": "unverified"
+  },
+  {
+   "name": "citeulike-ti",
+   "of": "netzschleuder/citeulike",
+   "verdict": "imported"
+  },
+  {
+   "name": "prosper-loans",
+   "of": "netzschleuder/prosper",
+   "verdict": "unverified"
+  },
+  {
+   "name": "web-BerkStan",
+   "of": "snap/web-BerkStan",
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
+  },
+  {
+   "name": "flixster",
+   "of": "netzschleuder/flixster",
+   "verdict": "unverified"
+  },
+  {
+   "name": "trec-wt10g",
+   "of": "netzschleuder/trec_web",
+   "verdict": "imported"
+  },
+  {
+   "name": "wikiconflict",
+   "of": "netzschleuder/wikiconflict",
+   "verdict": "imported"
+  },
+  {
+   "name": "as-skitter",
+   "of": "netzschleuder/as_skitter",
+   "verdict": "unverified"
+  },
+  {
+   "name": "as-skitter",
+   "of": "snap/as-Skitter",
+   "verdict": "unverified"
+  },
+  {
+   "name": "amazon-ratings",
+   "of": "netzschleuder/amazon_ratings",
+   "verdict": "imported"
+  },
+  {
+   "name": "higgs-twitter-social",
+   "of": "netzschleuder/twitter_higgs",
+   "verdict": "unverified"
+  },
+  {
+   "name": "discogs_affiliation",
+   "of": "netzschleuder/discogs_affiliation",
+   "verdict": "unverified"
+  },
+  {
+   "name": "zhishi-hudong-internallink",
+   "of": "netzschleuder/hudong",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-all",
+   "of": "netzschleuder/dbpedia_all",
+   "verdict": "unverified"
+  },
+  {
+   "name": "petster-carnivore",
+   "of": "netzschleuder/petster",
+   "verdict": "imported"
+  },
+  {
+   "name": "zhishi-baidu-internallink",
+   "of": "netzschleuder/baidu",
+   "verdict": "imported"
+  },
+  {
+   "name": "libimseti",
+   "of": "netzschleuder/libimseti",
+   "verdict": "unverified"
+  },
+  {
+   "name": "epinions-rating",
+   "of": "netzschleuder/epinions",
+   "verdict": "unverified"
+  },
+  {
+   "name": "lastfm_band",
+   "of": "netzschleuder/lastfm",
+   "verdict": "unverified"
+  },
+  {
+   "name": "soc-pokec-relationships",
+   "of": "snap/soc-Pokec",
+   "verdict": "unverified"
+  },
+  {
+   "name": "flickr-growth",
+   "of": "netzschleuder/flickr_growth",
+   "verdict": "unverified"
+  },
+  {
+   "name": "wikipedia-growth",
+   "of": "netzschleuder/wikipedia_growth",
+   "verdict": "unverified"
+  },
+  {
+   "name": "gottron-trec",
+   "of": "netzschleuder/trec",
+   "verdict": "imported"
+  },
+  {
+   "name": "sx-stackoverflow",
+   "of": "netzschleuder/qa_user",
+   "verdict": "unverified"
+  },
+  {
+   "name": "trackers-trackers",
+   "of": "netzschleuder/trackers",
+   "verdict": "unverified"
+  },
+  {
+   "name": "dbpedia-link",
+   "of": "netzschleuder/dbpedia_link",
+   "verdict": "unverified"
+  },
+  {
+   "name": "yahoo-song",
+   "of": "netzschleuder/yahoo_song",
+   "verdict": "imported"
+  },
+  {
+   "name": "delicious-ut",
+   "of": "netzschleuder/delicious",
+   "verdict": "unverified"
+  },
+  {
+   "name": "twitter",
+   "of": "netzschleuder/twitter_social",
+   "verdict": "unverified"
+  },
+  {
+   "name": "twitter_mpi",
+   "of": "netzschleuder/twitter_2009",
+   "verdict": "unverified"
+  }
  ]
 }

@@ -49,6 +49,7 @@ from .._core.network import Network
 from .._core.nodes import NodeTable
 from . import _ent
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
+from ._copies import Pair
 from ._models import EDGE_TYPES, FORMATS, SITE_URL, Dataset, is_edge_list_header
 
 __all__ = [
@@ -61,6 +62,7 @@ __all__ = [
     "Dataset",
     "DownloadError",
     "Network",
+    "Pair",
     "build_catalog",
     "cache_dir",
     "cache_info",
@@ -153,10 +155,15 @@ def search(
 
 
 # -- overlap with the other sources -----------------------------------------
-_overlap: tuple[tuple[int, int, int], dict[str, str], dict[str, Dataset]] | None = None
+_overlap: tuple[tuple[int, int, int], dict[str, Pair], dict[str, Dataset]] | None = None
 
 
-def _compute_overlap() -> tuple[dict[str, str], dict[str, Dataset]]:
+def _compute_overlap() -> tuple[dict[str, Pair], dict[str, Dataset]]:
+    """The catalog's copy verdicts whose other network is still listed.
+
+    Returns KONECT name -> the pair cross-source queries use, and
+    ``"<source>/<name>"`` -> the KONECT network with the same edge list.
+    """
     global _overlap
     from .. import netzschleuder, snap
 
@@ -165,33 +172,21 @@ def _compute_overlap() -> tuple[dict[str, str], dict[str, Dataset]]:
     if _overlap is not None and _overlap[0] == key:
         return _overlap[1], _overlap[2]
 
-    imported: dict[str, str] = {}
-    for item in nz.datasets:
-        # An entry of many subgraphs (one per language, say) describes its
-        # default one, which need not be the KONECT network it links to.
-        if item.subgraph_count > 1:
-            continue
-        host, _, path = item.upstream_url.partition("://")[2].partition("/")
-        if "konect" in host and path.startswith("networks/"):
-            imported[path.removeprefix("networks/").strip("/")] = f"netzschleuder/{item.name}"
+    listed = {f"netzschleuder/{item.name}" for item in nz.datasets}
+    listed.update(f"snap/{item.name}" for item in sn.datasets)
 
-    # Netzschleuder is filled last, so it wins a size tie with SNAP.
-    by_size: dict[tuple[int, int], str] = {}
-    for prefix, items in (("snap", sn.datasets), ("netzschleuder", nz.datasets)):
-        for other in items:
-            if other.nodes and other.edges:
-                by_size[(other.nodes, other.edges)] = f"{prefix}/{other.name}"
+    def present(pair: Pair) -> bool:
+        return pair.name in kc and pair.of in listed
 
-    duplicate: dict[str, str] = {}
+    duplicate: dict[str, Pair] = {}
     twins: dict[str, Dataset] = {}
-    for dataset in kc.datasets:
-        size = (dataset.nodes or 0, dataset.edges or 0)
-        twin = by_size.get(size) if all(size) else None
-        if twin is not None:
-            twins[twin] = dataset
-        found = imported.get(dataset.name) or twin
-        if found is not None:
-            duplicate[dataset.name] = found
+    for pair in kc.copies:
+        if not pair.is_copy or not present(pair):
+            continue
+        # The first copy is the preferred one: Netzschleuder's before SNAP's.
+        duplicate.setdefault(pair.name, pair)
+        if pair.verdict == "same-edges":
+            twins.setdefault(pair.of, kc[pair.name])
 
     _overlap = (key, duplicate, twins)
     return duplicate, twins
@@ -200,25 +195,30 @@ def _compute_overlap() -> tuple[dict[str, str], dict[str, Dataset]]:
 def duplicates() -> dict[str, str]:
     """KONECT name -> ``"<source>/<name>"`` of the copy cross-source queries use.
 
-    A KONECT network is a duplicate on evidence, never on name alone -- KONECT's
-    ``epinions`` and ``twitter`` are different networks from Netzschleuder's.
-    The evidence is either of:
+    A KONECT network is a copy only on evidence recorded when the catalog was
+    built, never on its name or its size alone: KONECT's ``epinions`` and
+    ``twitter`` are different networks from Netzschleuder's, and
+    ``brunson_southern-women`` shares its 10 nodes and 14 edges with an
+    unrelated one. The evidence is either of:
 
-    * Netzschleuder's entry names it as its upstream and holds that one
-      network, not a family of subgraphs: the data was imported.
-    * A Netzschleuder or SNAP entry has exactly the same node and edge count.
+    * ``imported``: Netzschleuder's entry names the KONECT network as its
+      upstream and holds that one network, not a family of subgraphs.
+    * ``same-edges``: the two edge lists were downloaded and found equal, as they
+      stand or up to a relabelling of the nodes.
 
-    Near-copies that differ in count -- a different snapshot, the largest
-    component only -- stay separate networks.
+    A pair the build has not compared, usually one above its size cap, stays
+    two separate networks; so do near-copies -- a different snapshot, the
+    largest component only. ``catalog().copies`` lists every pair considered,
+    with its verdict and how it was reached.
     """
-    return dict(_compute_overlap()[0])
+    return {name: pair.of for name, pair in _compute_overlap()[0].items()}
 
 
 def loops_for(key: str) -> bool | None:
     """KONECT's loop check for another source's network, if KONECT holds it.
 
-    *key* is ``"<source>/<name>"``. Only an exact-size twin counts, so the check
-    describes the same edge list.
+    *key* is ``"<source>/<name>"``. Only a pair whose edge lists were compared
+    and found equal counts, so the check describes the same edge list.
     """
     twin = _compute_overlap()[1].get(key)
     return twin.loops if twin is not None else None
@@ -245,8 +245,9 @@ def describe(name: str) -> str:
         lines.append(f"Node attrs  {', '.join(dataset.node_attributes) or 'none'}")
     if dataset.edge_attributes:
         lines.append(f"Edge attrs  {', '.join(dataset.edge_attributes)}")
-    if dataset.duplicate_of:
-        lines.append(f"Also as     {dataset.duplicate_of} (used by netgamut.search/load)")
+    copy = _compute_overlap()[0].get(dataset.name)
+    if copy is not None:
+        lines.append(f"Also as     {copy.of} ({copy.verdict}; used by netgamut.search/load)")
     if dataset.description:
         lines.append(f"Summary     {dataset.description[:400]}")
     lines.append(f"Page        {dataset.url}")

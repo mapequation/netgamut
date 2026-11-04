@@ -11,6 +11,21 @@ Archives up to 100 MB are listed to learn which ship node attributes; a
 listing is reused from the existing catalog while its archive's size and date
 are unchanged, so only the first build downloads them (2.4 GB).
 
+It also judges which KONECT networks are copies of a Netzschleuder or SNAP
+network, against the vendored catalogs of those two, so regenerate them first.
+Equal node and edge counts only nominate a pair; see netgamut.konect._copies.
+Comparing the edge lists is opt-in, as it downloads both:
+
+    python scripts/regenerate_konect_catalog.py --verify-copies
+    python scripts/regenerate_konect_catalog.py --copies-only --verify-copies \
+        --max-verify-edges 10000000
+
+Without --verify-copies, comparisons from the existing catalog are kept and new
+pairs stay unverified, which keeps them apart. --copies-only skips konect.cc
+and judges the pairs of the existing catalog. With networkx installed
+(uv run --extra networkx ...), small pairs that match only up to relabelling
+are also checked for an exact isomorphism.
+
 Exits non-zero if the result looks implausible, so a site redesign fails the job
 instead of shipping an empty catalog.
 """
@@ -18,17 +33,26 @@ instead of shipping an empty catalog.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import sys
+from collections import Counter
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from netgamut._core.domains import DOMAINS  # noqa: E402
+from netgamut.konect import _copies  # noqa: E402
 from netgamut.konect._catalog import Catalog, build_catalog  # noqa: E402
+from netgamut.netzschleuder._catalog import Catalog as NetzschleuderCatalog  # noqa: E402
+from netgamut.snap._catalog import Catalog as SnapCatalog  # noqa: E402
 
 TARGET = ROOT / "src" / "netgamut" / "konect" / "catalog.json"
+PACKAGE = ROOT / "src" / "netgamut"
+#: Pairs with more edges than this are left unverified unless asked for.
+MAX_VERIFY_EDGES = 1_000_000
 
 MIN_NETWORKS = 250
 MIN_WITH_SIZE = 250
@@ -40,17 +64,93 @@ MIN_WITH_FORMAT = 250
 MIN_LISTED = 250
 
 
+def judge_copies(
+    catalog: Catalog, previous: Catalog | None, *, verify: bool, max_edges: int
+) -> tuple[_copies.Pair, ...]:
+    """A verdict on every pair a KONECT network forms with a same-sized network elsewhere."""
+
+    def vendored(source: str) -> dict[str, Any]:
+        path = PACKAGE / source / "catalog.json"
+        data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+        return data
+
+    netzschleuder = NetzschleuderCatalog.from_dict(vendored("netzschleuder")).datasets
+    snap = SnapCatalog.from_dict(vendored("snap")).datasets
+    candidates = _copies.nominate(catalog.datasets, netzschleuder, snap)
+    others: dict[str, Any] = {f"netzschleuder/{item.name}": item for item in netzschleuder}
+    others.update({f"snap/{item.name}": item for item in snap})
+    konect = {item.name: item for item in catalog.datasets}
+
+    checked = 0
+
+    def check(candidate: _copies.Candidate) -> tuple[bool, str]:
+        nonlocal checked
+        checked += 1
+        edges = konect[candidate.name].edges or 0
+        print(
+            f"  comparing {candidate.name} with {candidate.of} ({edges:,} edges)", file=sys.stderr
+        )
+        return _copies.check(candidate)
+
+    pairs = _copies.judge(
+        candidates,
+        konect=konect,
+        others=others,
+        previous=previous.copies if previous else (),
+        check=check if verify else None,
+        max_edges=max_edges,
+    )
+    copies = {pair.name for pair in pairs if pair.is_copy}
+    print(
+        f"  {len(pairs)} candidate pairs, {len(copies)} KONECT networks copied elsewhere, "
+        f"{checked} pairs compared now",
+        file=sys.stderr,
+    )
+    for verdict, count in sorted(Counter(pair.verdict for pair in pairs).items()):
+        print(f"    {verdict:<12} {count}", file=sys.stderr)
+    return tuple(pairs)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("-o", "--output", type=Path, default=TARGET)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--verify-copies",
+        action="store_true",
+        help="download and compare the edge lists of pairs not compared before",
+    )
+    parser.add_argument(
+        "--max-verify-edges",
+        type=int,
+        default=MAX_VERIFY_EDGES,
+        help=f"compare only pairs up to this many edges (default {MAX_VERIFY_EDGES:,})",
+    )
+    parser.add_argument(
+        "--copies-only",
+        action="store_true",
+        help="keep the existing catalog and only judge its copies anew",
+    )
     args = parser.parse_args()
 
     previous = None
     if args.output.is_file():
         previous = Catalog.from_dict(json.loads(args.output.read_text(encoding="utf-8")))
-    print("Reading konect.cc ...", file=sys.stderr)
-    catalog = build_catalog(workers=args.workers, previous=previous)
+    if args.copies_only:
+        if previous is None:
+            print(f"--copies-only needs an existing {args.output}", file=sys.stderr)
+            return 1
+        catalog = previous
+    else:
+        print("Reading konect.cc ...", file=sys.stderr)
+        catalog = build_catalog(workers=args.workers, previous=previous)
+    print("Judging copies ...", file=sys.stderr)
+    copies = judge_copies(
+        catalog, previous, verify=args.verify_copies, max_edges=args.max_verify_edges
+    )
+    catalog = dataclasses.replace(catalog, copies=copies)
 
     with_size = sum(1 for item in catalog.datasets if item.nodes)
     counts = catalog.domains()
@@ -96,8 +196,10 @@ def main() -> int:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
+    output = args.output.resolve()
+    shown = output.relative_to(ROOT) if output.is_relative_to(ROOT) else output
     print(
-        f"Wrote {args.output.relative_to(ROOT)} ({args.output.stat().st_size / 1024:.0f} KB).",
+        f"Wrote {shown} ({args.output.stat().st_size / 1024:.0f} KB).",
         file=sys.stderr,
     )
     return 0

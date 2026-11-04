@@ -140,9 +140,15 @@ konect.info("moreno_lesmis").duplicate_of  # 'netzschleuder/lesmis'
 konect.duplicates()  # KONECT name -> the copy used elsewhere
 ```
 
-The evidence is either Netzschleuder naming the KONECT network as its upstream,
-or another entry with exactly the same node and edge count. Near-copies — a
-different snapshot, the largest component only — stay separate networks.
+The evidence is recorded when the catalog is built: either Netzschleuder names
+the KONECT network as its upstream (`imported`), or the two edge lists were
+downloaded and found equal, as they stand or up to a relabelling of the nodes
+(`same-edges`). Equal node and edge counts only nominate a pair: KONECT's
+`brunson_southern-women` has the same 10 nodes and 14 edges as Netzschleuder's
+`global_suicide_attacks`, and is a different network. A pair not compared yet,
+usually because it is too large, stays two networks, as do near-copies — a
+different snapshot, the largest component only. `konect.catalog().copies` lists
+every pair considered, with its verdict.
 
 **Loading.** The archive is kept as KONECT serves it, and the edge list is
 rewritten once beside it so every tool reads it the same way:
