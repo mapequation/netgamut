@@ -47,6 +47,11 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
 - The explorer links every mirrored network to the Network Navigator, which
   opens it and finds its modules with Infomap in the browser. An "In Navigator"
   filter keeps or leaves out those networks.
+- `to_pajek` names a downloaded network's nodes by the source's own names:
+  Netzschleuder's `name`, `label` or `nodeLabel` column, KONECT's `ent.*` files.
+  A node without a name still shows its id, and `names={}` asks for ids only.
+  `NodeTable.labels()` gives the same names. Before, every node showed its id,
+  so mirror files lost names like euroroad's cities.
 
 ### Changed
 

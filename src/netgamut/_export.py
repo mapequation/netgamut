@@ -222,9 +222,19 @@ def _is_graph(match: Any) -> bool:
     return match.source != "snap" or bool(kind and re.search(r"irected|bipartite", kind, re.I))
 
 
+#: Raised for a source when the files its networks convert to change, so the next
+#: run converts them again. A file that comes out the same stays byte for byte the
+#: same, so only the changed ones reach the mirror's history. 2: node names.
+_FORMATS = {"netzschleuder": 2, "konect": 2}
+
+
 def _fingerprint(match: Any) -> str:
-    """Changes whenever the source's catalog entry does, so an update rebuilds the file."""
-    return hashlib.sha256(repr(match.dataset).encode()).hexdigest()[:16]
+    """Changes whenever the source's catalog entry or file format does, so either rebuilds."""
+    text = repr(match.dataset)
+    version = _FORMATS.get(match.source, 1)
+    if version > 1:  # version 1 left it out, and its fingerprints still hold
+        text += f"\nformat {version}"
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
 def _read_manifest(folder: Path) -> dict[str, Any]:

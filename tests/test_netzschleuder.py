@@ -185,6 +185,29 @@ def test_cached_catalog_overrides_the_vendored_one(isolated_cache) -> None:
     assert [item.name for item in catalog.datasets] == ["only-me"]
 
 
+def test_to_pajek_names_nodes_from_the_bundle(tmp_path, monkeypatch) -> None:
+    import zipfile
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr("edges.csv", "# source, target\n0,1\n1,2\n")
+            bundle.writestr(
+                "nodes.csv",
+                '# index, name, _pos\n0,Mr Hi,"array([0, 1])"\n1,,"array([0, 1])"\n'
+                '2,"John ""A""","array([0, 1])"\n',
+            )
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    lines = nz.load("celegansneural").to_pajek(tmp_path).read_text().splitlines()
+    start = lines.index("*Vertices 3")
+    assert lines[start + 1 : start + 4] == ['0 "Mr Hi"', '1 "1"', "2 \"John 'A'\""]
+    # Asked for ids, it writes ids.
+    plain = nz.load("celegansneural").to_pajek(tmp_path / "plain", names={}).read_text()
+    assert '0 "0"' in plain
+
+
 # -- opt-in network tests -------------------------------------------------
 @pytest.mark.network
 def test_really_loads_a_csv_bundle() -> None:

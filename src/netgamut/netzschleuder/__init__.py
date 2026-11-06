@@ -59,6 +59,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
+    "node_names",
     "node_table",
     "refresh",
     "search",
@@ -307,6 +308,18 @@ def node_table(network: Network) -> NodeTable:
                 values[column][node] = cell
 
     return NodeTable(values=values, origin=f"{SOURCE}/{network.name}/{_NODES_MEMBER}")
+
+
+def node_names(network: Network) -> dict[Any, str]:
+    """Each node's name from ``nodes.csv`` in the bundle :func:`load` fetched, or ``{}``.
+
+    :meth:`Network.to_pajek` writes these as the ``*Vertices`` labels. The column is
+    the one :meth:`NodeTable.labels` picks.
+    """
+    try:
+        return node_table(network).labels()
+    except LookupError:
+        return {}
 
 
 def is_cached(name: str, *, subgraph: str | None = None) -> bool:

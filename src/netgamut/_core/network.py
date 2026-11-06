@@ -16,7 +16,7 @@ import os
 import shutil
 import tarfile
 import zipfile
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -427,7 +427,12 @@ class Network:
             yield cast(source), cast(target), weight
 
     def to_pajek(
-        self, directory: str | Path, *, name: str | None = None, directed: bool | None = None
+        self,
+        directory: str | Path,
+        *,
+        name: str | None = None,
+        directed: bool | None = None,
+        names: Mapping[Any, str] | None = None,
     ) -> Path:
         """Write ``<directory>/<name>.net`` in Pajek format and return its path.
 
@@ -436,6 +441,12 @@ class Network:
         numbered ``1..N`` and kept as ``*Vertices`` names. The file is
         streamed in two passes -- nodes, then links -- so memory holds the
         node set but never the links.
+
+        *names* maps a node id to the name shown on its ``*Vertices`` line. By
+        default it is the source's own names, where they come in the download
+        already made -- Netzschleuder's ``nodes.csv``, KONECT's ``ent.*`` files;
+        see :meth:`NodeTable.labels`. A node without one shows its id. Pass
+        ``{}`` to label every node by its id.
         """
         if directed is None:
             directed = bool(self.dataset.directed)
@@ -443,14 +454,37 @@ class Network:
         cast: Callable[[str], Any] = (
             int if all(_columns.is_int_label(label) for label in labels) else str
         )
+        if names is None:
+            names = self._source_names(cast)
         target = formats.output_path(directory, name or self.name, ".net")
         return formats.write_pajek(
             target,
             nodes=(cast(label) for label in labels),
             links=lambda: self._typed_links(cast),
             directed=directed,
+            names=names,
             comments=formats.describe(self.name, None),
         )
+
+    def _source_names(self, cast: Callable[[str], Any]) -> dict[Any, str]:
+        """The source's node names, keyed the way :meth:`to_pajek` keys nodes.
+
+        Only sources whose names arrive with the links publish a ``node_names``
+        reader, so this never starts a download of its own.
+        """
+        import importlib
+
+        if not self.source:
+            return {}
+        reader = getattr(importlib.import_module(f"netgamut.{self.source}"), "node_names", None)
+        if reader is None:
+            return {}
+        found: dict[Any, str] = reader(self)
+        return {
+            cast(str(node)): label
+            for node, label in found.items()
+            if cast is str or _columns.is_int_label(str(node))
+        }
 
     def to_link_list(
         self, directory: str | Path, *, name: str | None = None, directed: bool | None = None

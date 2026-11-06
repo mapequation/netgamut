@@ -19,7 +19,11 @@ net.to_link_list("out/", name="grqc") # PosixPath('out/grqc.txt')
 
 Integer node ids are written as they are, so a generated network's file lines up
 with its planted partition; other labels are numbered from 1 and kept as Pajek
-names. A link list has nowhere to put names, so it refuses non-integer labels
+names. A downloaded network's nodes take the source's own names where they
+come in the same download: Netzschleuder's `name`, `label` or `nodeLabel` column
+and KONECT's `ent.*` files. A node without a name shows its id, and
+`to_pajek("out/", names={})` writes ids alone. A link list has nowhere to put
+names, so it refuses non-integer labels
 rather than renumbering them silently. A written file loads the same network
 Infomap gets from `to_infomap()`, weights included. Downloads are streamed, so
 writing one never holds its links in memory.

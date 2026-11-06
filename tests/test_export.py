@@ -191,6 +191,17 @@ def test_a_changed_network_is_rebuilt(tmp_path, catalog) -> None:
     assert middle["edges"] == 12
 
 
+def test_a_new_file_format_rebuilds_that_source_alone(tmp_path, catalog, monkeypatch) -> None:
+    _export.export_networks(tmp_path, sources=("konect", "snap"))
+    large, tiny = catalog["konect"][0], catalog["snap"][0]
+    large.loads.clear()
+    tiny.loads.clear()
+    monkeypatch.setitem(_export._FORMATS, "konect", _export._FORMATS["konect"] + 1)
+    _export.export_networks(tmp_path, sources=("konect", "snap"))
+    assert len(large.loads) == 1
+    assert tiny.loads == []
+
+
 def test_a_failed_rebuild_keeps_the_previous_file(tmp_path, catalog) -> None:
     first = _export.export_networks(tmp_path, sources=("snap",))
     catalog["snap"][1].dataset.fails = True  # also changes its fingerprint
