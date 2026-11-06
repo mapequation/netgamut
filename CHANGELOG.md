@@ -57,6 +57,9 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   catalog, leaving out datasets whose source cannot say. `Match` has the same
   properties, and the explorer's index and the web mirror's manifest carry them,
   so the explorer and the Navigator can filter on them too.
+- `netgamut.search(unknown=True)` keeps the datasets whose source cannot answer
+  a filter, where a size bound, a yes or no, or a node attribute leaves them out
+  by default. The explorer has the same choice.
 
 ### Changed
 

@@ -375,6 +375,7 @@ def search(
     multilayer: bool | None = None,
     signed: bool | None = None,
     multigraph: bool | None = None,
+    unknown: bool = False,
 ) -> tuple[Match, ...]:
     """Search every source at once, filtering on the shared domain vocabulary.
 
@@ -388,7 +389,10 @@ def search(
     (see :attr:`Match.loops`), and ``node_metadata`` with datasets whose catalog
     cannot say (see :attr:`Match.node_metadata`), and so do ``weighted``,
     ``bipartite``, ``temporal``, ``multilayer``, ``signed`` and ``multigraph``
-    (see :attr:`Match.weighted` and the rest). ``node_attribute`` finds
+    (see :attr:`Match.weighted` and the rest). With ``unknown=True`` a dataset
+    passes every filter its source cannot answer instead, so
+    ``search(weighted=False, unknown=True)`` keeps the networks no catalog calls
+    weighted. ``node_attribute`` finds
     datasets with a per-node column of that name, case-insensitively, among the
     names each catalog knows -- ``node_attribute="gender"`` for something to score
     a partition against.
@@ -407,14 +411,19 @@ def search(
     needle = query.casefold().strip()
     results: list[Match] = []
     wanted = (weighted, bipartite, temporal, multilayer, signed, multigraph)
-    kinds = {name: value for name, value in zip(_KINDS, wanted, strict=True) if value is not None}
+    kinds = dict(zip(_KINDS, wanted, strict=True))
 
     def within(value: int | None, low: int | None, high: int | None) -> bool:
         if low is None and high is None:
             return True
         if value is None:
-            return False
+            return unknown
         return (low is None or value >= low) and (high is None or value <= high)
+
+    def says(value: bool | None, want: bool | None) -> bool:
+        if want is None:
+            return True
+        return unknown if value is None else value is want
 
     for name, module in _SOURCES.items():
         if source is not None and name != source:
@@ -427,22 +436,22 @@ def search(
             text = f"{dataset.name} {getattr(dataset, 'description', '')}".casefold()
             if needle and needle not in text:
                 continue
-            if directed is not None and dataset.directed is not directed:
+            if not says(dataset.directed, directed):
                 continue
             if not within(dataset.nodes, min_nodes, max_nodes):
                 continue
             if not within(dataset.edges, min_edges, max_edges):
                 continue
             match = Match(source=name, dataset=dataset)
-            if loops is not None and match.loops is not loops:
+            if not says(match.loops, loops) or not says(match.node_metadata, node_metadata):
                 continue
-            if node_metadata is not None and match.node_metadata is not node_metadata:
+            if not all(says(getattr(match, name), want) for name, want in kinds.items()):
                 continue
-            if any(getattr(match, name) is not value for name, value in kinds.items()):
-                continue
-            if node_attribute is not None and not any(
-                column.casefold() == node_attribute.casefold()
-                for column in match.node_attributes or ()
+            columns = match.node_attributes
+            if node_attribute is not None and not (
+                unknown
+                if columns is None
+                else any(column.casefold() == node_attribute.casefold() for column in columns)
             ):
                 continue
             results.append(match)

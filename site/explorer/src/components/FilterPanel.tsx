@@ -141,11 +141,22 @@ export function FilterPanel({
           />
         )}
       </div>
-      <p className="m-0 text-[0.75rem] text-fg-muted">
-        As in <code>netgamut.search()</code>: a size bound leaves out datasets
-        whose source publishes no size, and a yes or no leaves out those no
-        source has checked.
-      </p>
+      <div>
+        <label className="inline-flex cursor-pointer items-center gap-2 text-[0.8rem] text-fg-2">
+          <input
+            type="checkbox"
+            checked={filters.unknown}
+            onChange={(event) => onChange({ unknown: event.target.checked })}
+          />
+          Keep networks whose source cannot answer a filter
+        </label>
+        <p className="m-0 mt-1 text-[0.75rem] text-fg-muted">
+          As in <code>netgamut.search()</code>, a size bound, a yes or no, or a
+          node attribute leaves out the datasets whose source publishes no size,
+          has not checked, or cannot name its columns, unless this is ticked, as
+          with <code>unknown=True</code>.
+        </p>
+      </div>
     </div>
   );
 }

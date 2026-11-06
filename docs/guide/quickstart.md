@@ -71,6 +71,13 @@ netgamut.search(multilayer=True)  # Netzschleuder's multiplex networks
 netgamut.search(temporal=True, weighted=True, max_edges=100_000)
 ```
 
+`unknown=True` keeps them instead, for every filter their source cannot
+answer, sizes and node attributes included:
+
+```python
+netgamut.search(weighted=False, unknown=True)  # all not known to be weighted
+```
+
 Note `Biological: 51` — 36 from Netzschleuder, 5 each from KONECT and OGB, 4
 from AHORN, 1 from PyG, and none at all from SNAP. That imbalance is why the other sources exist.
 The mapping is deliberately visible in

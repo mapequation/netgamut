@@ -162,6 +162,23 @@ def test_kind_filters_leave_out_the_unknown() -> None:
     assert netgamut.search("chess", source="netzschleuder")[0].weighted is None
 
 
+def test_unknown_keeps_what_a_filter_cannot_answer() -> None:
+    unweighted = {match.key for match in netgamut.search(weighted=False)}
+    either = netgamut.search(weighted=False, unknown=True)
+    assert all(match.weighted is not True for match in either)
+    assert unweighted < {match.key for match in either}
+    chess = netgamut.search("chess", source="netzschleuder")[0]
+    assert chess.key in {match.key for match in either}
+    # A size bound keeps the datasets whose source publishes no size.
+    small = netgamut.search(max_nodes=1_000, unknown=True)
+    assert any(match.dataset.nodes is None for match in small)
+    assert all(match.dataset.nodes is None or match.dataset.nodes <= 1_000 for match in small)
+    # And a column filter those whose catalog cannot name their columns.
+    gender = netgamut.search(node_attribute="gender", unknown=True)
+    assert any(match.node_attributes is None for match in gender)
+    assert any(match.node_attributes for match in gender)
+
+
 def test_node_attribute_finds_a_named_column_in_any_source() -> None:
     keys = {match.key for match in netgamut.search(node_attribute="Department")}
     assert "snap/email-Eu-core" in keys
