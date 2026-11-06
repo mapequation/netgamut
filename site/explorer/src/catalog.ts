@@ -7,7 +7,19 @@ export interface Citation {
   url: string;
 }
 
-export interface Dataset {
+/** The kinds of network the index says yes, no or unknown to (netgamut's `_KINDS`). */
+export const KINDS = [
+  { key: "weighted", label: "Weighted" },
+  { key: "bipartite", label: "Bipartite" },
+  { key: "temporal", label: "Temporal" },
+  { key: "multilayer", label: "Multilayer" },
+  { key: "signed", label: "Signed" },
+  { key: "multigraph", label: "Multigraph" },
+] as const;
+
+export type Kind = (typeof KINDS)[number]["key"];
+
+export interface Dataset extends Record<Kind, boolean | null> {
   key: string;
   source: string;
   name: string;
@@ -58,7 +70,7 @@ export function navigatorUrl(key: string): string {
 /** Yes / no / either, for the boolean fields where the index may say "unknown". */
 export type Tristate = "any" | "yes" | "no";
 
-export interface Filters {
+export interface Filters extends Record<Kind, Tristate> {
   query: string;
   sources: string[];
   domains: string[];
@@ -89,6 +101,12 @@ export const NO_FILTERS: Filters = {
   maxEdges: "",
   copies: false,
   navigator: "any",
+  weighted: "any",
+  bipartite: "any",
+  temporal: "any",
+  multilayer: "any",
+  signed: "any",
+  multigraph: "any",
 };
 
 export type SortKey = "name" | "source" | "nodes" | "edges";
@@ -144,6 +162,7 @@ export function filterDatasets(
       matches(dataset.loops, filters.loops) &&
       matches(dataset.node_metadata, filters.nodeMetadata) &&
       matches(mirrored.has(dataset.key), filters.navigator) &&
+      KINDS.every(({ key }) => matches(dataset[key], filters[key])) &&
       (attribute === "" ||
         (dataset.node_attributes ?? []).some(
           (column) => column.toLocaleLowerCase() === attribute,

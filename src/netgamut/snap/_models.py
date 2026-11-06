@@ -147,6 +147,35 @@ class Dataset:
             return True
         return None
 
+    def _type_says(self, word: str) -> bool | None:
+        # A graph's type lists its properties ("Weighted, Signed, Directed,
+        # Temporal") and names its direction or that it is bipartite; any other
+        # type ("Tweets", "Movie reviews") says nothing about the rest.
+        lowered = (self.type or "").lower()
+        if "irected" not in lowered and "bipartite" not in lowered:
+            return None
+        return word in lowered
+
+    @property
+    def weighted(self) -> bool | None:
+        """Whether SNAP's type for the graph says *Weighted*; ``None`` if it is no graph's."""
+        return self._type_says("weighted")
+
+    @property
+    def signed(self) -> bool | None:
+        """Whether SNAP's type for the graph says *Signed*; ``None`` if it is no graph's."""
+        return self._type_says("signed")
+
+    @property
+    def temporal(self) -> bool | None:
+        """Whether SNAP's type for the graph says *Temporal*; ``None`` if it is no graph's."""
+        return self._type_says("temporal")
+
+    @property
+    def bipartite(self) -> bool | None:
+        """Whether SNAP's type for the graph says *Bipartite*; ``None`` if it is no graph's."""
+        return self._type_says("bipartite")
+
     @property
     def primary_file(self) -> DataFile | None:
         """The file :func:`netgamut.snap.load` downloads by default.

@@ -61,6 +61,16 @@ for match in netgamut.search(domain="Biological", max_nodes=500):
 net = netgamut.load("celegans_metabolic")
 ```
 
+The kind of network filters across sources too: `weighted`, `bipartite`,
+`temporal`, `multilayer`, `signed` and `multigraph`. Each source answers from
+its own catalog, and a dataset whose source cannot say is left out of a `True`
+and a `False` alike:
+
+```python
+netgamut.search(multilayer=True)  # Netzschleuder's multiplex networks
+netgamut.search(temporal=True, weighted=True, max_edges=100_000)
+```
+
 Note `Biological: 51` — 36 from Netzschleuder, 5 each from KONECT and OGB, 4
 from AHORN, 1 from PyG, and none at all from SNAP. That imbalance is why the other sources exist.
 The mapping is deliberately visible in

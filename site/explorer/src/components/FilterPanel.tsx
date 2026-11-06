@@ -1,4 +1,4 @@
-import type { Filters, Index } from "../catalog";
+import { type Filters, type Index, KINDS } from "../catalog";
 import { sourceColor, sourceLabel } from "../format";
 import { Chip, Choice, Range, Swatch } from "./Controls";
 
@@ -95,6 +95,20 @@ export function FilterPanel({
           onChange={(loops) => onChange({ loops })}
         />
       </div>
+
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className={`p-0 ${heading}`}>Kind of network</legend>
+        <div className="flex flex-wrap gap-x-5 gap-y-3">
+          {KINDS.map(({ key, label }) => (
+            <Choice
+              key={key}
+              label={label}
+              value={filters[key]}
+              onChange={(value) => onChange({ [key]: value })}
+            />
+          ))}
+        </div>
+      </fieldset>
 
       <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-4">
         <Choice

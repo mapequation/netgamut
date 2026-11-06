@@ -29,7 +29,7 @@ from typing import Any
 
 import netgamut
 
-from . import __version__
+from . import _KINDS, __version__
 from ._core.download import DownloadError
 
 #: The sources whose networks are first-order graphs the Navigator can load.
@@ -172,7 +172,9 @@ def export_networks(
             skipped.append({"key": match.key, "reason": reason, "reserved": size})
             log(f"{match.key}: skipped, {reason}")
             continue
-        entries.append(entry)
+        # From the catalog, not the file, so a kept entry gains them without a
+        # download; the Navigator filters on them as the explorer does.
+        entries.append({**entry, **{name: getattr(match, name) for name in _KINDS}})
         log(f"{match.key}: {entry['nodes']:,} nodes, {entry['edges']:,} links")
 
     _prune(folder, sources, {entry["file"] for entry in entries})

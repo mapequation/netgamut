@@ -119,6 +119,10 @@ _SOURCES: dict[str, Any] = {
     "ahorn": ahorn,
 }
 
+#: The kinds of network :class:`Match` can say yes, no or unknown to, which
+#: :func:`search`, the explorer's index and the web mirror's manifest share.
+_KINDS = ("weighted", "bipartite", "temporal", "multilayer", "signed", "multigraph")
+
 
 def sources() -> tuple[str, ...]:
     """The available data sources."""
@@ -210,6 +214,62 @@ class Match:
             return bool(value)
         return konect.loops_for(self.key)
 
+    def _flag(self, name: str) -> bool | None:
+        value = getattr(self.dataset, name, None)
+        return None if value is None else bool(value)
+
+    @property
+    def weighted(self) -> bool | None:
+        """Whether links carry weights; ``None`` where the source cannot say.
+
+        From Netzschleuder's tags, KONECT's edge type, SNAP's graph type and
+        AHORN's catalog. OGB, PyG and the path data cannot say.
+        """
+        return self._flag("weighted")
+
+    @property
+    def bipartite(self) -> bool | None:
+        """Whether links only join two kinds of node; ``None`` where the source cannot say.
+
+        KONECT and SNAP say so in their catalogs. For Netzschleuder it is the
+        site's structural check, no odd cycle, which every two-mode network
+        passes and so do a few trees and grids.
+        """
+        return self._flag("bipartite")
+
+    @property
+    def temporal(self) -> bool | None:
+        """Whether links carry timestamps; ``None`` where the source cannot say.
+
+        From Netzschleuder's ``Temporal`` and ``Timestamps`` tags, KONECT's
+        timestamp column, SNAP's graph type and AHORN's catalog.
+        """
+        return self._flag("temporal")
+
+    @property
+    def multilayer(self) -> bool | None:
+        """Whether Netzschleuder publishes it as a multilayer or multiplex network.
+
+        ``None`` for every other source, whose catalogs do not say.
+        """
+        return self._flag("multilayer")
+
+    @property
+    def signed(self) -> bool | None:
+        """Whether links are positive or negative; ``None`` where the source cannot say.
+
+        From Netzschleuder's ``Signed`` tag, KONECT's edge type and SNAP's graph type.
+        """
+        return self._flag("signed")
+
+    @property
+    def multigraph(self) -> bool | None:
+        """Whether some pair of nodes links more than once; ``None`` if the source cannot say.
+
+        From Netzschleuder's ``Multigraph`` tag and KONECT's edge type.
+        """
+        return self._flag("multigraph")
+
     @property
     def key(self) -> str:
         """``"<source>/<name>"`` -- unique across sources."""
@@ -226,8 +286,11 @@ class Match:
         Holds the fields :func:`search` filters on plus what a reader needs to
         choose and cite a dataset: its description, citations, its page at the
         source (``url``) and, where the catalog records it, the original
-        publisher (``upstream_url``). ``duplicate_of`` is the key of the network a
-        KONECT copy defers to (see :func:`netgamut.konect.duplicates`), else ``None``.
+        publisher (``upstream_url``). ``weighted``, ``bipartite``, ``temporal``,
+        ``multilayer``, ``signed`` and ``multigraph`` are the properties of the
+        same names, ``None`` where the source cannot say. ``duplicate_of`` is
+        the key of the network a KONECT copy defers to (see
+        :func:`netgamut.konect.duplicates`), else ``None``.
         ``subgraph_count`` is how many networks the name holds: a Netzschleuder
         entry can hold several, the first few named in ``subgraphs``, and the
         statistics describe the first, which :meth:`load` fetches by default.
@@ -248,6 +311,7 @@ class Match:
             "loops": self.loops,
             "node_metadata": self.node_metadata,
             "node_attributes": None if attributes is None else list(attributes),
+            **{name: getattr(self, name) for name in _KINDS},
             "subgraph_count": getattr(dataset, "subgraph_count", 1),
             "subgraphs": list(getattr(dataset, "subgraphs", ())),
             "description": getattr(dataset, "description", ""),
@@ -305,18 +369,26 @@ def search(
     loops: bool | None = None,
     node_metadata: bool | None = None,
     node_attribute: str | None = None,
+    weighted: bool | None = None,
+    bipartite: bool | None = None,
+    temporal: bool | None = None,
+    multilayer: bool | None = None,
+    signed: bool | None = None,
+    multigraph: bool | None = None,
 ) -> tuple[Match, ...]:
     """Search every source at once, filtering on the shared domain vocabulary.
 
     Only the fields every source agrees on are accepted here. For anything
-    source-specific -- SNAP's ground-truth partitions, Netzschleuder's multilayer
-    flag, OGB's loadability, PyG's class -- use that source's own ``search()``.
+    source-specific -- SNAP's ground-truth partitions, Netzschleuder's subtypes,
+    OGB's loadability, PyG's class -- use that source's own ``search()``.
 
     Size filters exclude datasets whose size the source does not publish rather than
     assuming anything: most PyG entries and the largest OGB ones have no counts.
     ``loops`` does the same with datasets no source has checked for self-links
     (see :attr:`Match.loops`), and ``node_metadata`` with datasets whose catalog
-    cannot say (see :attr:`Match.node_metadata`). ``node_attribute`` finds
+    cannot say (see :attr:`Match.node_metadata`), and so do ``weighted``,
+    ``bipartite``, ``temporal``, ``multilayer``, ``signed`` and ``multigraph``
+    (see :attr:`Match.weighted` and the rest). ``node_attribute`` finds
     datasets with a per-node column of that name, case-insensitively, among the
     names each catalog knows -- ``node_attribute="gender"`` for something to score
     a partition against.
@@ -334,6 +406,8 @@ def search(
 
     needle = query.casefold().strip()
     results: list[Match] = []
+    wanted = (weighted, bipartite, temporal, multilayer, signed, multigraph)
+    kinds = {name: value for name, value in zip(_KINDS, wanted, strict=True) if value is not None}
 
     def within(value: int | None, low: int | None, high: int | None) -> bool:
         if low is None and high is None:
@@ -363,6 +437,8 @@ def search(
             if loops is not None and match.loops is not loops:
                 continue
             if node_metadata is not None and match.node_metadata is not node_metadata:
+                continue
+            if any(getattr(match, name) is not value for name, value in kinds.items()):
                 continue
             if node_attribute is not None and not any(
                 column.casefold() == node_attribute.casefold()

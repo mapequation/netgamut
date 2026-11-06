@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { type Dataset, navigatorUrl } from "../catalog";
+import { type Dataset, KINDS, navigatorUrl } from "../catalog";
 import {
   cliSnippet,
   count,
@@ -141,12 +141,20 @@ export function Detail({
             </p>
           )}
 
-          <dl className="simple m-0 mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+          <dl className="simple m-0 mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
             <Fact label="Nodes" value={count(dataset.nodes)} />
             <Fact label="Edges" value={count(dataset.edges)} />
             <Fact label="Directed" value={yesNo(dataset.directed)} />
             <Fact label="Self-loops" value={yesNo(dataset.loops)} />
             <Fact label="Node metadata" value={yesNo(dataset.node_metadata)} />
+            {KINDS.map(({ key, label }) => (
+              // An index written before these fields lacks them: unknown.
+              <Fact
+                key={key}
+                label={label}
+                value={yesNo(dataset[key] ?? null)}
+              />
+            ))}
           </dl>
           {dataset.node_attributes && dataset.node_attributes.length > 0 && (
             <p className="mt-3 mb-0 text-[0.8rem] text-fg-2">

@@ -145,6 +145,23 @@ def test_node_metadata_filter_leaves_out_the_unknown() -> None:
     assert {match.source for match in with_metadata} >= {"snap", "netzschleuder", "konect"}
 
 
+def test_kind_filters_leave_out_the_unknown() -> None:
+    for name in netgamut._KINDS:
+        yes = netgamut.search(**{name: True})
+        no = netgamut.search(**{name: False})
+        assert yes and no, name
+        assert all(getattr(match, name) is True for match in yes), name
+        assert all(getattr(match, name) is False for match in no), name
+    # Only Netzschleuder's catalog says whether a network is multilayer.
+    assert {match.source for match in netgamut.search(multilayer=False)} == {"netzschleuder"}
+    # SNAP's type lists a graph's properties, and says nothing for its other collections.
+    signed = {match.key for match in netgamut.search(signed=True, source="snap")}
+    assert "snap/soc-sign-bitcoin-alpha" in signed
+    assert netgamut.search("amazon-meta", source="snap")[0].weighted is None
+    # Netzschleuder tags a network Weighted or Unweighted, and a few neither.
+    assert netgamut.search("chess", source="netzschleuder")[0].weighted is None
+
+
 def test_node_attribute_finds_a_named_column_in_any_source() -> None:
     keys = {match.key for match in netgamut.search(node_attribute="Department")}
     assert "snap/email-Eu-core" in keys
