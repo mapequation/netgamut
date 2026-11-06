@@ -92,8 +92,11 @@ def _leaf_constants(tree, non_redundant=True):
         U = exit_[A] / denom if denom > 0 else 0.0  # exit leaf A
         for L in range(dA - 1, -1, -1):
             nu, c = A[:L], A[: L + 1]
-            Z = (S.get(nu, 0.0) - (enter[c] if non_redundant else 0.0)
-                 + (exit_[nu] if nu != () else 0.0))
+            Z = (
+                S.get(nu, 0.0)
+                - (enter[c] if non_redundant else 0.0)
+                + (exit_[nu] if nu != () else 0.0)
+            )
             UZ[a, L] = U / Z if Z > 0 else 0.0
             if L > 0:  # keep exiting: factor exit[nu] / Z(nu, c)
                 U = U * exit_[nu] / Z if Z > 0 else 0.0
@@ -123,8 +126,9 @@ def _leaf_constants(tree, non_redundant=True):
             L = neq.argmax(axis=2)  # distinct leaves always differ somewhere
             C[lo:hi] = UZ[cols[lo:hi, None], L] * DEN[cols[None, :], L]
 
-    within = np.array([1.0 / (flow[A] + exit_[A]) if (flow[A] + exit_[A]) > 0 else 0.0
-                       for A in leaves])
+    within = np.array(
+        [1.0 / (flow[A] + exit_[A]) if (flow[A] + exit_[A]) > 0 else 0.0 for A in leaves]
+    )
     np.fill_diagonal(C, within)
     return C, leaves, {A: a for a, A in enumerate(leaves)}
 
