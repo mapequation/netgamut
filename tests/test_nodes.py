@@ -107,3 +107,21 @@ def test_rows_are_decoded_and_one_per_node() -> None:
 def test_repr_shows_the_categorical_widths() -> None:
     """The repr is the discovery path: it has to say what a table carries."""
     assert repr(table()) == "NodeTable(3 nodes from test: dept[2], year)"
+
+
+def test_labels_come_from_the_first_name_column_with_values() -> None:
+    table = NodeTable(
+        values={
+            "Name": {0: "", 1: " "},  # present but empty, as in some bundles
+            "label": {0: "Ann", 2: "Bo"},
+            "nodeLabel": {0: "ignored"},
+        }
+    )
+    # A node without a name is absent, so a writer shows its id.
+    assert table.labels() == {0: "Ann", 2: "Bo"}
+
+
+def test_labels_join_per_entity_names_and_default_to_none() -> None:
+    entities = NodeTable(values={"person.name": {1: "p1"}, "crime.name": {3: "c1"}, "x": {1: 2}})
+    assert entities.labels() == {1: "p1", 3: "c1"}
+    assert NodeTable(values={"groups": {0: 1}}).labels() == {}

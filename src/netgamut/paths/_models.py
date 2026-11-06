@@ -9,7 +9,7 @@ extended with that stream and the conversion to a state network.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
@@ -348,6 +348,7 @@ class PathData(Network):
         *,
         name: str | None = None,
         directed: bool | None = None,
+        names: Mapping[Any, str] | None = None,
         order: int = 1,
     ) -> Path:
         """Write the network the paths make, weights kept, and return its path.
@@ -357,10 +358,13 @@ class PathData(Network):
         network in Infomap's states format; see
         :meth:`StateNetwork.to_pajek`. *directed* is accepted for signature
         parity with :meth:`Network.to_pajek` and must not be ``False``:
-        transitions along a path are directed.
+        transitions along a path are directed. *names* is accepted for the same
+        reason and must be empty: path nodes are named by their own labels.
         """
         if directed is False:
             raise ValueError("path data is directed; transitions have a direction.")
+        if names:
+            raise ValueError("path nodes are named by their own labels; names cannot rename them.")
         return self.to_state_network(order=order).to_pajek(directory, name=name)
 
     def to_link_list(

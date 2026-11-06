@@ -27,11 +27,14 @@ finding about the attribute as much as about the algorithm.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
 __all__ = ["NodeTable"]
+
+#: Columns that name nodes, preferred in this order; matched in any case.
+_LABEL_COLUMNS = ("name", "label", "nodelabel")
 
 
 def _order(value: Any) -> tuple[int, float, str]:
@@ -147,6 +150,31 @@ class NodeTable:
             names={name: self.names[name] for name in columns if name in self.names},
             origin=self.origin,
         )
+
+    def labels(self) -> dict[Any, str]:
+        """``{node: name}`` from the column that names the nodes, or ``{}``.
+
+        That is the first of ``name``, ``label`` and ``nodeLabel``, in any case,
+        with a value for some node -- the names Netzschleuder and KONECT use.
+        Failing those, KONECT's per-entity ``<entity>.name`` columns together,
+        which never share a node. Nodes without a name are absent, so a writer
+        shows their ids instead.
+        """
+
+        def named(columns: Iterable[str]) -> dict[Any, str]:
+            found: dict[Any, str] = {}
+            for column in columns:
+                for node, value in self[column].items():
+                    text = "" if value is None else str(value).strip()
+                    if text:
+                        found[node] = text
+            return found
+
+        by_case = {column.lower(): column for column in self.columns}
+        for wanted in _LABEL_COLUMNS:
+            if wanted in by_case and (found := named([by_case[wanted]])):
+                return found
+        return named(column for column in self.columns if column.lower().endswith(".name"))
 
     def rows(self) -> list[dict[str, Any]]:
         """One dict per node, decoded -- the shape a dataframe constructor wants."""

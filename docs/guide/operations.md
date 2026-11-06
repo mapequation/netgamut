@@ -89,11 +89,14 @@ may be over `--max-file` (95 MB, below GitHub's 100 MiB limit). Each file opens
 with comment lines that name its source and citations. Node ids are the
 source's own, as `to_pajek` writes them, so a node keeps its id across a
 dataset's snapshots. They can start at 0 and skip numbers; a comment line gives
-their range. Next to the files,
+their range. Nodes carry the source's own names where it has them, as
+`to_pajek` writes them too. Next to the files,
 `index.json` lists every network with its file, size, counts and citations,
 and says why each other one was left out. Run it again on the same directory to
 update it: a network whose catalog entry is unchanged keeps its file without a
-download, and one that fails keeps its previous file. With `--stop-after
+download, and one that fails keeps its previous file. A change to how a source's
+networks are written rebuilds that source's files, and those that come out the
+same stay byte for byte the same. With `--stop-after
 MINUTES`, it starts no new download once that time is up and leaves the rest
 for the next run, which continues where it stopped. The manifest's `complete`
 stays false until a run gets through every network, and a run that changes

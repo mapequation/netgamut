@@ -552,6 +552,15 @@ def test_node_table_names_a_single_entity_by_attribute(offline_konect) -> None:
     assert dict(table["name"]) == {1: "Ann", 2: "Bo"}
 
 
+def test_to_pajek_names_nodes_from_the_ent_files(offline_konect, tmp_path) -> None:
+    offline_konect["moreno_bison"] = {
+        "ent.moreno_bison_bison.bison.name": "Ann\nBo\n",
+        "out.moreno_bison_bison": "% asym posweighted\n1 2 3\n",
+    }
+    text = konect.load("moreno_bison").to_pajek(tmp_path).read_text()
+    assert '1 "Ann"\n2 "Bo"\n' in text
+
+
 def test_node_table_reads_a_profile_table_by_node_id(offline_konect) -> None:
     """The petster layout: quoted rows keyed by node id, a few rows missing."""
     offline_konect["moreno_bison"] = {

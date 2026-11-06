@@ -37,6 +37,7 @@ import os
 import tarfile
 from collections.abc import Callable, Iterable, Iterator
 from pathlib import Path
+from typing import Any
 
 from .._core.cache import cache_dir, cache_info, clear_cache, file_lock, set_cache_dir
 from .._core.cache import dataset_dir as _dataset_dir
@@ -76,6 +77,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
+    "node_names",
     "node_table",
     "refresh",
     "search",
@@ -426,6 +428,18 @@ def node_table(network: Network) -> NodeTable:
         bipartite=dataset.bipartite,
     )
     return NodeTable(values=values, origin=f"{SOURCE}/{network.name}/ent.*")
+
+
+def node_names(network: Network) -> dict[Any, str]:
+    """Each node's name from the archive's ``ent.*`` files, or ``{}`` without one.
+
+    :meth:`Network.to_pajek` writes these as the ``*Vertices`` labels. The column is
+    the one :meth:`NodeTable.labels` picks.
+    """
+    try:
+        return node_table(network).labels()
+    except LookupError:
+        return {}
 
 
 def is_cached(name: str) -> bool:
