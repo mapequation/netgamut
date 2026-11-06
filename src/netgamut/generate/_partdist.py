@@ -31,7 +31,12 @@ exactly and is accumulated per meet cell.
 Verified against the dense reference ``D_dist(flow_matrix(G, A), flow_matrix(G, B))``
 and per-node against :func:`element_distances` to 1e-12 on two-level, hierarchical,
 directed and weighted cases (``distexp/test_partdist.py`` in the generative-map-equation
-project, and ``tests/test_generate.py`` here).  Nodes carrying no flow (``p_i = 0``,
+project, and ``tests/test_generate.py`` here).  Only a blueprint with a real enter/exit
+asymmetry tests the directed half: elsewhere ``ModuleTree`` sets ``enter is exit``, so a
+path priced entirely by exit rates agrees with the model by construction.  The per-node
+check compares the divergences ``d_i^2``, not ``d_i``: where ``d_i`` is a true zero this
+path clamps to exactly 0 and the dense path returns the sqrt of its ~1e-17 rounding, a
+~4e-9 difference carrying no information about either.  Nodes carrying no flow (``p_i = 0``,
 e.g. isolated nodes) have zero weight in the aggregate: two partitions differing only in
 where they put zero-flow nodes are flow-equivalent, and ``D`` is exactly ``0``.
 """
@@ -51,8 +56,10 @@ from . import _flowgen
 def _leaf_constants(tree, non_redundant=True):
     """C (m x m) with C[a, b] = P[i, j] / (p_i p_j) for i in leaf a, j in leaf b.
 
-    Matches flow_matrix exactly: diagonal 1/(p_A + q_A), off-diagonal
-    cross_R via tree path products, rows of leaves with q_A = 0 stay 0 off-diagonal.
+    Matches flow_matrix exactly, directed included: diagonal 1/(p_A + q_A^exit),
+    off-diagonal cross_R via tree path products -- exit rates going up to the least
+    common ancestor, enter rates coming back down -- and rows of leaves with
+    q_A^exit = 0 stay 0 off-diagonal.
     Returns (C, leaves list, {leaf path: index}).
     """
     leaves = tree.leaves
@@ -66,31 +73,36 @@ def _leaf_constants(tree, non_redundant=True):
         for t in range(1, len(A)):
             assert A[:t] not in leafset, f"leaf {A[:t]} is a prefix of leaf {A}"
 
-    q, flow, children = tree.q, tree.flow, tree.children
-    S = {nu: sum(q[ch] for ch in ch_list) for nu, ch_list in children.items()}
+    flow, children = tree.flow, tree.children
+    # Exits are priced by exit rates, entries by enter rates, exactly as cross_R does.
+    # For an undirected blueprint ModuleTree sets enter is exit is q (the same dict), so
+    # this is bit-identical to pricing everything with q; they differ only when directed.
+    enter, exit_ = tree.enter, tree.exit
+    S = {nu: sum(enter[ch] for ch in ch_list) for nu, ch_list in children.items()}
 
     # UZ[a, L]  = U(A, L) / Z(A[:L], A[:L+1])   (exit leaf A up to LCA depth L,
-    #             including the LCA normalization; cross_R's ascending part)
-    # DEN[b, L] = q[B[:L+1]] * prod_t q[B[:t+1]]/S[B[:t]] / flow[B]
-    #             (enter the depth-L+1 branch and descend to leaf B, pick node j)
+    #             including the LCA normalization; cross_R's ascending part -- exit rates)
+    # DEN[b, L] = enter[B[:L+1]] * prod_t enter[B[:t+1]]/S[B[:t]] / flow[B]
+    #             (enter the depth-L+1 branch, descend to leaf B, pick node j -- enter rates)
     UZ = np.zeros((m, maxd))
     DEN = np.zeros((m, maxd))
     for a, A in enumerate(leaves):
         dA = len(A)
-        denom = flow[A] + q[A]
-        U = q[A] / denom if denom > 0 else 0.0  # exit leaf A
+        denom = flow[A] + exit_[A]
+        U = exit_[A] / denom if denom > 0 else 0.0  # exit leaf A
         for L in range(dA - 1, -1, -1):
             nu, c = A[:L], A[: L + 1]
-            Z = S.get(nu, 0.0) - (q[c] if non_redundant else 0.0) + (q[nu] if nu != () else 0.0)
+            Z = (S.get(nu, 0.0) - (enter[c] if non_redundant else 0.0)
+                 + (exit_[nu] if nu != () else 0.0))
             UZ[a, L] = U / Z if Z > 0 else 0.0
-            if L > 0:  # keep exiting: factor q[nu] / Z(nu, c)
-                U = U * q[nu] / Z if Z > 0 else 0.0
+            if L > 0:  # keep exiting: factor exit[nu] / Z(nu, c)
+                U = U * exit_[nu] / Z if Z > 0 else 0.0
         # descending part
-        den = q[A] / flow[A] if flow[A] > 0 else 0.0
+        den = enter[A] / flow[A] if flow[A] > 0 else 0.0
         DEN[a, dA - 1] = den
         for L in range(dA - 2, -1, -1):
             Ssub = S.get(A[: L + 1], 0.0)
-            den = den * q[A[: L + 1]] / Ssub if Ssub > 0 else 0.0
+            den = den * enter[A[: L + 1]] / Ssub if Ssub > 0 else 0.0
             DEN[a, L] = den
 
     if maxd == 1:  # flat two-level partition: LCA is always the root
@@ -111,7 +123,8 @@ def _leaf_constants(tree, non_redundant=True):
             L = neq.argmax(axis=2)  # distinct leaves always differ somewhere
             C[lo:hi] = UZ[cols[lo:hi, None], L] * DEN[cols[None, :], L]
 
-    within = np.array([1.0 / (flow[A] + q[A]) if (flow[A] + q[A]) > 0 else 0.0 for A in leaves])
+    within = np.array([1.0 / (flow[A] + exit_[A]) if (flow[A] + exit_[A]) > 0 else 0.0
+                       for A in leaves])
     np.fill_diagonal(C, within)
     return C, leaves, {A: a for a, A in enumerate(leaves)}
 

@@ -795,6 +795,55 @@ def test_partition_distances_match_the_dense_flow_models() -> None:
     assert generate.agms(G, N, N) == pytest.approx(1.0, abs=1e-15)
 
 
+def test_partition_distances_are_correct_for_directed_flow() -> None:
+    """The blockwise path must price entries by enter rates, as cross_R does.
+
+    A directed blueprint has ``enter != exit`` per module, and the two halves of a
+    cross-module path use different rates: exit rates going up to the least common
+    ancestor, enter rates coming back down.  Collapsing both onto ``q = exit`` leaves
+    the undirected answer untouched (there ``enter is exit``) and silently changes the
+    directed one, so only a blueprint with a real enter/exit asymmetry tests it: on
+    ``directed_hierarchical`` the two differ in ``D`` by ~1e-3, far above any tolerance.
+    """
+    np = pytest.importorskip("numpy")
+    G, partition = directed_hierarchical(per=8, subs=2, supers=2)
+    tree = generate.ModuleTree(G, partition)
+    asym = max(abs(tree.enter[m] - tree.exit[m]) for m in tree.flow)
+    assert asym > 1e-6, "fixture must be genuinely directed for this test to bite"
+
+    flat = {u: partition[u][0] for u in G}  # supermodules only
+    fine = {u: partition[u] for u in G}  # the planted hierarchy
+    alt = {u: (partition[u][1], partition[u][0]) for u in G}  # regrouped levels
+
+    for A, B in ((fine, flat), (fine, alt), (flat, alt)):
+        nodes = sorted(G.nodes())
+        PA, _, _ = generate.flow_matrix(G, A, node_order=nodes)
+        PB, _, _ = generate.flow_matrix(G, B, node_order=nodes)
+        D, d_node = generate.gmd(G, A, B, element=True)
+        assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
+        # per node, compared as divergences: sqrt of a ~1e-17 rounding of a true
+        # zero is ~4e-9, which would say nothing about the agreement.
+        d_ref = generate.element_distances(PA, PB)
+        dev = max(abs(d_node[u] ** 2 - d_ref[i] ** 2) for i, u in enumerate(nodes))
+        assert dev < 1e-12
+        p = generate.ModuleTree(G, A).p
+        assert sum(p[u] * d_node[u] ** 2 for u in G) == pytest.approx(D**2, abs=1e-12)
+
+    # the leaf-constant table must rebuild the dense model exactly, directed included
+    from netgamut.generate import _partdist
+
+    for part in (fine, flat):
+        P, nodes, tree = generate.flow_matrix(G, part)
+        C, _, idx = _partdist._leaf_constants(tree)
+        a = np.array([idx[tree.paths[u]] for u in nodes])
+        pv = np.array([tree.p[u] for u in nodes])
+        rebuilt = C[a[:, None], a[None, :]] * np.outer(pv, pv)
+        assert np.abs(rebuilt - P).max() < 1e-15
+
+    assert generate.gmd(G, fine, fine) == pytest.approx(0.0, abs=1e-15)
+    assert generate.agmd(G, fine, generate.null_partition(G)) == pytest.approx(1.0, abs=1e-12)
+
+
 def test_zero_flow_nodes_carry_no_weight() -> None:
     """Partitions that differ only on nodes with no flow are flow-equivalent.
 
