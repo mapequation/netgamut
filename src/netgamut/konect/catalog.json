@@ -21942,7 +21942,8 @@
   {
    "name": "ucidata-gama",
    "of": "netzschleuder/new_guinea_tribes",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_taro",
@@ -21959,17 +21960,20 @@
   {
    "name": "moreno_zebra",
    "of": "netzschleuder/zebras",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "brunson_corporate-leadership",
    "of": "netzschleuder/elite",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_kangaroo",
    "of": "netzschleuder/kangaroo",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "iceland",
@@ -21986,12 +21990,14 @@
   {
    "name": "moreno_rhesus",
    "of": "netzschleuder/rhesus_monkey",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dolphins",
    "of": "netzschleuder/dolphins",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "maayan-pdzbase",
@@ -22008,17 +22014,20 @@
   {
    "name": "moreno_train",
    "of": "netzschleuder/train_terrorists",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_sheep",
    "of": "netzschleuder/moreno_sheep",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "gene_fusion",
    "of": "netzschleuder/gene_fusion",
-   "verdict": "imported"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_lesmis",
@@ -22029,27 +22038,32 @@
   {
    "name": "adjnoun_adjacency",
    "of": "netzschleuder/adjnoun",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
   },
   {
    "name": "moreno_beach",
    "of": "netzschleuder/windsurfers",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
   },
   {
    "name": "dimacs10-polbooks",
    "of": "netzschleuder/polbooks",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
   },
   {
    "name": "moreno_highschool",
    "of": "netzschleuder/highschool",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_hens",
    "of": "netzschleuder/hens",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dimacs10-football",
@@ -22060,12 +22074,14 @@
   {
    "name": "convote",
    "of": "netzschleuder/convote_mentions",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_innovation",
    "of": "netzschleuder/physician_trust",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_mac",
@@ -22082,7 +22098,8 @@
   {
    "name": "librec-filmtrust-trust",
    "of": "netzschleuder/librec_trust",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "unicodelang",
@@ -22105,22 +22122,26 @@
   {
    "name": "maayan-foodweb",
    "of": "netzschleuder/foodweb_little_rock",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "maayan-faa",
    "of": "netzschleuder/faa_routes",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "moreno_oz",
    "of": "netzschleuder/residence_hall",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "arenas-meta",
    "of": "netzschleuder/celegans_metabolic",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
   },
   {
    "name": "moreno_vdb",
@@ -22137,17 +22158,20 @@
   {
    "name": "maayan-vidal",
    "of": "netzschleuder/interactome_vidal",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "maayan-figeys",
    "of": "netzschleuder/interactome_figeys",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "opsahl-powergrid",
    "of": "netzschleuder/power",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "isomorphic after relabelling"
   },
   {
    "name": "dnc-corecipient",
@@ -22163,32 +22187,38 @@
   {
    "name": "p2p-Gnutella08",
    "of": "snap/p2p-Gnutella08",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "twin",
    "of": "netzschleuder/sister_cities",
-   "verdict": "unverified"
+   "verdict": "unverified",
+   "note": "check failed: DownloadError"
   },
   {
    "name": "arenas-pgp",
    "of": "netzschleuder/pgp_2004",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "p2p-Gnutella09",
    "of": "snap/p2p-Gnutella09",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "p2p-Gnutella06",
    "of": "snap/p2p-Gnutella06",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "p2p-Gnutella05",
    "of": "snap/p2p-Gnutella05",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "p2p-Gnutella04",
@@ -22199,7 +22229,8 @@
   {
    "name": "sociopatterns-hypertext",
    "of": "netzschleuder/sp_hypertext",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "contact",
@@ -22210,12 +22241,14 @@
   {
    "name": "tntp-ChicagoRegional",
    "of": "netzschleuder/chicago_road",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dimacs10-as-22july06",
    "of": "netzschleuder/internet_as",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "soc-sign-bitcoinalpha",
@@ -22250,27 +22283,32 @@
   {
    "name": "p2p-Gnutella24",
    "of": "snap/p2p-Gnutella24",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "p2p-Gnutella30",
    "of": "snap/p2p-Gnutella30",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "soc-sign-bitcoinotc",
    "of": "netzschleuder/bitcoin_trust",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "soc-sign-bitcoinotc",
    "of": "snap/soc-sign-bitcoin-otc",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "subelj_cora",
    "of": "netzschleuder/cora",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "escorts",
@@ -22293,17 +22331,20 @@
   {
    "name": "reactome",
    "of": "netzschleuder/reactome",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "chess",
    "of": "netzschleuder/chess",
-   "verdict": "imported"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "p2p-Gnutella31",
    "of": "snap/p2p-Gnutella31",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "radoslaw_email",
@@ -22314,17 +22355,20 @@
   {
    "name": "dbpedia-writer",
    "of": "netzschleuder/dbpedia_writer",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "cfinder-google",
    "of": "netzschleuder/google",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "movielens-100k_rating",
    "of": "netzschleuder/movielens_ratings",
-   "verdict": "unverified"
+   "verdict": "unverified",
+   "note": "check failed: DownloadError"
   },
   {
    "name": "munmun_digg_reply",
@@ -22335,7 +22379,8 @@
   {
    "name": "linux",
    "of": "netzschleuder/linux",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "loc-brightkite_edges",
@@ -22346,7 +22391,8 @@
   {
    "name": "elec",
    "of": "netzschleuder/elec",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dbpedia-producer",
@@ -22357,12 +22403,14 @@
   {
    "name": "dbpedia-recordlabel",
    "of": "netzschleuder/dbpedia_recordlabel",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dbpedia-occupation",
    "of": "netzschleuder/dbpedia_occupation",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "slashdot-threads",
@@ -22373,7 +22421,8 @@
   {
    "name": "dbpedia-starring",
    "of": "netzschleuder/dbpedia_starring",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "dbpedia-location",
@@ -22384,37 +22433,44 @@
   {
    "name": "cit-HepTh",
    "of": "snap/cit-HepTh",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "topology",
    "of": "netzschleuder/topology",
-   "verdict": "imported"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "douban",
    "of": "netzschleuder/douban",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "cit-HepPh",
    "of": "netzschleuder/arxiv_citation",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "cit-HepPh",
    "of": "snap/cit-HepPh",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "email-EuAll",
    "of": "netzschleuder/email_eu",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "email-EuAll",
    "of": "snap/email-EuAll",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "github",
@@ -22425,7 +22481,8 @@
   {
    "name": "soc-Epinions1",
    "of": "snap/soc-Epinions1",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "dbpedia-genre",
@@ -22436,27 +22493,32 @@
   {
    "name": "dbpedia-country",
    "of": "netzschleuder/dbpedia_country",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "slashdot-zoo",
    "of": "netzschleuder/slashdot_zoo",
-   "verdict": "imported"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "wordnet-words",
    "of": "netzschleuder/wordnet",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "wikisigned-k2",
    "of": "netzschleuder/wiki_users",
-   "verdict": "imported"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "loc-gowalla_edges",
    "of": "snap/loc-Gowalla",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "munmun_twitter_social",
@@ -22467,7 +22529,8 @@
   {
    "name": "com-amazon",
    "of": "snap/com-Amazon",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "com-dblp",
@@ -22496,12 +22559,14 @@
   {
    "name": "epinions",
    "of": "netzschleuder/signed_social_media",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "same ids, offset by 1"
   },
   {
    "name": "epinions",
    "of": "snap/soc-sign-epinions",
-   "verdict": "unverified"
+   "verdict": "same-edges",
+   "note": "equal up to relabelling (degree sequences, Weisfeiler-Lehman)"
   },
   {
    "name": "web-NotreDame",
