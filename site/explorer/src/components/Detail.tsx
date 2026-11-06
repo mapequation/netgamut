@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { type Dataset, navigatorUrl } from "../catalog";
+import { type Dataset, KINDS, navigatorUrl } from "../catalog";
 import {
   cliSnippet,
   count,
@@ -9,6 +9,7 @@ import {
   subgraphsSnippet,
   yesNo,
 } from "../format";
+import { isSearchShortcut } from "../shortcut";
 import { Chip, CopyBlock, Swatch } from "./Controls";
 import { Description } from "./Description";
 
@@ -46,6 +47,23 @@ export function Detail({
     if (!dataset && element.open) element.close();
     element.scrollTop = 0;
   }, [dataset]);
+
+  // On the docs site, Sphinx's sphinx_highlight.js cancels every Escape that
+  // reaches the document while focus is off a form control, as it is once a
+  // click lands on text in the dialog, and a cancelled Escape leaves a modal
+  // open. So the dialog closes itself first, in the window's capture phase.
+  // The search shortcut closes it too, since the search behind a modal cannot
+  // take focus; App focuses the search when the key bubbles back up.
+  const open = dataset !== null;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || isSearchShortcut(event))
+        dialog.current?.close();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [open]);
 
   const section = "mx-0 mt-5 mb-1.5 p-0 text-[0.8rem] font-semibold text-fg-2";
   const link = "text-brand underline-offset-2 hover:underline break-all";
@@ -123,12 +141,20 @@ export function Detail({
             </p>
           )}
 
-          <dl className="simple m-0 mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+          <dl className="simple m-0 mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
             <Fact label="Nodes" value={count(dataset.nodes)} />
             <Fact label="Edges" value={count(dataset.edges)} />
             <Fact label="Directed" value={yesNo(dataset.directed)} />
             <Fact label="Self-loops" value={yesNo(dataset.loops)} />
             <Fact label="Node metadata" value={yesNo(dataset.node_metadata)} />
+            {KINDS.map(({ key, label }) => (
+              // An index written before these fields lacks them: unknown.
+              <Fact
+                key={key}
+                label={label}
+                value={yesNo(dataset[key] ?? null)}
+              />
+            ))}
           </dl>
           {dataset.node_attributes && dataset.node_attributes.length > 0 && (
             <p className="mt-3 mb-0 text-[0.8rem] text-fg-2">

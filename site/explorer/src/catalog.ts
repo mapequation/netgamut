@@ -7,7 +7,19 @@ export interface Citation {
   url: string;
 }
 
-export interface Dataset {
+/** The kinds of network the index says yes, no or unknown to (netgamut's `_KINDS`). */
+export const KINDS = [
+  { key: "weighted", label: "Weighted" },
+  { key: "bipartite", label: "Bipartite" },
+  { key: "temporal", label: "Temporal" },
+  { key: "multilayer", label: "Multilayer" },
+  { key: "signed", label: "Signed" },
+  { key: "multigraph", label: "Multigraph" },
+] as const;
+
+export type Kind = (typeof KINDS)[number]["key"];
+
+export interface Dataset extends Record<Kind, boolean | null> {
   key: string;
   source: string;
   name: string;
@@ -58,7 +70,7 @@ export function navigatorUrl(key: string): string {
 /** Yes / no / either, for the boolean fields where the index may say "unknown". */
 export type Tristate = "any" | "yes" | "no";
 
-export interface Filters {
+export interface Filters extends Record<Kind, Tristate> {
   query: string;
   sources: string[];
   domains: string[];
@@ -71,6 +83,8 @@ export interface Filters {
   minEdges: string;
   maxEdges: string;
   copies: boolean;
+  /** Keep datasets whose source cannot answer a filter, as `search(unknown=True)`. */
+  unknown: boolean;
   /** Whether the web mirror holds it, so the Network Navigator can open it. */
   navigator: Tristate;
 }
@@ -88,7 +102,14 @@ export const NO_FILTERS: Filters = {
   minEdges: "",
   maxEdges: "",
   copies: false,
+  unknown: false,
   navigator: "any",
+  weighted: "any",
+  bipartite: "any",
+  temporal: "any",
+  multilayer: "any",
+  signed: "any",
+  multigraph: "any",
 };
 
 export type SortKey = "name" | "source" | "nodes" | "edges";
@@ -103,20 +124,27 @@ function bound(text: string): number | null {
   return text.trim() === "" || Number.isNaN(value) ? null : value;
 }
 
-// Like search(): with a bound set, a dataset whose size is unpublished is out.
+// Like search(): with a bound set, a dataset whose size is unpublished is out
+// unless *unknown* keeps it.
 function within(
   value: number | null,
   low: number | null,
   high: number | null,
+  unknown: boolean,
 ): boolean {
   if (low === null && high === null) return true;
-  if (value === null) return false;
+  if (value === null) return unknown;
   return (low === null || value >= low) && (high === null || value <= high);
 }
 
-// Like search(): "unknown" never matches a yes or a no.
-function matches(value: boolean | null, wanted: Tristate): boolean {
-  return wanted === "any" || value === (wanted === "yes");
+// Like search(): "unknown" matches a yes or a no only if *unknown* keeps it.
+function matches(
+  value: boolean | null,
+  wanted: Tristate,
+  unknown: boolean,
+): boolean {
+  if (wanted === "any") return true;
+  return value === null ? unknown : value === (wanted === "yes");
 }
 
 /** *mirrored* holds the keys in the web mirror's manifest. */
@@ -129,6 +157,7 @@ export function filterDatasets(
   const attribute = filters.nodeAttribute.trim().toLocaleLowerCase();
   const nodes = [bound(filters.minNodes), bound(filters.maxNodes)] as const;
   const edges = [bound(filters.minEdges), bound(filters.maxEdges)] as const;
+  const { unknown } = filters;
   return datasets.filter(
     (dataset) =>
       (filters.copies || dataset.duplicate_of === null) &&
@@ -140,16 +169,22 @@ export function filterDatasets(
         `${dataset.name} ${dataset.title} ${dataset.description}`
           .toLocaleLowerCase()
           .includes(needle)) &&
-      matches(dataset.directed, filters.directed) &&
-      matches(dataset.loops, filters.loops) &&
-      matches(dataset.node_metadata, filters.nodeMetadata) &&
-      matches(mirrored.has(dataset.key), filters.navigator) &&
+      matches(dataset.directed, filters.directed, unknown) &&
+      matches(dataset.loops, filters.loops, unknown) &&
+      matches(dataset.node_metadata, filters.nodeMetadata, unknown) &&
+      matches(mirrored.has(dataset.key), filters.navigator, unknown) &&
+      // An index written before the kinds lacks them: unknown.
+      KINDS.every(({ key }) =>
+        matches(dataset[key] ?? null, filters[key], unknown),
+      ) &&
       (attribute === "" ||
-        (dataset.node_attributes ?? []).some(
-          (column) => column.toLocaleLowerCase() === attribute,
-        )) &&
-      within(dataset.nodes, ...nodes) &&
-      within(dataset.edges, ...edges),
+        (dataset.node_attributes === null
+          ? unknown
+          : dataset.node_attributes.some(
+              (column) => column.toLocaleLowerCase() === attribute,
+            ))) &&
+      within(dataset.nodes, ...nodes, unknown) &&
+      within(dataset.edges, ...edges, unknown),
   );
 }
 

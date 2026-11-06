@@ -52,6 +52,14 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   A node without a name still shows its id, and `names={}` asks for ids only.
   `NodeTable.labels()` gives the same names. Before, every node showed its id,
   so mirror files lost names like euroroad's cities.
+- `netgamut.search()` filters on the kind of network: `weighted`, `bipartite`,
+  `temporal`, `multilayer`, `signed` and `multigraph`, from each source's own
+  catalog, leaving out datasets whose source cannot say. `Match` has the same
+  properties, and the explorer's index and the web mirror's manifest carry them,
+  so the explorer and the Navigator can filter on them too.
+- `netgamut.search(unknown=True)` keeps the datasets whose source cannot answer
+  a filter, where a size bound, a yes or no, or a node attribute leaves them out
+  by default. The explorer has the same choice.
 
 ### Changed
 

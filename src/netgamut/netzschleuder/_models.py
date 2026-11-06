@@ -95,8 +95,11 @@ class Dataset:
         return tuple(tag for tag in self.tags if tag not in _PROPERTY_TAGS and tag not in DOMAINS)
 
     @property
-    def weighted(self) -> bool:
-        return "Weighted" in self.tags
+    def weighted(self) -> bool | None:
+        """From the site's ``Weighted`` or ``Unweighted`` tag; ``None`` without either."""
+        if "Weighted" in self.tags:
+            return True
+        return False if "Unweighted" in self.tags else None
 
     @property
     def multilayer(self) -> bool:
@@ -110,6 +113,15 @@ class Dataset:
     @property
     def temporal(self) -> bool:
         return "Temporal" in self.tags or "Timestamps" in self.tags
+
+    @property
+    def signed(self) -> bool:
+        return "Signed" in self.tags
+
+    @property
+    def multigraph(self) -> bool:
+        """Whether the site tags it a multigraph: some pair of nodes links more than once."""
+        return "Multigraph" in self.tags
 
     @property
     def url(self) -> str:

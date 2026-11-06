@@ -61,6 +61,13 @@ class FakeMatch:
     source: str
     dataset: FakeDataset
     loads: list[dict[str, Any]] = field(default_factory=list)
+    #: Match.weighted and the rest; derived, so not part of the fingerprint.
+    kinds: dict[str, bool] = field(default_factory=dict)
+
+    def __getattr__(self, name: str) -> Any:
+        if name in netgamut._KINDS:
+            return self.kinds.get(name)
+        raise AttributeError(name)
 
     name = property(lambda self: self.dataset.name)
     nodes = property(lambda self: self.dataset.nodes)
@@ -304,6 +311,27 @@ def test_an_unreachable_source_keeps_its_earlier_files(tmp_path, catalog) -> Non
     document = _export.export_networks(tmp_path, sources=("snap",))
     assert document["datasets"] == first["datasets"]
     assert document["reserved"] == 0
+
+
+def test_lists_the_kinds_of_network_from_the_catalog(tmp_path, catalog) -> None:
+    """The Navigator filters on them; a file kept from an earlier run gains them too."""
+    tiny = catalog["snap"][0]
+    first = _export.export_networks(tmp_path)
+    assert all(entry["temporal"] is None for entry in first["datasets"])
+
+    tiny.kinds = {"temporal": True, "weighted": False}
+    document = _export.export_networks(tmp_path)
+
+    assert len(tiny.loads) == 1
+    entry = next(entry for entry in document["datasets"] if entry["key"] == "snap/tiny")
+    assert {name: entry[name] for name in netgamut._KINDS} == {
+        "weighted": False,
+        "bipartite": None,
+        "temporal": True,
+        "multilayer": None,
+        "signed": None,
+        "multigraph": None,
+    }
 
 
 def test_cli_export_networks(tmp_path, catalog, capsys) -> None:
