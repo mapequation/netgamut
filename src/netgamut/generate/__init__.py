@@ -123,6 +123,8 @@ __all__ = [
     "gmd",
     "gms",
     "null_partition",
+    "two_level_constants",
+    "two_level_table",
     # samplers and repair passes, for callers that drive them directly
     "connect_components",
     "pair_stubs",
@@ -183,6 +185,8 @@ _REEXPORTS = {
             "gmd",
             "gms",
             "null_partition",
+            "two_level_constants",
+            "two_level_table",
         )
     },
     **{name: "_lfr" for name in ("LfrSource", "lfr", "lfr_available", "lfr_source")},
