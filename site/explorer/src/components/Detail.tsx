@@ -9,6 +9,7 @@ import {
   subgraphsSnippet,
   yesNo,
 } from "../format";
+import { isSearchShortcut } from "../shortcut";
 import { Chip, CopyBlock, Swatch } from "./Controls";
 import { Description } from "./Description";
 
@@ -46,6 +47,23 @@ export function Detail({
     if (!dataset && element.open) element.close();
     element.scrollTop = 0;
   }, [dataset]);
+
+  // On the docs site, Sphinx's sphinx_highlight.js cancels every Escape that
+  // reaches the document while focus is off a form control, as it is once a
+  // click lands on text in the dialog, and a cancelled Escape leaves a modal
+  // open. So the dialog closes itself first, in the window's capture phase.
+  // The search shortcut closes it too, since the search behind a modal cannot
+  // take focus; App focuses the search when the key bubbles back up.
+  const open = dataset !== null;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || isSearchShortcut(event))
+        dialog.current?.close();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [open]);
 
   const section = "mx-0 mt-5 mb-1.5 p-0 text-[0.8rem] font-semibold text-fg-2";
   const link = "text-brand underline-offset-2 hover:underline break-all";

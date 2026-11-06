@@ -3,6 +3,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -20,6 +21,7 @@ import { DomainChart } from "./components/DomainChart";
 import { FilterPanel } from "./components/FilterPanel";
 import { Results } from "./components/Results";
 import { SizeChart } from "./components/SizeChart";
+import { isSearchShortcut, SEARCH_ARIA, SEARCH_KEYS } from "./shortcut";
 
 const PAGE = 50;
 const HASH = "#dataset=";
@@ -49,6 +51,20 @@ export function App({
   const [showFilters, setShowFilters] = useState(wide);
   const [showCharts, setShowCharts] = useState(wide);
   const deferred = useDeferredValue(filters);
+  const search = useRef<HTMLInputElement>(null);
+
+  // In the bubble phase: an open dataset's dialog closes on the same key in the
+  // capture phase (Detail), so the search is no longer inert by now.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!isSearchShortcut(event)) return;
+      event.preventDefault();
+      search.current?.focus();
+      search.current?.select();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     fetch(indexUrl)
@@ -143,14 +159,31 @@ export function App({
   return (
     <div className="grid gap-4 text-[0.9rem] text-fg">
       <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="search"
-          value={filters.query}
-          onChange={(event) => change({ query: event.target.value })}
-          placeholder={`Search ${base.length.toLocaleString("en")} datasets`}
-          aria-label="Search datasets"
-          className="min-h-9 min-w-0 flex-[1_1_16rem] rounded-md border border-line-strong bg-bg px-3"
-        />
+        <div className="relative flex min-w-0 flex-[1_1_16rem] items-center">
+          <input
+            ref={search}
+            type="search"
+            value={filters.query}
+            onChange={(event) => change({ query: event.target.value })}
+            placeholder={`Search ${base.length.toLocaleString("en")} datasets`}
+            aria-label="Search datasets"
+            aria-keyshortcuts={SEARCH_ARIA}
+            className={`min-h-9 w-full min-w-0 rounded-md border border-line-strong bg-bg pl-3 ${
+              filters.query === "" ? "pr-14" : "pr-3"
+            }`}
+          />
+          {/* A span, not a kbd, which furo styles; the input names the
+              shortcut to assistive technology. Gone once there is a query,
+              where the browser draws its clear button. */}
+          {filters.query === "" && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-2 rounded border border-line bg-bg-2 px-1.5 text-[0.7rem] leading-5 text-fg-muted"
+            >
+              {SEARCH_KEYS}
+            </span>
+          )}
+        </div>
         <button
           type="button"
           aria-expanded={showFilters}
