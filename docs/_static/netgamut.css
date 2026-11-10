@@ -1,4 +1,5 @@
-/* The MapEquation icon before the title at the top of the sidebar. */
+/* The MapEquation icon before the title at the top of the sidebar,
+   with the version below the name. */
 .sidebar-brand {
   flex-direction: row;
   align-items: center;
@@ -9,4 +10,15 @@
   flex-shrink: 0;
   width: auto;
   height: 2.2rem;
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.sidebar-brand-version {
+  color: var(--color-foreground-muted);
+  font-size: 0.875rem;
 }
