@@ -90,7 +90,10 @@ with comment lines that name its source and citations. Node ids are the
 source's own, as `to_pajek` writes them, so a node keeps its id across a
 dataset's snapshots. They can start at 0 and skip numbers; a comment line gives
 their range. Nodes carry the source's own names where it has them, as
-`to_pajek` writes them too. Next to the files,
+`to_pajek` writes them too. A network its source tags multilayer is written in
+Infomap's multilayer format where netgamut finds its layers, as
+`netzschleuder.load_multilayer` lays them out; one whose layers it does not find
+is written as one network, with a comment saying so. Next to the files,
 `index.json` lists every network with its file, size, counts and citations,
 and says why each other one was left out. Run it again on the same directory to
 update it: a network whose catalog entry is unchanged keeps its file without a

@@ -22,10 +22,28 @@
   ([#29](https://github.com/mapequation/netgamut/issues/29)). Netzschleuder
   and SNAP networks are converted again on the next build.
 
+- `Network.to_multilayer` keeps the source's node names, as `to_pajek` does.
+
 ### Added
 
 - `Columns.delimiter` and `Columns.header_row`, for a source to declare how a
   row splits and whether the first line names the fields.
+- `MultilayerNetwork.from_networks({layer: network}, key=...)` stacks
+  downloaded networks as layers, matching nodes by a node-metadata column, or
+  by id where the networks share one id space
+  ([#8](https://github.com/mapequation/netgamut/issues/8)).
+- `netzschleuder.load_multilayer(name, subgraphs=None, key=None)` returns an
+  entry as a multilayer network from wherever it keeps its layers: a layer
+  column (`layer`, or `route_type` and `transmitter` for the entries that name
+  it so), or one subgraph per layer for copenhagen, malaria_genes,
+  twitter_higgs, ugandan_village and youtube_interactions
+  ([#8](https://github.com/mapequation/netgamut/issues/8)).
+- `export-networks` writes multilayer networks in Infomap's multilayer format
+  (`*Vertices`, `*Intra`), with their number of `layers` in `index.json`. A
+  network tagged multilayer whose layers are not found is written as one
+  network, with a comment saying so
+  ([#28](https://github.com/mapequation/netgamut/issues/28)).
+- A "Multilayer networks" section in the guide.
 
 ## 0.4.0
 

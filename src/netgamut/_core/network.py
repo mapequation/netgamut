@@ -670,6 +670,8 @@ class Network:
 
             ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)
 
+        The source's node names come along, as :meth:`to_pajek` writes them.
+
         Raises:
             LookupError: No time column (with *bins*), or no layer column.
             ValueError: Both *bins* and *layer* given.
@@ -700,11 +702,14 @@ class Network:
                 intra[label] = _aggregate(table, by_layer[label], directed)
             name = self.columns.names[column] if column < len(self.columns.names) else column
             info = {"layers": name}
+        everyone = {node for links in intra.values() for pair in links for node in pair}
+        cast: Callable[[str], Any] = int if all(isinstance(node, int) for node in everyone) else str
         return MultilayerNetwork(
             name=self.name,
             intra=intra,
             directed=directed,
             weighted=any(w != 1.0 for links in intra.values() for w in links.values()),
+            names=self._source_names(cast),
             info={"source": self.name, **info},
         )
 

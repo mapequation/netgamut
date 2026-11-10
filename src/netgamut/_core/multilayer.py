@@ -14,12 +14,16 @@ Infomap reports a multilayer partition and how the samplers take one.
 
 from __future__ import annotations
 
-from collections.abc import Hashable, Iterator
+from collections import Counter
+from collections.abc import Hashable, Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from . import formats
+
+if TYPE_CHECKING:
+    from .network import Network
 
 __all__ = ["MultilayerNetwork"]
 
@@ -63,6 +67,93 @@ class MultilayerNetwork:
                 f"inter-layer links must stay on one physical node, as Infomap's *Inter "
                 f"links do; {crossing[0]} joins two different nodes."
             )
+
+    @classmethod
+    def from_networks(
+        cls,
+        layers: Mapping[Any, Network],
+        *,
+        key: str | None = None,
+        name: str | None = None,
+        directed: bool | None = None,
+    ) -> MultilayerNetwork:
+        """Stack downloaded networks as the layers of one multilayer network.
+
+        Each network in *layers* becomes the layer its key names. Its links are
+        summed as :meth:`Network.to_multilayer` sums them: occurrences, or
+        weights where the file has a weight column. There are no inter-layer
+        links, so Infomap couples the layers with its relax rate.
+
+        Without *key*, a node is the same physical node in every layer where it
+        has the same id. That fits files that share one id space. Where each
+        network numbers its nodes on its own, as Netzschleuder's subgraphs do,
+        *key* names the column of :meth:`Network.nodes` that identifies a node
+        across them, such as copenhagen's ``id``. The source's node names come
+        along, for :meth:`to_pajek`'s ``*Vertices`` labels.
+
+        *name* defaults to the first network's, and *directed* to whether any
+        of them is directed.
+
+        Raises:
+            ValueError: No layers, or under *key* a node with no value or two
+                nodes of one layer with the same value.
+            LookupError: A network has no node metadata, or no *key* column.
+        """
+        from .columns import is_int_label
+
+        if not layers:
+            raise ValueError("no networks to stack as layers.")
+        if directed is None:
+            directed = any(bool(network.dataset.directed) for network in layers.values())
+        identities: dict[Hashable, dict[str, str] | None] = {}
+        labels: dict[str, str] = {}
+        for layer, network in layers.items():
+            if key is None:
+                identities[layer] = None
+                continue
+            table = network.nodes()
+            values = {str(node): str(value) for node, value in table[key].items()}
+            shared = [value for value, count in Counter(values.values()).items() if count > 1]
+            if shared:
+                raise ValueError(
+                    f"{key!r} does not identify the nodes of layer {layer!r}: "
+                    f"{len(shared):,} values, such as {shared[0]!r}, belong to more than one node."
+                )
+            identities[layer] = values
+            for node, label in table.labels().items():
+                labels.setdefault(values.get(str(node), ""), label)
+        raw: dict[Hashable, dict[tuple[str, str], float]] = {}
+        for layer, network in layers.items():
+            identity = identities[layer]
+            links: dict[tuple[str, str], float] = {}
+            for u, v, weight in network._links():
+                if identity is not None:
+                    try:
+                        u, v = identity[u], identity[v]
+                    except KeyError as missing:
+                        raise ValueError(
+                            f"node {missing.args[0]} of layer {layer!r} has no {key!r}."
+                        ) from None
+                pair = (u, v)
+                if not directed and pair not in links and (v, u) in links:
+                    pair = (v, u)
+                links[pair] = links.get(pair, 0.0) + (1.0 if weight is None else weight)
+            raw[layer] = links
+        everyone = {node for links in raw.values() for pair in links for node in pair}
+        cast: Any = int if all(is_int_label(node) for node in everyone) else str
+        intra = {}
+        for layer in list(raw):  # popped as it goes, so a large network is held once
+            intra[layer] = {(cast(u), cast(v)): w for (u, v), w in raw.pop(layer).items()}
+        names = {cast(node): label for node, label in labels.items() if node and label != node}
+        first = next(iter(layers.values()))
+        return cls(
+            name=name or first.name,
+            intra=intra,
+            directed=directed,
+            weighted=any(w != 1.0 for links in intra.values() for w in links.values()),
+            names=names,
+            info={"source": name or first.name, "layers": "networks", "key": key},
+        )
 
     # -- inspection --------------------------------------------------------
     @property
