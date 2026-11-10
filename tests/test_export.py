@@ -342,6 +342,61 @@ def test_an_unreachable_source_keeps_its_earlier_files(tmp_path, catalog) -> Non
     assert document["reserved"] == 0
 
 
+def test_a_multilayer_network_is_written_in_its_layers(tmp_path, catalog, monkeypatch) -> None:
+    from netgamut import MultilayerNetwork
+
+    middle = catalog["snap"][1]
+    middle.kinds["multilayer"] = True
+    asked: list[tuple[str, dict[str, Any]]] = []
+
+    def load_multilayer(name: str, **kwargs: Any) -> MultilayerNetwork:
+        asked.append((name, kwargs))
+        intra = {"bus": {(1, 2): 1.0, (2, 3): 2.0}, "tram": {(2, 3): 1.0}}
+        return MultilayerNetwork(name=name, intra=intra, directed=True, names={1: "Hub"})
+
+    monkeypatch.setattr(netgamut.snap, "load_multilayer", load_multilayer, raising=False)
+    document = _export.export_networks(tmp_path, sources=("snap",), max_download=123)
+    entry = next(entry for entry in document["datasets"] if entry["key"] == "snap/middle")
+    assert asked == [("middle", {"progress": False, "max_bytes": 123})]
+    assert middle.loads == []  # the flat network is not downloaded besides
+    assert (entry["nodes"], entry["edges"], entry["layers"], entry["directed"]) == (3, 3, 2, True)
+    assert entry["multilayer"] is True
+    text = gzip.decompress((tmp_path / entry["file"]).read_bytes()).decode()
+    assert "# Multilayer: 2 layers in Infomap's multilayer format." in text
+    assert '# layer 1 = bus\n# layer 2 = tram\n*Vertices 3\n1 "Hub"\n' in text
+    assert "*Intra\n# layer node node weight\n1 1 2 1.0\n1 2 3 2.0\n2 2 3 1.0\n" in text
+    # A network without layers has no layers field.
+    tiny = next(entry for entry in document["datasets"] if entry["key"] == "snap/tiny")
+    assert "layers" not in tiny
+
+
+def test_a_multilayer_network_without_layers_is_written_as_one(
+    tmp_path, catalog, monkeypatch
+) -> None:
+    middle = catalog["snap"][1]
+    middle.kinds["multilayer"] = True
+
+    def load_multilayer(name: str, **kwargs: Any) -> None:
+        raise LookupError("no layer column")
+
+    monkeypatch.setattr(netgamut.snap, "load_multilayer", load_multilayer, raising=False)
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    entry = next(entry for entry in document["datasets"] if entry["key"] == "snap/middle")
+    assert "layers" not in entry
+    assert len(middle.loads) == 1
+    text = gzip.decompress((tmp_path / entry["file"]).read_bytes()).decode()
+    assert "# snap tags this network multilayer, but netgamut finds no layers" in text
+    assert "*Edges\n" in text
+
+
+def test_writing_layers_rebuilds_the_multilayer_networks_alone(tmp_path, catalog) -> None:
+    large, tiny = catalog["konect"][0], catalog["snap"][0]
+    before = _export._fingerprint(large), _export._fingerprint(tiny)
+    large.kinds["multilayer"] = True
+    assert _export._fingerprint(large) != before[0]
+    assert _export._fingerprint(tiny) == before[1]
+
+
 def test_lists_the_kinds_of_network_from_the_catalog(tmp_path, catalog) -> None:
     """The Navigator filters on them; a file kept from an earlier run gains them too."""
     tiny = catalog["snap"][0]

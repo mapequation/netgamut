@@ -24,7 +24,7 @@ Please cite the networks you use; see ``Dataset.citations``.
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +35,7 @@ from .._core.domains import DOMAINS
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
 from .._core.models import DataFile
+from .._core.multilayer import MultilayerNetwork
 from .._core.network import Network
 from .._core.nodes import NodeTable
 from ._catalog import Catalog, build_catalog, load_catalog, refresh
@@ -59,6 +60,7 @@ __all__ = [
     "info",
     "is_cached",
     "load",
+    "load_multilayer",
     "node_names",
     "node_table",
     "refresh",
@@ -77,6 +79,36 @@ _EDGES_MEMBER = "edges.csv"
 _WEIGHT_NAMES = ("weight", "count")
 _TIME_NAMES = ("time", "timestamp", "year")
 _LAYER_NAMES = ("layer",)
+#: Entries whose layer column has another name: a transmitter for each layer of
+#: the C. elegans wireless connectome, a mode of transport for the others.
+_LAYER_COLUMNS = {
+    "celegans_extrasynaptic": "transmitter",
+    "kujala_public_transport": "route_type",
+    "national_public_transport": "route_type",
+}
+#: Entries that keep each layer in a subgraph of its own: the subgraphs that make
+#: up the default multilayer network, and the ``nodes.csv`` column that names a
+#: node in every one of them -- ``index``, the row number, where they all number
+#: the same nodes alike. ugandan_village holds two layers for each of 17
+#: villages, so its default is the first village.
+_SUBGRAPH_LAYERS: dict[str, tuple[tuple[str, ...], str]] = {
+    "copenhagen": (("sms", "fb_friends", "calls", "bt"), "id"),
+    "malaria_genes": (tuple(f"HVR_{number}" for number in range(1, 10)), "name"),
+    "twitter_higgs": (("social", "retweet", "reply", "mention"), "name"),
+    "ugandan_village": (("friendship-1", "health-advice_1"), "name"),
+    "youtube_interactions": (
+        (
+            "contacts",
+            "shared_friends",
+            "shared_subscriptions",
+            "shared_subscribers",
+            "shared_favorites",
+        ),
+        "index",
+    ),
+}
+#: Columns that can name a node across subgraphs when an entry is not listed above.
+_KEY_NAMES = ("id", "name")
 #: Property types that cannot be a link weight: a boolean ``weight`` only marks
 #: presence, and text is not a number.
 _NOT_NUMERIC = ("bool", "string")
@@ -240,6 +272,86 @@ def load(
     return dataclasses.replace(network, columns=_columns(network, dataset))
 
 
+def load_multilayer(
+    name: str,
+    subgraphs: Sequence[str] | None = None,
+    *,
+    key: str | None = None,
+    force: bool = False,
+    progress: Callable[[int, int | None], None] | bool | None = None,
+    max_bytes: int | None = None,
+) -> MultilayerNetwork:
+    """Download *name* and return it as a :class:`~netgamut.MultilayerNetwork`.
+
+    Without *subgraphs*, the layers are where the entry keeps them. Most
+    multilayer entries hold a layer column in their default subgraph:
+    ``layer`` for london_transport, ``route_type`` for the public transport
+    entries, ``transmitter`` for celegans_extrasynaptic. copenhagen,
+    malaria_genes, twitter_higgs, ugandan_village and youtube_interactions
+    keep one layer per subgraph, and those are stacked.
+
+    With *subgraphs*, each one named is a layer, as
+    :meth:`MultilayerNetwork.from_networks` stacks them. Every subgraph numbers
+    its nodes ``0..n-1`` on its own, so a node is matched across them by the
+    ``nodes.csv`` column *key*, such as copenhagen's ``id``. By default that is
+    the entry's known key, else the first of ``id`` and ``name`` that the
+    subgraphs have. Pass ``key="index"`` when they all number the same nodes
+    alike.
+
+    For a column-layered entry's other subgraphs, load one and lay it out:
+    ``load("kujala_public_transport", subgraph="berlin").to_multilayer()``.
+    The other arguments are :func:`load`'s, applied to each download.
+
+    Raises:
+        LookupError: The entry has no layer column, and no subgraphs were named
+            that netgamut knows to be its layers; or no *key* fits.
+    """
+    dataset = info(name)
+
+    def fetch(subgraph: str | None = None) -> Network:
+        return load(
+            dataset.name, subgraph=subgraph, force=force, progress=progress, max_bytes=max_bytes
+        )
+
+    known = _SUBGRAPH_LAYERS.get(dataset.name)
+    if subgraphs is None:
+        if known is None:
+            network = fetch()
+            if network.columns.layer is None:
+                raise LookupError(
+                    f"{dataset.name!r} has no layer column, and netgamut knows no subgraphs "
+                    "that are its layers; name them with subgraphs=[...]."
+                )
+            return network.to_multilayer()
+        subgraphs = known[0]
+    layers = {subgraph: fetch(subgraph) for subgraph in subgraphs}
+    if key is None:
+        key = known[1] if known is not None else _node_key(layers)
+    stacked = MultilayerNetwork.from_networks(
+        layers, key=None if key == "index" else key, name=dataset.name
+    )
+    info_ = {**stacked.info, "layers": "subgraph", "key": key}
+    return dataclasses.replace(stacked, info=info_)
+
+
+def _node_key(layers: dict[str, Network]) -> str:
+    """The first of :data:`_KEY_NAMES` that every subgraph's ``nodes.csv`` has."""
+    shared: set[str] | None = None
+    for network in layers.values():
+        try:
+            columns = set(network.nodes().columns)
+        except LookupError:
+            columns = set()
+        shared = columns if shared is None else shared & columns
+    for candidate in _KEY_NAMES:
+        if candidate in (shared or ()):
+            return candidate
+    raise LookupError(
+        f"the subgraphs share no {' or '.join(_KEY_NAMES)} column to match nodes by; "
+        "pass key=, or key='index' if they all number the same nodes alike."
+    )
+
+
 def _columns(network: Network, dataset: Dataset) -> Columns:
     """Column roles from the file's own ``# source, target, ...`` header.
 
@@ -271,7 +383,7 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
     return Columns(
         weight=None if signed else first(_WEIGHT_NAMES, numeric=True),
         time=first(_TIME_NAMES),
-        layer=first(_LAYER_NAMES),
+        layer=first((*filter(None, [_LAYER_COLUMNS.get(dataset.name)]), *_LAYER_NAMES)),
         names=names,
         delimiter=",",
     )

@@ -62,15 +62,8 @@ too, and a link's weight in a snapshot is how often it occurs there (summed
 weights where the file has a weight column). ISO dates come back as
 `datetime64`.
 
-The same bins, or a layer column, make a multilayer network:
-
-```python
-ml = net.to_multilayer(bins=12)          # layer i = bin i; ml.info["bin_edges"]
-ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)  # couple adjacent bins
-
-netgamut.load("london_transport").to_multilayer()             # its layer column
-snap.load("higgs-twitter").to_multilayer(layer="interaction") # any categorical column
-```
+The same bins, or a layer column, make a multilayer network: see
+[Multilayer networks](#multilayer-networks).
 
 If a source has a column wrong, or you know better, declare it yourself:
 `dataclasses.replace(net, columns=netgamut.Columns(time=2))`. `Columns` also
@@ -98,7 +91,85 @@ net = netgamut.load("ambassador", source="netzschleuder", subgraph="2000")
 
 Each subgraph loads as a network of its own. netgamut does not combine them,
 because what they share differs by entry: `ambassador`'s are mostly periods,
-plus a kinship network and a list of every tie.
+plus a kinship network and a list of every tie. Where an entry's subgraphs are
+the layers of one network, `netzschleuder.load_multilayer` stacks them; see
+[Multilayer networks](#multilayer-networks).
+
+## Multilayer networks
+
+A multilayer network has nodes that appear in several layers: the lines of a
+transport network, the kinds of tie between the same people. netgamut builds
+one as a `MultilayerNetwork`, the shape Infomap's multilayer model reads, from
+wherever a source keeps its layers. Each layer's links are summed, as counts or
+as weights where the file has a weight column, and the source's node names come
+along.
+
+A time column gives a layer per time bin, the same bins as `snapshots`:
+
+```python
+ml = net.to_multilayer(bins=12)          # layer i = bin i; ml.info["bin_edges"]
+ml.to_infomap(multilayer_relax_rate=0.15, multilayer_relax_limit=1)  # couple adjacent bins
+```
+
+A layer column gives a layer per value, and any categorical column can serve:
+
+```python
+netgamut.load("london_transport").to_multilayer()             # its layer column
+snap.load("higgs-twitter", file="higgs-activity_time.txt.gz").to_multilayer(
+    layer="interaction"                                       # retweet, mention, reply
+)
+```
+
+Netzschleuder keeps the layers of its multilayer entries in different places.
+`netzschleuder.load_multilayer` knows where:
+
+```python
+from netgamut import netzschleuder as nz
+
+nz.load_multilayer("london_transport")         # its layer column
+nz.load_multilayer("kujala_public_transport")  # route_type: tram, rail, bus...
+nz.load_multilayer("copenhagen")               # subgraphs sms, fb_friends, calls and bt
+```
+
+copenhagen, malaria_genes, twitter_higgs, ugandan_village and
+youtube_interactions keep each layer in a subgraph of its own. Each subgraph
+numbers its nodes `0..n-1` by itself, so the stacked layers match a node by a
+`nodes.csv` column: copenhagen's `id`, the `name` of the others, and the row
+number for youtube_interactions, whose subgraphs list the same users in the same
+order. Name other subgraphs to stack, and the column that matches their nodes,
+yourself:
+
+```python
+nz.load_multilayer("ugandan_village", ["friendship-5", "health-advice_5"])  # village 5
+nz.load_multilayer("copenhagen", ["calls", "sms"], key="id")
+```
+
+For column-layered entries with several subgraphs, load the subgraph you want
+and lay it out: `nz.load("kujala_public_transport", subgraph="berlin").to_multilayer()`.
+
+Three entries are tagged multilayer, but their files hold no layers:
+physician_trust merges its advice, discussion and friendship ties; iwdb is a
+collection of separate studies; and in paris_transportation's current upstream
+file, every link has one end on a node without attributes. `load_multilayer`
+raises `LookupError` for them.
+
+Networks you loaded yourself stack with `MultilayerNetwork.from_networks`. Files
+that share one id space, as SNAP's higgs-twitter files do, need no `key`:
+
+```python
+layers = {
+    kind: snap.load("higgs-twitter", file=f"{kind}_network.edgelist.gz")
+    for kind in ("retweet", "reply", "mention")
+}
+ml = netgamut.MultilayerNetwork.from_networks(layers, name="higgs")
+```
+
+None of these layerings links one layer to another: Infomap couples them with
+its relax rate. `ml.to_pajek(directory)` writes Infomap's multilayer format
+(`*Vertices`, then `*Intra` lines of layer, node, node and weight), and
+`ml.to_infomap()` builds the same network in Infomap. The web mirror writes
+multilayer networks in this format, with their number of `layers` in
+`index.json`.
 
 ## Node metadata, in one shape
 

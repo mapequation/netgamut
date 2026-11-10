@@ -5,7 +5,8 @@ Navigator cannot fetch their files. :func:`export_networks` converts the graph
 sources' networks to gzipped Pajek, smallest first, until a size budget is
 spent, and writes the ``index.json`` manifest that the catalog explorer and the
 Navigator read. Every file opens with comment lines that say where the network
-came from and how to cite it.
+came from and how to cite it. A multilayer network is written in Infomap's
+multilayer format, its manifest entry saying how many ``layers`` it has.
 
 The mirror is committed to the repository's ``mirror`` branch and served by
 raw.githubusercontent.com, so git's limits apply: GitHub rejects a file of
@@ -16,6 +17,7 @@ from __future__ import annotations
 
 import gzip
 import hashlib
+import importlib
 import json
 import re
 import shutil
@@ -31,6 +33,7 @@ import netgamut
 
 from . import _KINDS, __version__
 from ._core.download import DownloadError
+from ._core.multilayer import MultilayerNetwork
 
 #: The sources whose networks are first-order graphs the Navigator can load.
 MIRRORED_SOURCES = ("netzschleuder", "konect", "snap")
@@ -62,6 +65,11 @@ def export_networks(
     over *max_file* bytes, downloads over *max_download*, and networks that
     read as having no nodes or no links, which would list a file with nothing
     in it.
+
+    A network its source tags multilayer is written in Infomap's multilayer
+    format (``*Vertices``, ``*Intra``) where its source lays out the layers,
+    with ``layers`` in its manifest entry; one whose layers netgamut cannot
+    find is written as one network, and says so in a comment.
 
     Run it again on the same *output* to update it. A network whose catalog
     entry is unchanged keeps its file without a download unless *force* is set;
@@ -239,6 +247,9 @@ def _is_graph(match: Any) -> bool:
 #: Netzschleuder 3: its edge lists read as CSV, quoted fields and all; SNAP 2:
 #: the Reddit hyperlink TSVs read without their header row.
 _FORMATS = {"netzschleuder": 3, "konect": 2, "snap": 2}
+#: Raised when multilayer networks are written differently, which rebuilds
+#: those alone. 1: in Infomap's multilayer format.
+_LAYERED_FORMAT = 1
 
 
 def _fingerprint(match: Any) -> str:
@@ -247,6 +258,8 @@ def _fingerprint(match: Any) -> str:
     version = _FORMATS.get(match.source, 1)
     if version > 1:  # version 1 left it out, and its fingerprints still hold
         text += f"\nformat {version}"
+    if getattr(match, "multilayer", False):
+        text += f"\nlayers {_LAYERED_FORMAT}"
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
@@ -264,11 +277,24 @@ def _convert(
     """Download one network, write it as gzipped Pajek, and describe the file."""
     meta = match.to_dict()
     with tempfile.TemporaryDirectory() as scratch:
-        network = match.load(progress=False, max_bytes=max_download)
-        pajek = network.to_pajek(scratch, name=match.name)
+        layered = _layered(match, max_download)
+        if layered is not None:
+            pajek = layered.to_pajek(scratch, name=match.name)
+            note = _layer_note(layered)
+        else:
+            network = match.load(progress=False, max_bytes=max_download)
+            pajek = network.to_pajek(scratch, name=match.name)
+            note = []
+            if getattr(match, "multilayer", False):
+                note = [
+                    f"{match.source} tags this network multilayer, but netgamut finds no "
+                    "layers in its data, so its links are written as one network."
+                ]
         packed = Path(scratch) / f"{pajek.name}.gz"
-        header = _attribution(meta) + _id_note(pajek)
+        header = _attribution(meta) + note + _id_note(pajek)
         nodes, edges, directed = _compress(pajek, packed, header)
+        if layered is not None:
+            directed = layered.directed  # the multilayer format does not say
         if not nodes or not edges:
             raise _Empty(f"empty: {nodes:,} nodes and {edges:,} links read")
         size = packed.stat().st_size
@@ -277,7 +303,7 @@ def _convert(
         relative = f"{match.source}/{packed.name}"
         (folder / relative).parent.mkdir(parents=True, exist_ok=True)
         shutil.move(packed, folder / relative)
-    return {
+    entry = {
         "key": meta["key"],
         "title": meta["title"] or meta["name"],
         "file": relative,
@@ -289,6 +315,35 @@ def _convert(
         "citations": meta["citations"],
         "fingerprint": fingerprint,
     }
+    if layered is not None:
+        entry["layers"] = layered.num_layers
+    return entry
+
+
+def _layered(match: Any, max_download: int) -> MultilayerNetwork | None:
+    """The network in its layers, if its source tags it multilayer and can lay them out."""
+    if not getattr(match, "multilayer", False):
+        return None
+    module = importlib.import_module(f"netgamut.{match.source}")
+    loader = getattr(module, "load_multilayer", None)
+    if loader is None:
+        return None
+    try:
+        layered: MultilayerNetwork = loader(match.name, progress=False, max_bytes=max_download)
+    except LookupError:
+        return None
+    return layered
+
+
+def _layer_note(layered: MultilayerNetwork) -> list[str]:
+    """How to read a multilayer file, which neither Pajek nor the format itself says."""
+    direction = "directed" if layered.directed else "undirected"
+    return [
+        f"Multilayer: {layered.num_layers:,} layers in Infomap's multilayer format. "
+        f"*Intra lines are layer, node, node, weight, and the links are {direction}. "
+        "No link joins two layers, so couple them with a relax rate, as Infomap's "
+        "--multilayer-relax-rate does."
+    ]
 
 
 def _attribution(meta: dict[str, Any]) -> list[str]:
@@ -350,7 +405,7 @@ def _compress(source: Path, target: Path, header: list[str]) -> tuple[int, int, 
                 heading = keyword.lower()
                 if heading == b"*vertices":
                     nodes = int(rest[0])
-                in_links = heading in (b"*edges", b"*arcs")
+                in_links = heading in (b"*edges", b"*arcs", b"*intra", b"*inter")
                 directed = directed or heading == b"*arcs"
             elif in_links and line.strip() and not line.startswith(b"#"):
                 links += 1
