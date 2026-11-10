@@ -29,11 +29,13 @@ Both flow models share the exact factor ``p_i`` per row, so the joint JSD decomp
 exactly and is accumulated per meet cell.
 
 Verified against the dense reference ``D_dist(flow_matrix(G, A), flow_matrix(G, B))``
-and per-node against :func:`element_distances` to 1e-12 on two-level, hierarchical,
-directed and weighted cases (``distexp/test_partdist.py`` in the generative-map-equation
-project, and ``tests/test_generate.py`` here).  Only a blueprint with a real enter/exit
-asymmetry tests the directed half: elsewhere ``ModuleTree`` sets ``enter is exit``, so a
-path priced entirely by exit rates agrees with the model by construction.  The per-node
+and per-node against :func:`element_distances` to 1e-12, on six structures -- a toy
+bridge, planted blocks, structure-ignoring random partitions, karate, nine triangles in
+a ring, and a two-level directed hierarchy -- each in an undirected *and* a directed
+form (``tests/test_generate.py``, which is where this is checked: the measure lives here,
+so its checks do too).  Both forms are needed, because undirected ``ModuleTree`` sets
+``enter is exit`` -- literally one dict -- so a path priced entirely by exit rates agrees
+with the model by construction and the descending half goes untested.  The per-node
 check compares the divergences ``d_i^2``, not ``d_i``: where ``d_i`` is a true zero this
 path clamps to exactly 0 and the dense path returns the sqrt of its ~1e-17 rounding, a
 ~4e-9 difference carrying no information about either.  Nodes carrying no flow (``p_i = 0``,
@@ -53,13 +55,55 @@ from . import _flowgen
 # --------------------------------------------------------------------------- #
 # Leaf-module constant tables from the module tree
 # --------------------------------------------------------------------------- #
+def two_level_constants(p_mod, exits, enters=None, non_redundant=True):
+    """Leaf constants of a flat (two-level) flow model, as three arrays.
+
+    ``C[a, b] = up[a] * down[b]`` off the diagonal and ``C[a, a] = diag[a]`` on it, so
+    that ``P[i, j] = C[a(i), a(j)] p_i p_j``.  This is the two-level case of
+    :func:`_leaf_constants`, taking module aggregates directly instead of a
+    ``ModuleTree``: the shape a hot loop wants, where a search over candidate
+    partitions already holds the aggregates and never builds a tree.
+    :func:`_leaf_constants` calls it for ``maxd == 1``, so there is one derivation of
+    the flat constants rather than one per caller.
+
+    ``p_mod`` is the module flow, ``exits`` and ``enters`` its exit and enter rates;
+    ``enters`` defaults to ``exits``, which is the undirected case -- there the two
+    rates coincide, and a caller that has only ``q`` is saying its blueprint is
+    undirected.  ``non_redundant`` excludes the module just left from the root
+    normalizer.  A module with no flow, no exit or an empty normalizer scores 0
+    rather than dividing by zero.
+    """
+    p_mod = np.asarray(p_mod, dtype=float)
+    exits = np.asarray(exits, dtype=float)
+    enters = exits if enters is None else np.asarray(enters, dtype=float)
+    tot = p_mod + exits
+    # One spelling of the branch normalizer for the whole model -- see ``_total``.
+    Z = _flowgen._total(enters) - (enters if non_redundant else 0.0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        diag = np.where(tot > 0, 1.0 / np.where(tot > 0, tot, 1.0), 0.0)
+        up = np.where(tot > 0, exits / np.where(tot > 0, tot, 1.0), 0.0)
+        up = np.where(Z > 0, up / np.where(Z > 0, Z, 1.0), 0.0)
+        down = np.where(p_mod > 0, enters / np.where(p_mod > 0, p_mod, 1.0), 0.0)
+    return diag, up, down
+
+
+def two_level_table(p_mod, exits, enters=None, non_redundant=True):
+    """The dense ``K x K`` table of :func:`two_level_constants`, diagonal filled in."""
+    diag, up, down = two_level_constants(p_mod, exits, enters, non_redundant)
+    C = np.outer(up, down)
+    np.fill_diagonal(C, diag)
+    return C
+
+
 def _leaf_constants(tree, non_redundant=True):
     """C (m x m) with C[a, b] = P[i, j] / (p_i p_j) for i in leaf a, j in leaf b.
 
     Matches flow_matrix exactly, directed included: diagonal 1/(p_A + q_A^exit),
     off-diagonal cross_R via tree path products -- exit rates going up to the least
     common ancestor, enter rates coming back down -- and rows of leaves with
-    q_A^exit = 0 stay 0 off-diagonal.
+    q_A^exit = 0 stay 0 off-diagonal.  A flat partition is handed to
+    :func:`two_level_table`, so the flat constants have one derivation however they
+    are reached.
     Returns (C, leaves list, {leaf path: index}).
     """
     leaves = tree.leaves
@@ -72,6 +116,19 @@ def _leaf_constants(tree, non_redundant=True):
     for A in leaves:
         for t in range(1, len(A)):
             assert A[:t] not in leafset, f"leaf {A[:t]} is a prefix of leaf {A}"
+
+    index = {A: a for a, A in enumerate(leaves)}
+    if maxd == 1:  # flat two-level partition: the LCA is always the root
+        return (
+            two_level_table(
+                np.array([tree.flow[A] for A in leaves]),
+                np.array([tree.exit[A] for A in leaves]),
+                np.array([tree.enter[A] for A in leaves]),
+                non_redundant,
+            ),
+            leaves,
+            index,
+        )
 
     flow, children = tree.flow, tree.children
     # Exits are priced by exit rates, entries by enter rates, exactly as cross_R does.
@@ -108,29 +165,26 @@ def _leaf_constants(tree, non_redundant=True):
             den = den * enter[A[: L + 1]] / Ssub if Ssub > 0 else 0.0
             DEN[a, L] = den
 
-    if maxd == 1:  # flat two-level partition: LCA is always the root
-        C = np.outer(UZ[:, 0], DEN[:, 0])
-    else:
-        # integer-encode paths, padded with -1; LCA depth = first differing position
-        codes = {}
-        P = np.full((m, maxd), -1, dtype=np.int64)
-        for a, A in enumerate(leaves):
-            for t, x in enumerate(A):
-                P[a, t] = codes.setdefault((t, x), len(codes))
-        C = np.empty((m, m))
-        cols = np.arange(m)
-        chunk = max(1, min(m, 2048))
-        for lo in range(0, m, chunk):
-            hi = min(lo + chunk, m)
-            neq = P[lo:hi, None, :] != P[None, :, :]
-            L = neq.argmax(axis=2)  # distinct leaves always differ somewhere
-            C[lo:hi] = UZ[cols[lo:hi, None], L] * DEN[cols[None, :], L]
+    # integer-encode paths, padded with -1; LCA depth = first differing position
+    codes = {}
+    P = np.full((m, maxd), -1, dtype=np.int64)
+    for a, A in enumerate(leaves):
+        for t, x in enumerate(A):
+            P[a, t] = codes.setdefault((t, x), len(codes))
+    C = np.empty((m, m))
+    cols = np.arange(m)
+    chunk = max(1, min(m, 2048))
+    for lo in range(0, m, chunk):
+        hi = min(lo + chunk, m)
+        neq = P[lo:hi, None, :] != P[None, :, :]
+        L = neq.argmax(axis=2)  # distinct leaves always differ somewhere
+        C[lo:hi] = UZ[cols[lo:hi, None], L] * DEN[cols[None, :], L]
 
     within = np.array(
         [1.0 / (flow[A] + exit_[A]) if (flow[A] + exit_[A]) > 0 else 0.0 for A in leaves]
     )
     np.fill_diagonal(C, within)
-    return C, leaves, {A: a for a, A in enumerate(leaves)}
+    return C, leaves, index
 
 
 # --------------------------------------------------------------------------- #

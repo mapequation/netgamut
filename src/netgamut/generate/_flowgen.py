@@ -129,6 +129,30 @@ def common_prefix_len(a, b):
     return L
 
 
+def _total(rates):
+    """Sum flow rates the one way the whole flow model sums them.
+
+    Every branch normalizer goes through here so that no two of them can disagree in
+    the last bit -- and an ulp matters: ``D`` is a square root, so it reports one as
+    ~5e-9 between a partition and that same partition wrapped in one extra level.
+
+    The one thing this does beyond ``sum`` is unbox numpy scalars.  CPython's ``sum``
+    switches to compensated (Neumaier) addition only while every item passes
+    ``PyFloat_CheckExact``; ``np.float64`` is a float *subclass* that overrides
+    ``__add__``, so it fails that test and ``sum(array)`` drops to the uncompensated
+    loop, while ``array.sum()`` is numpy's pairwise reduction.  Both land an ulp away
+    from what the same rates give as Python floats.  *Which* algorithm runs is not the
+    point and is not fixed -- there is no compensation before CPython 3.12 -- the
+    contract is that every caller gets the same one.
+
+    ``rates`` is any iterable; an array is unboxed with ``.tolist()``, an O(K)
+    interpreter loop against one SIMD pass.  Should that ever dominate, pass the
+    normalizer in from a caller that already holds it rather than respelling the sum.
+    """
+    tolist = getattr(rates, "tolist", None)
+    return float(sum(tolist() if tolist is not None else rates))
+
+
 class ModuleTree:
     """Module tree with flow statistics from a network + (hierarchical) partition.
 
@@ -294,16 +318,16 @@ class ModuleTree:
         ``Q^enter(nu) - q^enter[excluded_child]``: the enter rates of nu's children plus
         nu's own exit-to-parent rate, with the branch just left removed.
         """
-        z = sum(self.enter[ch] for ch in self.children[nu]
-                if (ch != excluded_child or not non_redundant))
+        z = _total(self.enter[ch] for ch in self.children[nu]
+                   if (ch != excluded_child or not non_redundant))
         if nu != ():
             z += self.exit[nu]
         return z
 
     def Z_in(self, nu, excluded_child, non_redundant=True):
         """Time-reversed :meth:`Z`: normalizer for an in-stub entering excluded_child."""
-        z = sum(self.exit[ch] for ch in self.children[nu]
-                if (ch != excluded_child or not non_redundant))
+        z = _total(self.exit[ch] for ch in self.children[nu]
+                   if (ch != excluded_child or not non_redundant))
         if nu != ():
             z += self.enter[nu]
         return z
@@ -388,17 +412,43 @@ def cross_R(tree, A, B, non_redundant=True):
 
     Exits are priced by exit rates, entries by enter rates; the two coincide for an
     undirected blueprint, so this is the same expression the undirected model always used.
+
+    A degenerate denominator -- a module with neither flow nor exit, an empty
+    normalizer, a target leaf with no flow -- means there is no such path, so the
+    R-value is 0, and that is what this returns rather than raising.  Exact, not a
+    convention: at every step the denominator dominates that step's numerator factor
+    (exiting, ``Z = sum_{ch != c} enter[ch] + exit[nu] >= exit[nu]``; at the LCA, ``Z``
+    includes ``enter[B[:L+1]]``; descending, the sum over children includes
+    ``enter[B[:t+1]]``), so a zero denominator forces its numerator to zero too.  A
+    whole component with nothing to exit through is the everyday case; a state-network
+    copy wrapped under a zero-flow supermodule is where it first bit.
+    :func:`~netgamut.generate._partdist._leaf_constants` has always scored those 0, so
+    the dense and blockwise evaluations now agree on degenerate input as well.
     """
     L = common_prefix_len(A, B)
-    val = tree.exit[A] / (tree.flow[A] + tree.exit[A])       # exit leaf A
+    denom = tree.flow[A] + tree.exit[A]
+    if denom <= 0:
+        return 0.0
+    val = tree.exit[A] / denom                     # exit leaf A
     for t in range(len(A) - 1, L, -1):            # keep exiting ancestors below the LCA
         nu, c = A[:t], A[:t + 1]
-        val *= tree.exit[nu] / tree.Z(nu, c, non_redundant)
+        Z = tree.Z(nu, c, non_redundant)
+        if Z <= 0:
+            return 0.0
+        val *= tree.exit[nu] / Z
     nu, c = A[:L], A[:L + 1]                       # at the LCA: enter the branch holding B
-    val *= tree.enter[B[:L + 1]] / tree.Z(nu, c, non_redundant)
+    Z = tree.Z(nu, c, non_redundant)
+    if Z <= 0:
+        return 0.0
+    val *= tree.enter[B[:L + 1]] / Z
     for t in range(L + 1, len(B)):                # descend to leaf B by enter rates
         nu = B[:t]
-        val *= tree.enter[B[:t + 1]] / sum(tree.enter[ch] for ch in tree.children[nu])
+        S = sum(tree.enter[ch] for ch in tree.children[nu])
+        if S <= 0:
+            return 0.0
+        val *= tree.enter[B[:t + 1]] / S
+    if tree.flow[B] <= 0:
+        return 0.0
     return val / tree.flow[B]                      # choose node j within B: p_j / p_B
 
 
@@ -420,7 +470,8 @@ def flow_matrix(G, partition, non_redundant=True, node_order=None, directed=None
     members = {A: [idx[u] for u in tree.nodes_in[A]] for A in tree.leaves}
     for A in tree.leaves:
         ia = members[A]
-        R[np.ix_(ia, ia)] = 1.0 / (tree.flow[A] + tree.exit[A])
+        tot = tree.flow[A] + tree.exit[A]
+        R[np.ix_(ia, ia)] = 1.0 / tot if tot > 0 else 0.0
         for B in tree.leaves:
             if B != A and tree.exit[A] > 0:
                 R[np.ix_(ia, members[B])] = cross_R(tree, A, B, non_redundant)
@@ -448,10 +499,24 @@ def jsd(a, b):
 
 
 def element_distances(P1, P2):
-    """d_i = JS distance between row conditionals q_i = P_i / p_i."""
-    p1, p2 = P1.sum(1), P2.sum(1)
-    return np.array([math.sqrt(jsd(P1[i] / p1[i], P2[i] / p2[i]))
-                     for i in range(P1.shape[0])])
+    """d_i = JS distance between row conditionals q_i = P_i / p_i.
+
+    Vectorized over rows -- one pass of array arithmetic rather than a Python loop
+    over :func:`jsd` -- which is what makes it usable inside a sampling or annealing
+    loop.  A row with no flow (p_i = 0) has no conditional to compare, and scores
+    d_i = 0; the per-row loop reached the same answer through a nan.
+    """
+    p1 = P1.sum(1, keepdims=True)
+    p2 = P2.sum(1, keepdims=True)
+    q1 = np.divide(P1, p1, out=np.zeros(P1.shape, dtype=float), where=p1 > 0)
+    q2 = np.divide(P2, p2, out=np.zeros(P2.shape, dtype=float), where=p2 > 0)
+    m = 0.5 * (q1 + q2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r1 = np.divide(q1, m, out=np.ones_like(q1), where=m > 0)
+        r2 = np.divide(q2, m, out=np.ones_like(q2), where=m > 0)
+        t1 = np.where(q1 > 0, q1 * np.log2(r1), 0.0)
+        t2 = np.where(q2 > 0, q2 * np.log2(r2), 0.0)
+    return np.sqrt(np.maximum(0.5 * t1.sum(1) + 0.5 * t2.sum(1), 0.0))
 
 
 def S_dist(P1, P2):

@@ -13,6 +13,7 @@ regime, so that is what the tests pin down.
 
 from __future__ import annotations
 
+import math
 import subprocess
 import sys
 from typing import Any
@@ -764,84 +765,287 @@ def test_two_level_samples_are_identical_across_routing_rules() -> None:
     assert not (deep["observed"] == deep["boundary"] == deep["model"])
 
 
-def test_partition_distances_match_the_dense_flow_models() -> None:
+def asymmetric(G: Any, seed: int = 3) -> Any:
+    """``G`` as a digraph carrying the same links with asymmetric arc weights.
+
+    Every undirected edge becomes a pair of opposite arcs with different weights, so
+    the structure is untouched and only the symmetry of the flow across each module
+    boundary is broken.  That is the one thing an undirected blueprint cannot
+    exercise: undirected, ``ModuleTree`` sets ``enter is exit`` -- literally one dict
+    -- so a path priced entirely by exit rates matches the model by construction and
+    the descending half of every cross-module path goes untested.
+    """
+    nx = pytest.importorskip("networkx")
+    np = pytest.importorskip("numpy")
+    rng = np.random.default_rng(seed)
+    H = nx.DiGraph()
+    H.add_nodes_from(G.nodes())
+    for u, v in G.edges():
+        if u == v:
+            continue
+        H.add_edge(u, v, weight=float(rng.uniform(0.5, 4.0)))
+        H.add_edge(v, u, weight=float(rng.uniform(0.5, 4.0)))
+    return H
+
+
+def nine_triangles() -> tuple[Any, dict[Any, tuple[int, int]]]:
+    """Nine triangles in a ring, three to a supermodule: a genuine two-level tree."""
+    nx = pytest.importorskip("networkx")
+    G = nx.Graph()
+    for t in range(9):
+        a, b, c = 3 * t, 3 * t + 1, 3 * t + 2
+        G.add_edges_from([(a, b), (b, c), (c, a), (c, (3 * t + 3) % 27)])
+    return G, {u: (u // 9, (u % 9) // 3) for u in G}
+
+
+#: The structures the blockwise distance is checked on.  Each is tested in both an
+#: undirected and a directed form -- see :func:`asymmetric` for why both are needed.
+DISTANCE_CASES = ["toy", "planted", "random", "karate", "nine-triangles", "hierarchy"]
+
+
+def distance_case(name: str) -> tuple[Any, Any, list[tuple[Any, Any]]]:
+    """``(undirected G, directed G, partition pairs)`` for one structure.
+
+    The directed twin is the same links with asymmetric weights, except for
+    ``hierarchy``, whose arcs are drawn one-way to begin with, and whose undirected
+    twin is its undirected projection.
+    """
+    nx = pytest.importorskip("networkx")
+    np = pytest.importorskip("numpy")
+    if name == "toy":  # two triangles joined at a bridge
+        G = nx.Graph([(1, 2), (1, 3), (2, 3), (3, 4), (4, 5), (4, 6), (5, 6)])
+        good = {1: 0, 2: 0, 3: 0, 4: 1, 5: 1, 6: 1}
+        bad = {1: 0, 2: 0, 3: 1, 4: 0, 5: 1, 6: 1}  # cuts both triangles
+        one = dict.fromkeys(G, 0)
+        pairs = [(good, bad), (good, one), (bad, one)]
+    elif name == "planted":  # flat and hierarchical readings of the same blocks
+        G, part = blueprint()
+        coarse = {u: part[u] // 2 for u in G}
+        hier = {u: (part[u] // 2, part[u]) for u in G}
+        pairs = [(part, coarse), (hier, coarse), (hier, part)]
+    elif name == "random":  # partitions that ignore the structure: many meet cells
+        G, part = blueprint()
+        rng = np.random.default_rng(42)
+        rp = [{u: int(rng.integers(4)) for u in G} for _ in range(3)]
+        pairs = [(part, rp[0]), (rp[0], rp[1]), (rp[1], rp[2]), (rp[0], rp[2])]
+    elif name == "karate":  # an empirical network, against random partitions
+        G = nx.karate_club_graph()
+        clubs = {u: int(G.nodes[u]["club"] != "Mr. Hi") for u in G}
+        rng = np.random.default_rng(7)
+        rp = [{u: int(rng.integers(4)) for u in G} for _ in range(2)]
+        pairs = [(clubs, rp[0]), (clubs, rp[1]), (rp[0], rp[1])]
+    elif name == "nine-triangles":  # hier-vs-hier, hier-vs-flat and flat-vs-flat
+        G, hier = nine_triangles()
+        flat9 = {u: (3 * hier[u][0] + hier[u][1],) for u in G}
+        top3 = {u: (hier[u][0],) for u in G}
+        hier2 = dict(hier)
+        for u in (0, 1, 2):  # swap two triangles across supermodules
+            hier2[u] = (1, 3)
+        for u in (9, 10, 11):
+            hier2[u] = (0, 3)
+        pairs = [(hier, flat9), (hier, top3), (flat9, top3), (hier, hier2)]
+    elif name == "hierarchy":  # one-way arcs, two planted levels
+        H, part = directed_hierarchical(per=8, subs=2, supers=2)
+        fine = dict(part)
+        flat = {u: part[u][0] for u in H}  # supermodules only
+        alt = {u: (part[u][1], part[u][0]) for u in H}  # regrouped levels
+        return H.to_undirected(), H, [(fine, flat), (fine, alt), (flat, alt)]
+    else:  # pragma: no cover -- guards a typo in DISTANCE_CASES
+        raise AssertionError(f"unknown testbed {name!r}")
+    return G, asymmetric(G), pairs
+
+
+def check_distance_pair(G: Any, A: Any, B: Any) -> float:
+    """Blockwise ``D`` and ``d_i`` against the dense flow models; returns ``D``."""
+    nodes = sorted(G.nodes())
+    PA, _, _ = generate.flow_matrix(G, A, node_order=nodes)
+    PB, _, _ = generate.flow_matrix(G, B, node_order=nodes)
+    D, d_node = generate.gmd(G, A, B, element=True)
+    assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
+    # per node, compared as divergences: the sqrt of a ~1e-17 rounding of a true zero
+    # is ~4e-9, a difference that says nothing about either path
+    d_ref = generate.element_distances(PA, PB)
+    assert max(abs(d_node[u] ** 2 - d_ref[i] ** 2) for i, u in enumerate(nodes)) < 1e-12
+    p = generate.ModuleTree(G, A).p
+    assert sum(p[u] * d_node[u] ** 2 for u in G) == pytest.approx(D**2, abs=1e-12)
+    assert generate.gms(G, A, B) == pytest.approx(1.0 - D, abs=1e-15)
+    assert 0.0 <= generate.agms(G, A, B) <= 1.0
+    return D
+
+
+def check_leaf_table(G: Any, part: Any) -> None:
+    """The leaf-constant table must rebuild the dense model it stands in for."""
+    np = pytest.importorskip("numpy")
+    from netgamut.generate import _partdist
+
+    P, nodes, tree = generate.flow_matrix(G, part)
+    C, _, idx = _partdist._leaf_constants(tree)
+    a = np.array([idx[tree.paths[u]] for u in nodes])
+    pv = np.array([tree.p[u] for u in nodes])
+    assert np.abs(C[a[:, None], a[None, :]] * np.outer(pv, pv) - P).max() < 1e-15
+
+
+@pytest.mark.parametrize("directed", [False, True], ids=["undirected", "directed"])
+@pytest.mark.parametrize("name", DISTANCE_CASES)
+def test_blockwise_distance_matches_the_dense_flow_models(name: str, directed: bool) -> None:
     """GMD/GMS/AGMD/AGMS: blockwise evaluation against the dense reference.
 
     The blockwise cell decomposition must reproduce ``D_dist`` on the materialized
-    ``n x n`` flow models exactly, and the element-centric decomposition
-    ``D^2 = sum_i p_i d_i^2`` must hold -- both on a flat and on a hierarchical
-    partition, since the hierarchical path shares no code branch with the flat one.
+    ``n x n`` flow models exactly, the element-centric decomposition
+    ``D^2 = sum_i p_i d_i^2`` must hold, and the leaf-constant table must rebuild the
+    dense model it stands in for.
+
+    Every structure is checked in both an undirected and a directed form.  The two
+    halves of a cross-module path use different rates -- exit rates going up to the
+    least common ancestor, enter rates coming back down -- and only a directed
+    blueprint can tell them apart, so a directed twin of each structure is what keeps
+    the descending half of the blockwise evaluation honest rather than one special
+    fixture.  Flat, hierarchical, hier-vs-flat and structure-ignoring random
+    partitions all appear, since they take different branches.
     """
     pytest.importorskip("numpy")
-    G, partition = blueprint()
-    coarse = {u: partition[u] // 2 for u in G}  # merge pairs of blocks
-    hier = {u: (partition[u] // 2, partition[u]) for u in G}  # two planted levels
+    Gu, Gd, pairs = distance_case(name)
+    G = Gd if directed else Gu
+    tree = generate.ModuleTree(G, pairs[0][0])
+    if directed:
+        asym = max(abs(tree.enter[m] - tree.exit[m]) for m in tree.flow)
+        assert asym > 1e-6, "the directed twin must be asymmetric or it tests nothing"
+    else:
+        assert tree.enter is tree.exit  # the aliasing the directed twin exists to cover
 
-    for A, B in ((partition, coarse), (hier, coarse), (hier, partition)):
-        PA, _, _ = generate.flow_matrix(G, A)
-        PB, _, _ = generate.flow_matrix(G, B)
-        D, d_node = generate.gmd(G, A, B, element=True)
-        assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
-        p = generate.ModuleTree(G, A).p
-        assert sum(p[u] * d_node[u] ** 2 for u in G) == pytest.approx(D**2, abs=1e-12)
-        assert generate.gms(G, A, B) == pytest.approx(1.0 - D, abs=1e-15)
-        assert 0.0 <= generate.agms(G, A, B) <= 1.0
+    for A, B in pairs:
+        check_distance_pair(G, A, B)
+    for part in pairs[0]:
+        check_leaf_table(G, part)
 
-    # identity and the adjusted end points: N is at AGMD = 1 from any structure
-    assert generate.gmd(G, partition, partition) == pytest.approx(0.0, abs=1e-15)
-    assert generate.agms(G, partition, partition) == pytest.approx(1.0, abs=1e-15)
+    A = pairs[0][0]
+    assert generate.gmd(G, A, A) == pytest.approx(0.0, abs=1e-15)
+    assert generate.agms(G, A, A) == pytest.approx(1.0, abs=1e-15)
     N = generate.null_partition(G)
-    assert generate.agmd(G, partition, N) == pytest.approx(1.0, abs=1e-12)
+    assert generate.agmd(G, A, N) == pytest.approx(1.0, abs=1e-12)
     assert generate.agms(G, N, N) == pytest.approx(1.0, abs=1e-15)
 
 
-def test_partition_distances_are_correct_for_directed_flow() -> None:
-    """The blockwise path must price entries by enter rates, as cross_R does.
+@pytest.mark.parametrize("directed", [False, True], ids=["undirected", "directed"])
+@pytest.mark.parametrize("name", DISTANCE_CASES)
+def test_a_single_child_wrap_leaves_the_flow_model_alone(name: str, directed: bool) -> None:
+    """Wrapping a partition in one extra level does not change the flow model.
 
-    A directed blueprint has ``enter != exit`` per module, and the two halves of a
-    cross-module path use different rates: exit rates going up to the least common
-    ancestor, enter rates coming back down.  Collapsing both onto ``q = exit`` leaves
-    the undirected answer untouched (there ``enter is exit``) and silently changes the
-    directed one, so only a blueprint with a real enter/exit asymmetry tests it: on
-    ``directed_hierarchical`` the two differ in ``D`` by ~1e-3, far above any tolerance.
+    A single-child level offers no choice -- a walker leaving a module pays for the
+    same branches either way -- so ``D`` between a partition and its own wrap is 0.
+    Wrapping at the root is exact, and has to be: the flat partition takes the array
+    branch of the constant table and the wrapped one takes the hierarchical branch,
+    and the two reach the same numbers only while the root normalizer is summed by
+    the same algorithm on both, which is what ``_flowgen._total`` is for.  A
+    normalizer an ulp away shows up here as ~5e-9, so this runs on the whole case set
+    rather than one blueprint: a five-module normalizer often sums identically under
+    every spelling, and a test that only ever saw such a case would pass while the
+    guarantee was gone.
+
+    Wrapping each module in a child of its own lands at the square-root floor instead
+    of on it, because the extra level multiplies and divides by the same enter rate
+    rather than cancelling symbolically; ``sqrt`` of an ulp is ~1.5e-8, and that is
+    the whole budget below.
+    """
+    pytest.importorskip("numpy")
+    G = distance_case(name)[1 if directed else 0]
+    flat = {u: (i % 5,) for i, u in enumerate(sorted(G.nodes()))}
+    root_wrapped = {u: (1, *path) for u, path in flat.items()}
+    leaf_wrapped = {u: (*path, 1) for u, path in flat.items()}
+    assert generate.gmd(G, flat, root_wrapped) == 0.0
+    assert generate.agmd(G, flat, root_wrapped) == 0.0
+    assert generate.gmd(G, flat, leaf_wrapped) < 1.5e-8
+
+
+def test_two_level_constants_are_the_flat_case_of_the_leaf_table() -> None:
+    """``two_level_constants`` is what ``_leaf_constants`` uses for a flat partition.
+
+    Callers that run a search over candidate partitions hold the module aggregates
+    already and cannot afford a ``ModuleTree`` per candidate, so they need the
+    constants at the array level.  Those constants must come from here rather than be
+    re-derived at each call site -- a re-derivation is what silently keeps an old
+    pricing rule when this one changes -- so the array entry point and the tree one
+    have to agree exactly, undirected and directed alike.
     """
     np = pytest.importorskip("numpy")
-    G, partition = directed_hierarchical(per=8, subs=2, supers=2)
-    tree = generate.ModuleTree(G, partition)
-    asym = max(abs(tree.enter[m] - tree.exit[m]) for m in tree.flow)
-    assert asym > 1e-6, "fixture must be genuinely directed for this test to bite"
-
-    flat = {u: partition[u][0] for u in G}  # supermodules only
-    fine = {u: partition[u] for u in G}  # the planted hierarchy
-    alt = {u: (partition[u][1], partition[u][0]) for u in G}  # regrouped levels
-
-    for A, B in ((fine, flat), (fine, alt), (flat, alt)):
-        nodes = sorted(G.nodes())
-        PA, _, _ = generate.flow_matrix(G, A, node_order=nodes)
-        PB, _, _ = generate.flow_matrix(G, B, node_order=nodes)
-        D, d_node = generate.gmd(G, A, B, element=True)
-        assert generate.D_dist(PA, PB) == pytest.approx(D, abs=1e-12)
-        # per node, compared as divergences: sqrt of a ~1e-17 rounding of a true
-        # zero is ~4e-9, which would say nothing about the agreement.
-        d_ref = generate.element_distances(PA, PB)
-        dev = max(abs(d_node[u] ** 2 - d_ref[i] ** 2) for i, u in enumerate(nodes))
-        assert dev < 1e-12
-        p = generate.ModuleTree(G, A).p
-        assert sum(p[u] * d_node[u] ** 2 for u in G) == pytest.approx(D**2, abs=1e-12)
-
-    # the leaf-constant table must rebuild the dense model exactly, directed included
     from netgamut.generate import _partdist
 
-    for part in (fine, flat):
-        P, nodes, tree = generate.flow_matrix(G, part)
-        C, _, idx = _partdist._leaf_constants(tree)
-        a = np.array([idx[tree.paths[u]] for u in nodes])
-        pv = np.array([tree.p[u] for u in nodes])
-        rebuilt = C[a[:, None], a[None, :]] * np.outer(pv, pv)
-        assert np.abs(rebuilt - P).max() < 1e-15
+    undirected = blueprint()[0]
+    for G in (undirected, asymmetric(undirected)):
+        part = {u: i % 4 for i, u in enumerate(sorted(G.nodes()))}
+        tree = generate.ModuleTree(G, part)
+        _, leaves, _ = _partdist._leaf_constants(tree)
+        rates = ([tree.flow[A] for A in leaves], [tree.exit[A] for A in leaves])
+        C_arr = generate.two_level_table(*rates, [tree.enter[A] for A in leaves])
+        # Comparing _leaf_constants against this on a flat partition would compare the
+        # function with itself -- it delegates.  The hierarchical branch is the one
+        # that has to be held to it, so wrap the partition and compare across branches.
+        wrapped = generate.ModuleTree(G, {u: (1, m) for u, m in part.items()})
+        C_h, leaves_h, _ = _partdist._leaf_constants(wrapped)
+        order = [leaves_h.index((1, A[0])) for A in leaves]
+        assert np.abs(C_h[np.ix_(order, order)] - C_arr).max() == 0.0, (
+            "the hierarchical and the array branch must agree bit for bit"
+        )
+        # enters defaults to exits -- the undirected reading, and only correct there
+        same = bool(np.abs(generate.two_level_table(*rates) - C_arr).max() == 0.0)
+        assert same is not G.is_directed(), "exits-only must differ exactly when directed"
 
-    assert generate.gmd(G, fine, fine) == pytest.approx(0.0, abs=1e-15)
-    assert generate.agmd(G, fine, generate.null_partition(G)) == pytest.approx(1.0, abs=1e-12)
+    # degenerate aggregates score 0 instead of dividing by zero
+    diag, up, down = generate.two_level_constants([0.0, 0.5], [0.0, 0.0])
+    assert list(diag) == [0.0, 2.0]
+    assert list(up) == [0.0, 0.0] and list(down) == [0.0, 0.0]
+
+
+def test_dense_and_blockwise_agree_on_degenerate_modules() -> None:
+    """A module with no outgoing flow has no cross-module path, in both evaluations.
+
+    ``cross_R`` used to raise ``ZeroDivisionError`` where the blockwise table returned
+    0, so the dense and blockwise paths disagreed on exactly the input a caller is
+    least able to avoid -- a disconnected component, a sink module.  They must agree.
+    """
+    nx = pytest.importorskip("networkx")
+    np = pytest.importorskip("numpy")
+    G = nx.Graph([(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)])  # two components
+    part = {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 1}
+    tree = generate.ModuleTree(G, part)
+    assert tree.exit[(0,)] == 0.0, "a whole component has nothing to exit through"
+    assert generate.cross_R(tree, (0,), (1,)) == 0.0
+
+    P, nodes, tree = generate.flow_matrix(G, part)
+    from netgamut.generate import _partdist
+
+    C, _, idx = _partdist._leaf_constants(tree)
+    a = np.array([idx[tree.paths[u]] for u in nodes])
+    pv = np.array([tree.p[u] for u in nodes])
+    assert np.abs(C[a[:, None], a[None, :]] * np.outer(pv, pv) - P).max() < 1e-15
+
+
+def test_element_distances_are_vectorized_but_unchanged() -> None:
+    """The vectorized rows must agree with the per-row ``jsd`` they replaced.
+
+    ``element_distances`` runs inside sampling loops, which is why it is array
+    arithmetic rather than a Python loop -- but the loop is the definition, so the two
+    have to agree, including on rows with no flow, where there is no conditional to
+    compare and the answer is 0.
+    """
+    np = pytest.importorskip("numpy")
+    nx = pytest.importorskip("networkx")
+    G = nx.karate_club_graph()
+    G.add_nodes_from([100, 101])  # no links, hence no flow
+    part = {u: int(G.nodes[u].get("club", "Mr. Hi") != "Mr. Hi") for u in G}
+    other = {u: u % 3 for u in G}
+    PA, nodes, _ = generate.flow_matrix(G, part)
+    PB, _, _ = generate.flow_matrix(G, other, node_order=nodes)
+
+    pa, pb = PA.sum(1), PB.sum(1)
+    loop = np.array(
+        [
+            math.sqrt(generate.jsd(PA[i] / pa[i], PB[i] / pb[i])) if pa[i] > 0 else 0.0
+            for i in range(len(nodes))
+        ]
+    )
+    assert np.abs(generate.element_distances(PA, PB) - loop).max() < 1e-12
+    assert generate.element_distances(PA, PA).max() == 0.0
 
 
 def test_zero_flow_nodes_carry_no_weight() -> None:
