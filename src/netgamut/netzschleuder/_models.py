@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import quote
 
 from .._core.domains import domains_for_netzschleuder_tags
 from .._core.models import DataFile
@@ -160,7 +161,8 @@ class Dataset:
         standard library; the others are here for callers that prefer them.
         """
         stem = subgraph or self.default_subgraph
-        base = f"{SITE_URL}/net/{self.name}/files/{stem}"
+        # Subgraph names can hold spaces ("Llao Llao"), which urllib rejects in a URL.
+        base = f"{SITE_URL}/net/{quote(self.name)}/files/{quote(stem)}"
         return (
             DataFile(f"{stem}.csv.zip", f"{base}.csv.zip", "Edges, nodes and graph properties"),
             DataFile(f"{stem}.gml.zst", f"{base}.gml.zst", "GML (needs zstd)"),

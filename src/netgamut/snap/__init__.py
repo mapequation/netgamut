@@ -216,6 +216,24 @@ _COLUMNS: dict[str, Columns] = {
     "soc-sign-Slashdot090221.txt.gz": _SIGN,
     # Business relationship codes (-1 customer, 0 peer, 1 provider, 2 sibling).
     "as-caida20071105.txt.gz": Columns(names=("source", "target", "relationship")),
+    # Tab-separated under a header row, with a space inside each timestamp. The
+    # sentiment is -1 or 1, so not a weight.
+    **{
+        f"soc-redditHyperlinks-{part}.tsv": Columns(
+            time=3,
+            names=(
+                "SOURCE_SUBREDDIT",
+                "TARGET_SUBREDDIT",
+                "POST_ID",
+                "TIMESTAMP",
+                "LINK_SENTIMENT",
+                "PROPERTIES",
+            ),
+            delimiter="\t",
+            header_row=True,
+        )
+        for part in ("body", "title")
+    },
 }
 
 

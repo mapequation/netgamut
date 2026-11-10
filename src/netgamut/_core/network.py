@@ -242,7 +242,12 @@ class Network:
 
     @property
     def delimiter(self) -> str | None:
-        """The field separator this file uses, or ``None`` for whitespace."""
+        """The field separator this file uses, or ``None`` for whitespace.
+
+        The one :attr:`columns` declares, else one detected from the first lines.
+        """
+        if self.columns.delimiter is not None:
+            return self.columns.delimiter
         return _detect_delimiter(self._samples())
 
     def _samples(self) -> list[str]:
@@ -263,11 +268,13 @@ class Network:
         Use this for the datasets that carry more than two columns, such as
         timestamps in the temporal category or signs in the signed category.
 
-        The separator is detected from the first data line, since a few SNAP
-        files are CSV rather than whitespace-separated. Pass *delimiter* to
-        override that.
+        The separator is the one :attr:`columns` declares, or else detected
+        from the first data lines, since a few SNAP files are CSV rather than
+        whitespace-separated. Pass *delimiter* to override that. A header row
+        that :attr:`columns` declares is left out.
         """
         sniffed = delimiter if delimiter is not None else self.delimiter
+        skip = self.columns.header_row
         with self.open() as stream:
             if sniffed is None:
                 for line in stream:
@@ -275,16 +282,22 @@ class Network:
                     if not stripped or stripped.startswith(_COMMENT_PREFIXES):
                         continue
                     fields = stripped.split()
-                    if fields:
+                    if skip:
+                        skip = False
+                    elif fields:
                         yield tuple(fields)
                 return
-            # csv.reader honours quoting, so a label containing the delimiter
-            # does not split into extra fields.
+            # csv.reader honours quoting, so a label containing the delimiter,
+            # or a quoted field running over a line break, stays one field.
             for record in csv.reader(stream, delimiter=sniffed):
                 if not record or record[0].lstrip().startswith(_COMMENT_PREFIXES):
                     continue
                 fields = [field.strip() for field in record]
-                if any(fields):
+                if not any(fields):
+                    continue
+                if skip:
+                    skip = False
+                else:
                     yield tuple(fields)
 
     def nodes(self) -> NodeTable:
@@ -417,7 +430,9 @@ class Network:
         field deep in the file would be a weight here and nowhere else. The
         check is a plain pass over the lines, about a tenth of Infomap's read.
         """
-        if self.delimiter is not None or self.columns.layer is not None:
+        if self.columns.header_row or self.columns.layer is not None:
+            return False
+        if self.delimiter is not None:
             return False
         width = 3 if self.columns.weight == 2 else 2
         return all(len(fields) <= width for fields in self.rows())

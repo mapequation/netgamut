@@ -73,7 +73,11 @@ snap.load("higgs-twitter").to_multilayer(layer="interaction") # any categorical 
 ```
 
 If a source has a column wrong, or you know better, declare it yourself:
-`dataclasses.replace(net, columns=netgamut.Columns(time=2))`.
+`dataclasses.replace(net, columns=netgamut.Columns(time=2))`. `Columns` also
+says how a row splits: `delimiter=","` reads a CSV whose quoted fields hold
+commas or line breaks, `delimiter="\t"` a TSV whose fields hold spaces, and
+`header_row=True` leaves out a first line that names the fields. Netzschleuder
+declares its CSV, and SNAP its Reddit hyperlink TSVs.
 
 Some entries are multi-file bundles:
 
