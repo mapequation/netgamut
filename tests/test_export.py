@@ -27,6 +27,8 @@ class FakeDataset:
     duplicate_of: str | None = None
     type: str = "Undirected"
     fails: bool = False
+    #: Reads as a network with no nodes, as product_space once did.
+    empty: bool = False
     #: Raised by the download, as the real loaders raise DownloadError.
     error: Exception | None = None
 
@@ -46,10 +48,10 @@ class FakeNetwork:
     def to_pajek(self, directory: str | Path, *, name: str) -> Path:
         if self.dataset.fails:
             raise OSError("upstream is down")
-        count = self.dataset.edges or 0
+        count = 0 if self.dataset.empty else self.dataset.edges or 0
         return formats.write_pajek(
             formats.output_path(directory, name, ".net"),
-            nodes=range(1, count + 2),
+            nodes=range(1, count + 2) if count else (),
             links=lambda: ((i, i + 1, None) for i in range(1, count + 1)),
             directed=self.dataset.directed,
             comments=[name],
@@ -223,6 +225,33 @@ def test_a_failed_network_without_a_file_is_skipped(tmp_path, catalog) -> None:
     assert _keys(document) == ["snap/tiny"]
     (middle,) = document["skipped"]
     assert (middle["key"], middle["reason"]) == ("snap/middle", "OSError: upstream is down")
+
+
+def test_a_network_that_reads_as_empty_is_skipped(tmp_path, catalog) -> None:
+    catalog["snap"][1].dataset.empty = True
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert _keys(document) == ["snap/tiny"]
+    (middle,) = document["skipped"]
+    assert middle["key"] == "snap/middle"
+    assert middle["reason"] == "empty: 0 nodes and 0 links read"
+    assert not (tmp_path / "snap" / "middle.net.gz").exists()
+
+
+def test_an_empty_file_from_an_earlier_build_is_built_again(tmp_path, catalog) -> None:
+    """Unchanged in the catalog, but its file had nothing in it: not worth keeping."""
+    _export.export_networks(tmp_path, sources=("snap",))
+    manifest = tmp_path / "index.json"
+    earlier = json.loads(manifest.read_text())
+    for entry in earlier["datasets"]:
+        if entry["key"] == "snap/middle":
+            entry["nodes"] = entry["edges"] = 0
+    manifest.write_text(json.dumps(earlier))
+    middle = catalog["snap"][1]
+    middle.loads.clear()
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert len(middle.loads) == 1
+    rebuilt = next(entry for entry in document["datasets"] if entry["key"] == "snap/middle")
+    assert (rebuilt["nodes"], rebuilt["edges"]) == (11, 10)
 
 
 def test_one_source_at_a_time_keeps_the_others(tmp_path, catalog) -> None:

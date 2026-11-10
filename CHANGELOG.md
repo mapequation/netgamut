@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Netzschleuder subgraph names are percent-encoded in download URLs, so a
+  name with a space no longer fails with `InvalidURL`
+  ([#16](https://github.com/mapequation/netgamut/issues/16)).
+- Netzschleuder edge lists are read as CSV, quoting and all, instead of
+  detecting the delimiter from split lines. A quoted field holding a comma
+  (`wiki_rfa`'s dates) or a line break (`product_space`'s colours) made the
+  detection fall back to whitespace, which garbled every row or read none
+  ([#9](https://github.com/mapequation/netgamut/issues/9),
+  [#29](https://github.com/mapequation/netgamut/issues/29)).
+- SNAP's `soc-RedditHyperlinks` files are read as tab-separated, without their
+  header row, and with `TIMESTAMP` as the time column
+  ([#9](https://github.com/mapequation/netgamut/issues/9)).
+- `export-networks` skips a network that reads as having no nodes or no links,
+  with the reason under `skipped`, instead of listing an empty file; an empty
+  file an earlier build listed is built again
+  ([#29](https://github.com/mapequation/netgamut/issues/29)). Netzschleuder
+  and SNAP networks are converted again on the next build.
+
+### Added
+
+- `Columns.delimiter` and `Columns.header_row`, for a source to declare how a
+  row splits and whether the first line names the fields.
+
 ## 0.4.0
 
 The first release on PyPI: `pip install netgamut`.

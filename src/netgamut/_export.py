@@ -59,7 +59,9 @@ def export_networks(
     Networks are taken in order of edge count until their files would exceed
     *budget* bytes. Left out: KONECT's copies of another source's network,
     SNAP's collections that are not graphs, networks of unknown size, files
-    over *max_file* bytes and downloads over *max_download*.
+    over *max_file* bytes, downloads over *max_download*, and networks that
+    read as having no nodes or no links, which would list a file with nothing
+    in it.
 
     Run it again on the same *output* to update it. A network whose catalog
     entry is unchanged keeps its file without a download unless *force* is set;
@@ -82,7 +84,8 @@ def export_networks(
     kept = {
         entry["key"]: entry
         for entry in earlier.get("datasets", [])
-        if (folder / entry["file"]).is_file()
+        # An empty file is never worth keeping: it is built again, or skipped.
+        if (folder / entry["file"]).is_file() and entry["nodes"] and entry["edges"]
     }
     too_large = {
         entry["key"]: entry["fingerprint"]
@@ -142,7 +145,9 @@ def export_networks(
                 entry = _convert(match, folder, fingerprint, max_file, max_download)
             except Exception as error:
                 described = (
-                    error if isinstance(error, _TooLarge) else f"{type(error).__name__}: {error}"
+                    error
+                    if isinstance(error, (_TooLarge, _Empty))
+                    else f"{type(error).__name__}: {error}"
                 )
                 reason = " ".join(str(described).split())[:300]
                 if _unreachable(error):
@@ -199,6 +204,10 @@ class _TooLarge(ValueError):
     """The gzipped file would be over the per-file limit."""
 
 
+class _Empty(ValueError):
+    """The network read as having no nodes or no links."""
+
+
 def _unreachable(error: Exception) -> bool:
     """Whether the host did not answer, rather than refusing this one file."""
     if not isinstance(error, DownloadError):
@@ -226,8 +235,10 @@ def _is_graph(match: Any) -> bool:
 
 #: Raised for a source when the files its networks convert to change, so the next
 #: run converts them again. A file that comes out the same stays byte for byte the
-#: same, so only the changed ones reach the mirror's history. 2: node names.
-_FORMATS = {"netzschleuder": 2, "konect": 2}
+#: same, so only the changed ones reach the mirror's history. 2: node names;
+#: Netzschleuder 3: its edge lists read as CSV, quoted fields and all; SNAP 2:
+#: the Reddit hyperlink TSVs read without their header row.
+_FORMATS = {"netzschleuder": 3, "konect": 2, "snap": 2}
 
 
 def _fingerprint(match: Any) -> str:
@@ -258,6 +269,8 @@ def _convert(
         packed = Path(scratch) / f"{pajek.name}.gz"
         header = _attribution(meta) + _id_note(pajek)
         nodes, edges, directed = _compress(pajek, packed, header)
+        if not nodes or not edges:
+            raise _Empty(f"empty: {nodes:,} nodes and {edges:,} links read")
         size = packed.stat().st_size
         if size > max_file:
             raise _TooLarge(f"too large: {size:,} bytes gzipped, over {max_file:,}")

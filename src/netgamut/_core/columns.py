@@ -47,6 +47,13 @@ class Columns:
     layer: int | None = None
     #: Every field's name, where the source publishes them.
     names: tuple[str, ...] = ()
+    #: The field separator, where the source says what it is: ``","`` for a CSV
+    #: whose quoted fields hold commas or line breaks, ``"\t"`` for a TSV whose
+    #: fields hold spaces. ``None`` detects it from the first lines.
+    delimiter: str | None = None
+    #: Whether the first row that is not a comment names the fields rather than
+    #: holding a link, as in SNAP's Reddit hyperlink TSVs.
+    header_row: bool = False
 
     def find(self, name: str) -> int:
         """The index of the field called *name*.

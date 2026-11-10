@@ -102,6 +102,46 @@ def test_quoted_delimiter_does_not_split(quoted_csv_edges: Path) -> None:
     assert list(network.rows())[0] == ("1", "2", "Air Lines, Inc.")
 
 
+def test_a_declared_tsv_header_row_is_not_a_link(tmp_path: Path) -> None:
+    """SNAP's Reddit hyperlinks: a header row, and a space inside each timestamp."""
+    import dataclasses
+
+    from netgamut._core.columns import Columns
+
+    path = tmp_path / "links.tsv"
+    path.write_text(
+        "SOURCE\tTARGET\tTIMESTAMP\tSENTIMENT\n"
+        "leagueoflegends\tteamredditteams\t2013-12-31 16:39:58\t1\n"
+        "theredlion\tsoccer\t2014-01-01 14:54:35\t-1\n"
+    )
+    columns = Columns(
+        time=2,
+        names=("SOURCE", "TARGET", "TIMESTAMP", "SENTIMENT"),
+        delimiter="\t",
+        header_row=True,
+    )
+    network = dataclasses.replace(make_network(path), columns=columns)
+    assert network.delimiter == "\t"
+    assert list(network.edges()) == [
+        ("leagueoflegends", "teamredditteams"),
+        ("theredlion", "soccer"),
+    ]
+    assert next(network.rows())[2] == "2013-12-31 16:39:58"
+    assert not network._infomap_reads_directly()
+
+
+def test_a_declared_header_row_is_skipped_in_a_whitespace_file(tmp_path: Path) -> None:
+    import dataclasses
+
+    from netgamut._core.columns import Columns
+
+    path = tmp_path / "links.txt"
+    path.write_text("# a comment\nfrom to\n1 2\n2 3\n")
+    network = dataclasses.replace(make_network(path), columns=Columns(header_row=True))
+    assert network.delimiter is None
+    assert list(network.edges()) == [("1", "2"), ("2", "3")]
+
+
 def test_nodes_needs_a_source_that_knows_the_layout(gzipped_labels: Path) -> None:
     """Reading node metadata is delegated, because every source stores it elsewhere.
 

@@ -248,10 +248,14 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
     ``sms`` has ``timestamp`` where the catalog lists ``timestamp, rssi`` -- so
     the header of the file actually loaded names the columns, and the catalog
     only says which of them are numeric.
+
+    The file is always CSV, so the delimiter is declared rather than detected:
+    detection splits lines, and a quoted field can hold a comma (``wiki_rfa``'s
+    dates) or a line break (``product_space``'s colours).
     """
     header = network.header
     if not header:
-        return Columns()
+        return Columns(delimiter=",")
     names = tuple(field.strip() for field in header[0].split(","))
     types = {name: kind for name, kind in dataset.analyses.get("edge_properties") or ()}
 
@@ -269,6 +273,7 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
         time=first(_TIME_NAMES),
         layer=first(_LAYER_NAMES),
         names=names,
+        delimiter=",",
     )
 
 

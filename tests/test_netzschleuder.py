@@ -61,6 +61,17 @@ def test_page_url_includes_the_net_path() -> None:
     assert make("celegansneural").url == "https://networks.skewed.de/net/celegansneural"
 
 
+def test_subgraph_names_are_quoted_in_the_download_url() -> None:
+    """urllib rejects a space in a URL, and plant_pol_vazquez had a "Llao Llao"."""
+    dataset = make("pollinators", subgraphs=("Llao Llao", "All sites pooled"))
+    assert dataset.primary_file is not None
+    assert dataset.primary_file.name == "Llao Llao.csv.zip"
+    assert dataset.primary_file.url == (
+        "https://networks.skewed.de/net/pollinators/files/Llao%20Llao.csv.zip"
+    )
+    assert dataset.files_for("All sites pooled")[0].url.endswith("/All%20sites%20pooled.csv.zip")
+
+
 def test_other_formats_are_reachable_by_suffix() -> None:
     dataset = make("power")
     assert dataset.file("gml.zst").name == "power.gml.zst"
@@ -206,6 +217,35 @@ def test_to_pajek_names_nodes_from_the_bundle(tmp_path, monkeypatch) -> None:
     # Asked for ids, it writes ids.
     plain = nz.load("celegansneural").to_pajek(tmp_path / "plain", names={}).read_text()
     assert '0 "0"' in plain
+
+
+def test_quoted_fields_holding_commas_or_line_breaks_stay_one_field(tmp_path, monkeypatch) -> None:
+    """wiki_rfa quotes dates with a comma, product_space colours with a line break.
+
+    Splitting lines to detect the delimiter saw ragged rows, fell back to
+    whitespace, and read garbage or nothing; the bundle is always CSV.
+    """
+    import zipfile
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr(
+                "edges.csv",
+                "# source, target, date, color\n"
+                '0,1,"23:13, 19 April 2013","#727272\n"\n'
+                '1,2,"09:01, 2 May 2013","#7b7b7b\n"\n',
+            )
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    network = nz.load("celegansneural")
+    assert network.delimiter == ","
+    assert list(network.edges()) == [("0", "1"), ("1", "2")]
+    assert next(network.rows())[2] == "23:13, 19 April 2013"
+    pajek = network.to_pajek(tmp_path).read_text()
+    assert "*Vertices 3" in pajek
+    assert pajek.rstrip().endswith("0 1\n1 2")
 
 
 # -- opt-in network tests -------------------------------------------------
