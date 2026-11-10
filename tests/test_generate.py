@@ -926,27 +926,35 @@ def test_blockwise_distance_matches_the_dense_flow_models(name: str, directed: b
     assert generate.agms(G, N, N) == pytest.approx(1.0, abs=1e-15)
 
 
-def test_a_single_child_wrap_leaves_the_flow_model_alone() -> None:
+@pytest.mark.parametrize("directed", [False, True], ids=["undirected", "directed"])
+@pytest.mark.parametrize("name", DISTANCE_CASES)
+def test_a_single_child_wrap_leaves_the_flow_model_alone(name: str, directed: bool) -> None:
     """Wrapping a partition in one extra level does not change the flow model.
 
     A single-child level offers no choice -- a walker leaving a module pays for the
     same branches either way -- so ``D`` between a partition and its own wrap is 0.
-    Wrapping at the root is exact, and has to be: the flat and the hierarchical branch
-    of the constant table reach the same numbers by different routes, and summing the
-    root normalizer in a different order is a 1-ulp difference that ``D``, being a
-    square root, would report as ~5e-9.  Wrapping each module in a child of its own
-    lands at that square-root floor instead of on it, because the extra level
-    multiplies and divides by the same enter rate rather than cancelling symbolically;
-    ``sqrt`` of an ulp is ~1.5e-8, and that is the whole budget below.
+    Wrapping at the root is exact, and has to be: the flat partition takes the array
+    branch of the constant table and the wrapped one takes the hierarchical branch,
+    and the two reach the same numbers only while the root normalizer is summed by
+    the same algorithm on both (see the comment beside ``Z`` in ``_partdist``).  A
+    normalizer an ulp away shows up here as ~5e-9, so this runs on the whole case set
+    rather than one blueprint: a five-module normalizer often sums identically under
+    every spelling, and a test that only ever saw such a case would pass while the
+    guarantee was gone.
+
+    Wrapping each module in a child of its own lands at the square-root floor instead
+    of on it, because the extra level multiplies and divides by the same enter rate
+    rather than cancelling symbolically; ``sqrt`` of an ulp is ~1.5e-8, and that is
+    the whole budget below.
     """
     pytest.importorskip("numpy")
-    for G in (blueprint()[0], asymmetric(blueprint()[0])):
-        flat = {u: (i % 5,) for i, u in enumerate(sorted(G.nodes()))}
-        root_wrapped = {u: (1, *path) for u, path in flat.items()}
-        leaf_wrapped = {u: (*path, 1) for u, path in flat.items()}
-        assert generate.gmd(G, flat, root_wrapped) == 0.0
-        assert generate.agmd(G, flat, root_wrapped) == 0.0
-        assert generate.gmd(G, flat, leaf_wrapped) < 1.5e-8
+    G = distance_case(name)[1 if directed else 0]
+    flat = {u: (i % 5,) for i, u in enumerate(sorted(G.nodes()))}
+    root_wrapped = {u: (1, *path) for u, path in flat.items()}
+    leaf_wrapped = {u: (*path, 1) for u, path in flat.items()}
+    assert generate.gmd(G, flat, root_wrapped) == 0.0
+    assert generate.agmd(G, flat, root_wrapped) == 0.0
+    assert generate.gmd(G, flat, leaf_wrapped) < 1.5e-8
 
 
 def test_two_level_constants_are_the_flat_case_of_the_leaf_table() -> None:
@@ -966,10 +974,18 @@ def test_two_level_constants_are_the_flat_case_of_the_leaf_table() -> None:
     for G in (undirected, asymmetric(undirected)):
         part = {u: i % 4 for i, u in enumerate(sorted(G.nodes()))}
         tree = generate.ModuleTree(G, part)
-        C_tree, leaves, _ = _partdist._leaf_constants(tree)
+        _, leaves, _ = _partdist._leaf_constants(tree)
         rates = ([tree.flow[A] for A in leaves], [tree.exit[A] for A in leaves])
         C_arr = generate.two_level_table(*rates, [tree.enter[A] for A in leaves])
-        assert np.abs(C_tree - C_arr).max() == 0.0, "the two entry points must agree"
+        # Comparing _leaf_constants against this on a flat partition would compare the
+        # function with itself -- it delegates.  The hierarchical branch is the one
+        # that has to be held to it, so wrap the partition and compare across branches.
+        wrapped = generate.ModuleTree(G, {u: (1, m) for u, m in part.items()})
+        C_h, leaves_h, _ = _partdist._leaf_constants(wrapped)
+        order = [leaves_h.index((1, A[0])) for A in leaves]
+        assert np.abs(C_h[np.ix_(order, order)] - C_arr).max() == 0.0, (
+            "the hierarchical and the array branch must agree bit for bit"
+        )
         # enters defaults to exits -- the undirected reading, and only correct there
         same = bool(np.abs(generate.two_level_table(*rates) - C_arr).max() == 0.0)
         assert same is not G.is_directed(), "exits-only must differ exactly when directed"

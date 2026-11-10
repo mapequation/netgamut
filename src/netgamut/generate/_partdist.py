@@ -77,11 +77,13 @@ def two_level_constants(p_mod, exits, enters=None, non_redundant=True):
     exits = np.asarray(exits, dtype=float)
     enters = exits if enters is None else np.asarray(enters, dtype=float)
     tot = p_mod + exits
-    # Summed sequentially, in the order given.  ``ModuleTree`` sums a node's children
-    # the same way, so a caller handing over the leaves in tree order gets the tree's
-    # own normalizer bit for bit -- which is what keeps D between a partition and that
-    # same partition wrapped in one extra level at exactly 0, where ``np.sum``'s
-    # pairwise order differs by an ulp and the square root turns it into ~5e-9.
+    # ``.tolist()`` is load-bearing, not a speed trick.  CPython's ``sum`` uses
+    # compensated (Neumaier) addition only while every item is an exact ``float``, and
+    # ``ModuleTree.Z`` sums exact floats, so this spelling is the one that reproduces
+    # the tree's normalizer bit for bit.  ``enters.sum()`` (numpy, pairwise) and
+    # ``sum(enters)`` (``np.float64`` is a float *subclass*, so the compensated path is
+    # skipped) both land an ulp away, and ``D``, being a square root, reports that as
+    # ~5e-9 between a partition and the same partition wrapped in one extra level.
     Z = float(sum(enters.tolist())) - (enters if non_redundant else 0.0)
     with np.errstate(divide="ignore", invalid="ignore"):
         diag = np.where(tot > 0, 1.0 / np.where(tot > 0, tot, 1.0), 0.0)
