@@ -23,6 +23,12 @@
   and SNAP networks are converted again on the next build.
 
 - `Network.to_multilayer` keeps the source's node names, as `to_pajek` does.
+- `Network.to_multilayer` reads a layer column without numpy. Only time
+  layers need it, and the web mirror builds without it, so its first layered
+  build left the 28 Netzschleuder networks with a layer column flat.
+- Fields longer than csv's 128 KiB default, such as in Netzschleuder's
+  `littlesis`, no longer stop a Netzschleuder edge list or `nodes.csv` from
+  being read.
 
 ### Added
 

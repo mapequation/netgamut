@@ -16,6 +16,7 @@ and times outside every bin are left out.
 
 from __future__ import annotations
 
+import csv
 import math
 import re
 from array import array
@@ -23,11 +24,24 @@ from collections.abc import Hashable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["Columns", "Table", "assign_bins", "read_table"]
+__all__ = ["Columns", "Table", "allow_long_fields", "assign_bins", "read_table"]
 
 # The numeric prefix a C++ stream reads as a double -- what Infomap's own parser
 # makes of a weight field -- so "1_000" is 1 here too, not Python's 1000.
 LEADING_NUMBER = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
+
+# csv stops at fields over 128 KiB, and some Netzschleuder fields are longer:
+# littlesis's. 2**31 - 1 is the most the limit takes on every platform.
+_FIELD_LIMIT = 2**31 - 1
+
+
+def allow_long_fields() -> None:
+    """Lift csv's field size limit, which a few CSV files exceed.
+
+    The limit is process-wide, so this only ever raises it.
+    """
+    if csv.field_size_limit() < _FIELD_LIMIT:
+        csv.field_size_limit(_FIELD_LIMIT)
 
 
 @dataclass(frozen=True)
@@ -177,7 +191,7 @@ class Table:
     sources: Sequence[Hashable]
     targets: Sequence[Hashable]
     #: Floats, or ``None`` when the file has no weight column.
-    weights: Any
+    weights: Sequence[float] | None
     #: The time column as an array, or ``None`` when not asked for.
     times: Any
     #: Layer labels, ``None`` for a row without one; ``None`` when not asked for.
@@ -196,10 +210,9 @@ def read_table(
 
     Labels are integers when every label is digits, as :meth:`Network.to_pajek`
     decides, and strings otherwise. Rows with fewer than two fields are
-    skipped, as everywhere else in the package.
+    skipped, as everywhere else in the package. Only a time column needs
+    numpy, so a layer column reads without it.
     """
-    import numpy as np
-
     # One label column for both ends, so sources and targets are always the
     # same kind: integers only if every label on either side is digits.
     ends = _Labels()
@@ -223,7 +236,7 @@ def read_table(
     return Table(
         sources=labels[0::2],
         targets=labels[1::2],
-        weights=None if weights is None else np.frombuffer(weights, dtype=np.float64).copy(),
+        weights=weights,
         times=None if times is None else times.array(),
         layers=None if layers is None else _layer_labels(layers),
     )
