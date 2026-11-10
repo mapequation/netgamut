@@ -129,6 +129,30 @@ def common_prefix_len(a, b):
     return L
 
 
+def _total(rates):
+    """Sum flow rates the one way the whole flow model sums them.
+
+    Every branch normalizer goes through here so that no two of them can disagree in
+    the last bit -- and an ulp matters: ``D`` is a square root, so it reports one as
+    ~5e-9 between a partition and that same partition wrapped in one extra level.
+
+    The one thing this does beyond ``sum`` is unbox numpy scalars.  CPython's ``sum``
+    switches to compensated (Neumaier) addition only while every item passes
+    ``PyFloat_CheckExact``; ``np.float64`` is a float *subclass* that overrides
+    ``__add__``, so it fails that test and ``sum(array)`` drops to the uncompensated
+    loop, while ``array.sum()`` is numpy's pairwise reduction.  Both land an ulp away
+    from what the same rates give as Python floats.  *Which* algorithm runs is not the
+    point and is not fixed -- there is no compensation before CPython 3.12 -- the
+    contract is that every caller gets the same one.
+
+    ``rates`` is any iterable; an array is unboxed with ``.tolist()``, an O(K)
+    interpreter loop against one SIMD pass.  Should that ever dominate, pass the
+    normalizer in from a caller that already holds it rather than respelling the sum.
+    """
+    tolist = getattr(rates, "tolist", None)
+    return float(sum(tolist() if tolist is not None else rates))
+
+
 class ModuleTree:
     """Module tree with flow statistics from a network + (hierarchical) partition.
 
@@ -294,16 +318,16 @@ class ModuleTree:
         ``Q^enter(nu) - q^enter[excluded_child]``: the enter rates of nu's children plus
         nu's own exit-to-parent rate, with the branch just left removed.
         """
-        z = sum(self.enter[ch] for ch in self.children[nu]
-                if (ch != excluded_child or not non_redundant))
+        z = _total(self.enter[ch] for ch in self.children[nu]
+                   if (ch != excluded_child or not non_redundant))
         if nu != ():
             z += self.exit[nu]
         return z
 
     def Z_in(self, nu, excluded_child, non_redundant=True):
         """Time-reversed :meth:`Z`: normalizer for an in-stub entering excluded_child."""
-        z = sum(self.exit[ch] for ch in self.children[nu]
-                if (ch != excluded_child or not non_redundant))
+        z = _total(self.exit[ch] for ch in self.children[nu]
+                   if (ch != excluded_child or not non_redundant))
         if nu != ():
             z += self.enter[nu]
         return z

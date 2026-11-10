@@ -936,7 +936,7 @@ def test_a_single_child_wrap_leaves_the_flow_model_alone(name: str, directed: bo
     Wrapping at the root is exact, and has to be: the flat partition takes the array
     branch of the constant table and the wrapped one takes the hierarchical branch,
     and the two reach the same numbers only while the root normalizer is summed by
-    the same algorithm on both (see the comment beside ``Z`` in ``_partdist``).  A
+    the same algorithm on both, which is what ``_flowgen._total`` is for.  A
     normalizer an ulp away shows up here as ~5e-9, so this runs on the whole case set
     rather than one blueprint: a five-module normalizer often sums identically under
     every spelling, and a test that only ever saw such a case would pass while the

@@ -77,19 +77,8 @@ def two_level_constants(p_mod, exits, enters=None, non_redundant=True):
     exits = np.asarray(exits, dtype=float)
     enters = exits if enters is None else np.asarray(enters, dtype=float)
     tot = p_mod + exits
-    # ``.tolist()`` turns each ``np.float64`` into an exact Python ``float``, and that
-    # type change is the whole reason it is here: CPython's ``sum`` uses compensated
-    # (Neumaier) addition only while every item passes ``PyFloat_CheckExact``, which
-    # ``np.float64`` -- a float *subclass* -- fails.  ``ModuleTree.Z`` sums exact
-    # floats, so this is the spelling that reproduces the tree's normalizer bit for
-    # bit; ``sum(enters)`` drops to the uncompensated loop and ``enters.sum()`` is
-    # numpy's pairwise one, and both land an ulp away, which ``D`` -- a square root --
-    # reports as ~5e-9 between a partition and that partition wrapped in one more
-    # level.  It is an O(K) interpreter loop against one SIMD pass, so it reads like
-    # dead weight to delete: it is 2% of this call at K=10 and 65% at K=5000, and if
-    # that ever matters the fix is to hand the normalizer in, not to respell it.
-    # Pinned by ``test_a_single_child_wrap_leaves_the_flow_model_alone``.
-    Z = float(sum(enters.tolist())) - (enters if non_redundant else 0.0)
+    # One spelling of the branch normalizer for the whole model -- see ``_total``.
+    Z = _flowgen._total(enters) - (enters if non_redundant else 0.0)
     with np.errstate(divide="ignore", invalid="ignore"):
         diag = np.where(tot > 0, 1.0 / np.where(tot > 0, tot, 1.0), 0.0)
         up = np.where(tot > 0, exits / np.where(tot > 0, tot, 1.0), 0.0)
