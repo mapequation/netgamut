@@ -1089,6 +1089,29 @@ it needs `pyyaml` — which is in the dev group and *not* a dependency of the
 package, because only rebuilding needs it. `ahorn.refresh()` says so if it is
 missing.
 
+### Releasing
+
+Pushing a `v*` tag publishes that version to PyPI. `publish.yml` checks that
+the tag matches `__version__`, runs the whole CI workflow, and uploads the
+wheel and sdist that CI's build job made.
+
+1. On a branch, set `__version__` in `src/netgamut/__init__.py` and rename the
+   changelog's `## Unreleased` section to that version. Merge it to main.
+2. Tag the merge commit on main and push the tag:
+
+```bash
+git tag -a v0.4.0 -m "0.4.0: <one-line summary>; see CHANGELOG.md"
+git push origin v0.4.0
+```
+
+PyPI never takes the same version twice, so a bad release is fixed with a new
+version, not a re-upload. If the workflow fails before the upload step, delete
+the tag (`git push origin :v0.4.0`), fix main, and tag again.
+
+There is no token to keep: PyPI trusts `publish.yml` in this repository when it
+runs in the `pypi` environment, as set up under the project's Publishing
+settings on pypi.org.
+
 ## Attribution
 
 The data belongs to the Stanford Network Analysis Project. This package only

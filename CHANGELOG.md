@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+The first release on PyPI: `pip install netgamut`.
 
 ### Renamed to netgamut
 
@@ -60,6 +62,10 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
 - `netgamut.search(unknown=True)` keeps the datasets whose source cannot answer
   a filter, where a size bound, a yes or no, or a node attribute leaves them out
   by default. The explorer has the same choice.
+- `generate.two_level_constants(p_mod, exits, enters=None)`, returning
+  `(diag, up, down)`, and `generate.two_level_table(...)`, the dense K x K
+  table: the two-level flow-model constants as arrays, from the one derivation
+  the blockwise distance uses too.
 
 ### Changed
 
@@ -80,7 +86,21 @@ pointed elsewhere with `NETWORKS_CACHE_DIR` stays where it is; set
   | `movielens_100k` | `movielens_ratings`, subgraph `100k` |
   | `dblp_coauthor_snap`, `revolution` | none; SNAP's `com-DBLP` and KONECT's `brunson_revolution` remain |
 
+- `generate.element_distances` is vectorized over rows, fast enough to call in
+  a sampling loop. A row with no flow scores 0 directly rather than through a
+  nan.
+- `generate.cross_R` returns 0 where a denominator is degenerate, instead of
+  raising `ZeroDivisionError`. That is the exact value, and what the blockwise
+  path always scored there, so the two now agree on degenerate input too.
+
 ### Fixed
+
+- On directed networks, `generate.D_blockwise`, `gmd`, `gms`, `agmd` and
+  `agms` priced the step down into a module by exit rates instead of enter
+  rates, so they disagreed with the dense
+  `D_dist(flow_matrix(...), flow_matrix(...))`: 0.3425747 instead of 0.3427566
+  on one directed hierarchy. They now use enter rates and match the dense
+  model. Undirected results are unchanged.
 
 - A KONECT network is no longer taken for a copy of a Netzschleuder or SNAP
   network because both have the same node and edge count. KONECT's

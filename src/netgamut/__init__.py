@@ -106,7 +106,7 @@ __all__ = [
     "sources",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 #: Source name -> subpackage, in the order results are reported.
 _SOURCES: dict[str, Any] = {

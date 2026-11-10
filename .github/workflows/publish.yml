@@ -1,0 +1,54 @@
+# Publishes netgamut to PyPI when a version tag is pushed. The README's
+# "Releasing" section has the steps.
+#
+# The upload uses PyPI trusted publishing, so no token is stored here: PyPI
+# accepts uploads from this file in mapequation/netgamut, run in the `pypi`
+# environment, as set up once under the project's Publishing settings on
+# pypi.org.
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  # The upload takes its number from __version__, not from the tag, so a tag
+  # that disagrees would publish a version other than the one it names. Fail
+  # before the full CI run rather than after it.
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check the tag matches __version__
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! grep -qx "__version__ = \"$version\"" src/netgamut/__init__.py; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match __version__ in src/netgamut/__init__.py"
+            exit 1
+          fi
+
+  # The whole CI workflow gates the release, and its build job makes the
+  # distributions that get uploaded -- one build, checked once.
+  ci:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/netgamut/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
