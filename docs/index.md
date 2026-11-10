@@ -63,3 +63,10 @@ guide/attribution
 
 api/index
 ```
+
+```{toctree}
+:caption: Links
+
+mapequation.org <https://www.mapequation.org>
+GitHub <https://github.com/mapequation/netgamut>
+```

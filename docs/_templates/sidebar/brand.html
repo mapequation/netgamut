@@ -1,0 +1,9 @@
+{#- The MapEquation icon before the name, with the version on a smaller line below. -#}
+{% extends "!sidebar/brand.html" %}
+{% block brand_content %}
+<img class="sidebar-brand-icon" src="{{ pathto('_static/mapequation-icon.svg', 1) }}" alt="" width="120" height="96">
+<span class="sidebar-brand-text">
+  <span class="sidebar-brand-name">{{ project }}</span>
+  <span class="sidebar-brand-version">v{{ release }}</span>
+</span>
+{% endblock brand_content %}

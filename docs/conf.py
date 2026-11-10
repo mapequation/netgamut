@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from markupsafe import Markup
 from sphinx.application import Sphinx
 from sphinx.util import logging
 
@@ -51,10 +52,20 @@ myst_heading_anchors = 3
 html_theme = "furo"
 html_title = f"netgamut {release}"
 html_static_path = ["_static"]
+html_css_files = ["netgamut.css"]
+templates_path = ["_templates"]
 html_theme_options = {
     "source_repository": "https://github.com/mapequation/netgamut",
     "source_branch": "main",
     "source_directory": "docs/",
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/mapequation/netgamut",
+            "html": (Path(__file__).parent / "_static" / "github-icon.svg").read_text(),
+            "class": "",
+        },
+    ],
 }
 
 # Written by `npm run build` in site/explorer, together with the exported index.
@@ -80,6 +91,17 @@ def _rebuild_explorer(app: Sphinx, env: Any, *changes: set[str]) -> list[str]:
     return ["explorer"]
 
 
+def _link_copyright(
+    app: Sphinx, pagename: str, templatename: str, context: dict[str, Any], doctree: Any
+) -> None:
+    """Link the team named in the footer to mapequation.org.
+
+    Furo escapes the copyright string, which leaves a ``Markup`` value as it is.
+    """
+    context["copyright"] = Markup('the <a href="https://www.mapequation.org">MapEquation team</a>')
+
+
 def setup(app: Sphinx) -> None:
     app.connect("html-page-context", _explorer_assets)
+    app.connect("html-page-context", _link_copyright)
     app.connect("env-get-outdated", _rebuild_explorer)
