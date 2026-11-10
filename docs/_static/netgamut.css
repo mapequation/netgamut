@@ -1,0 +1,12 @@
+/* The MapEquation icon before the title at the top of the sidebar. */
+.sidebar-brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sidebar-brand-icon {
+  flex-shrink: 0;
+  width: auto;
+  height: 2.2rem;
+}

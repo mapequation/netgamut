@@ -12,6 +12,8 @@ from typing import Any
 from sphinx.application import Sphinx
 from sphinx.util import logging
 
+from markupsafe import Markup
+
 import netgamut
 
 project = "netgamut"
@@ -51,6 +53,8 @@ myst_heading_anchors = 3
 html_theme = "furo"
 html_title = f"netgamut {release}"
 html_static_path = ["_static"]
+html_css_files = ["netgamut.css"]
+templates_path = ["_templates"]
 html_theme_options = {
     "source_repository": "https://github.com/mapequation/netgamut",
     "source_branch": "main",
@@ -98,6 +102,19 @@ def _rebuild_explorer(app: Sphinx, env: Any, *changes: set[str]) -> list[str]:
     return ["explorer"]
 
 
+def _link_copyright(
+    app: Sphinx, pagename: str, templatename: str, context: dict[str, Any], doctree: Any
+) -> None:
+    """Link the team named in the footer to mapequation.org.
+
+    Furo escapes the copyright string, which leaves a ``Markup`` value as it is.
+    """
+    context["copyright"] = Markup(
+        'the <a href="https://www.mapequation.org">MapEquation team</a>'
+    )
+
+
 def setup(app: Sphinx) -> None:
     app.connect("html-page-context", _explorer_assets)
+    app.connect("html-page-context", _link_copyright)
     app.connect("env-get-outdated", _rebuild_explorer)

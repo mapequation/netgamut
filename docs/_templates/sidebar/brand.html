@@ -1,0 +1,6 @@
+{#- The MapEquation icon sits on the same line as the title, before it. -#}
+{% extends "!sidebar/brand.html" %}
+{% block brand_content %}
+<img class="sidebar-brand-icon" src="{{ pathto('_static/mapequation-icon.svg', 1) }}" alt="" width="120" height="96">
+<span class="sidebar-brand-text">{{ docstitle if docstitle else project }}</span>
+{% endblock brand_content %}
