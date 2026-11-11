@@ -145,8 +145,8 @@ def test_node_metadata_filter_leaves_out_the_unknown() -> None:
     assert {match.source for match in with_metadata} >= {"snap", "netzschleuder", "konect"}
 
 
-def test_kind_filters_leave_out_the_unknown() -> None:
-    for name in netgamut._KINDS:
+def test_trait_filters_leave_out_the_unknown() -> None:
+    for name in netgamut._TRAITS:
         yes = netgamut.search(**{name: True})
         no = netgamut.search(**{name: False})
         assert yes and no, name

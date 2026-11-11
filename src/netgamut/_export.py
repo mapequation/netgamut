@@ -311,9 +311,11 @@ def _fingerprint(match: Any) -> str:
         text += f"\nformat {version}"
     if getattr(match, "multilayer", False):
         text += f"\nlayers {_LAYERED_FORMAT}"
-    # The files say the traits, so a change in what the catalog says of them,
-    # its own or netgamut's reading of it, rebuilds them.
-    text += f"\ntraits {_traits(match)}"
+    # The files say the traits the catalog states, so a change in what it says
+    # of them, its own or netgamut's reading of it, rebuilds them. One it cannot
+    # say is not written, so a trait added later rebuilds only where it is stated.
+    stated = {name: value for name, value in _traits(match).items() if value is not None}
+    text += f"\ntraits {stated}"
     # Every network is built again in a new mirror format.
     text += f"\nmirror {FORMAT}"
     return hashlib.sha256(text.encode()).hexdigest()[:16]

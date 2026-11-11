@@ -819,6 +819,18 @@ def test_lists_the_traits_from_the_catalog(tmp_path, catalog) -> None:
     }
 
 
+def test_a_trait_added_later_rebuilds_only_where_it_is_stated(catalog, monkeypatch) -> None:
+    """A new trait, such as memory, which the mirrored sources cannot say, rebuilds nothing."""
+    tiny = catalog["snap"][0]
+    tiny.traits = {"temporal": True}
+    before = _export._fingerprint(tiny)
+    monkeypatch.setattr(netgamut, "_TRAITS", (*netgamut._TRAITS, "memory"))
+    monkeypatch.setattr(_export, "_TRAITS", netgamut._TRAITS)
+    assert _export._fingerprint(tiny) == before
+    tiny.traits["memory"] = True
+    assert _export._fingerprint(tiny) != before
+
+
 def test_cli_export_networks(tmp_path, catalog, capsys) -> None:
     target = tmp_path / "mirror"
     assert cli.main(["export-networks", "--output", str(target), "--source", "snap"]) == 0
