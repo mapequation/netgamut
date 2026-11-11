@@ -26,6 +26,14 @@
 - Fields longer than csv's 128 KiB default, such as in Netzschleuder's
   `littlesis`, no longer stop a Netzschleuder edge list or `nodes.csv` from
   being read.
+- Netzschleuder's CSV files escape a quote inside a quoted field with a
+  backslash, not by doubling it, and are now read that way. littlesis's
+  `nodes.csv` read as 605,261 rows instead of 402,954, and since nodes were
+  numbered by row, most of its nodes got another node's name; nodes are now
+  keyed by the file's `index` column, and a row that cannot be read is left
+  out with a warning. wiki_rfa reads 198,253 of its 198,275 links, up from
+  198,083; the rest end a field with a bare backslash
+  ([#37](https://github.com/mapequation/netgamut/issues/37)).
 
 ### Changed
 

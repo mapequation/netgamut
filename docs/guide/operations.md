@@ -126,7 +126,7 @@ gzipped Pajek. Each entry in `datasets` has `key`, `title`, `url`, `citations`,
   "<source>/<name>.nodes.parquet"}`, `nodes` only where there is a nodes file;
 - `links`, the rows in the links file, and `nodes`, the distinct ids across
   both files; `bytes`, both files together; `layers`, where it has layers;
-- `dropped`: `{"nodes": [...], "links": [...]}`, free-text columns left out, and
+- `dropped`: `{"nodes": [...], "links": [...]}`, the columns left out, and
   `note`, a sentence such as why a network tagged multilayer has no layers,
   each only where there is one.
 
@@ -139,7 +139,7 @@ its order: a repeated link or a timed event stays its own row.
 |---|---|---|
 | `source`, `target` | always | int32 if every id is an integer that fits, else int64 if every id is an integer, else string |
 | `weight` | the source declares a weight | float64 |
-| `time` | the source declares a time | int64 if every value is an integer, float64 if numeric, timestamp (milliseconds, UTC; the values are whole seconds) for dates, else string |
+| `time` | the source declares a time | int64 if every value is an integer, float64 if numeric, timestamp (milliseconds, UTC) for dates, else string |
 | `layer` | the network has layers | int32 if every label is an integer, else string |
 
 Ids are the source's own, so a node keeps its id across a dataset's snapshots.
@@ -153,13 +153,16 @@ whose layers netgamut does not find has no `layer` column and says so in
 **`<name>.nodes.parquet`** holds one row per node the source's node table lists,
 nodes without links included; a node that appears only in the links has no row.
 `id` has the same type as `source` and `target`. `name`, the source's node name,
-is cut to 100 characters. Every other node column follows in the source's
-order: int64 if every present value is an integer, float64 if numeric, else
+is cut to 100 characters. A column that only repeats `id` or `name`, such as
+Netzschleuder's `index` or the column the names came from, is not written.
+Every other node column follows in the source's order: int64 if every present value is an integer, float64 if numeric, else
 string, with missing values null and values decoded where the source names its
 codes. A source column called `id` or `name` that is not the name column becomes
 `id_` or `name_`. A string column with any value over 100 characters or a line
 break is free text, such as littlesis's biographies: it is left out and listed
-under `dropped`. A subgraph stack's nodes file has `id` and `name` only.
+under `dropped`. So are Netzschleuder's internal properties, whose names start
+with `_`, such as `_pos`, graph-tool's layout, in either file. A subgraph
+stack's nodes file has `id` and `name` only.
 
 Both files are zstd-compressed in row groups of at most 1,000,000 rows, and
 carry their attribution as key-value metadata: `netgamut:key`, `netgamut:title`,
