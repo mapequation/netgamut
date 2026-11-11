@@ -191,7 +191,7 @@ class Table:
     sources: Sequence[Hashable]
     targets: Sequence[Hashable]
     #: Floats, or ``None`` when the file has no weight column.
-    weights: Sequence[float] | None
+    weights: Any
     #: The time column as an array, or ``None`` when not asked for.
     times: Any
     #: Layer labels, ``None`` for a row without one; ``None`` when not asked for.
@@ -210,9 +210,10 @@ def read_table(
 
     Labels are integers when every label is digits, as :meth:`Network.to_pajek`
     decides, and strings otherwise. Rows with fewer than two fields are
-    skipped, as everywhere else in the package. Only a time column needs
-    numpy, so a layer column reads without it.
+    skipped, as everywhere else in the package.
     """
+    import numpy as np
+
     # One label column for both ends, so sources and targets are always the
     # same kind: integers only if every label on either side is digits.
     ends = _Labels()
@@ -236,7 +237,7 @@ def read_table(
     return Table(
         sources=labels[0::2],
         targets=labels[1::2],
-        weights=weights,
+        weights=None if weights is None else np.frombuffer(weights, dtype=np.float64).copy(),
         times=None if times is None else times.array(),
         layers=None if layers is None else _layer_labels(layers),
     )

@@ -227,6 +227,7 @@ def _cmd_export_networks(args: argparse.Namespace) -> int:
     print(
         f"{len(document['datasets'])} networks ({document['bytes'] / 1e6:.0f} MB) written "
         f"to {args.output}; {len(document['skipped'])} skipped"
+        + (f", {len(document['failed'])} failed" if document["failed"] else "")
         + ("" if document["complete"] else f", {waiting} not built yet"),
         file=sys.stderr,
     )

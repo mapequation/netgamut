@@ -38,6 +38,11 @@ __all__ = ["Columns", "Network"]
 
 _COMMENT_PREFIXES = ("#", "%")
 
+
+class ArchiveError(ValueError):
+    """A multi-file bundle was read as one network; extract it and open a member."""
+
+
 # SNAP files are mostly tab- or space-separated, but its Bitcoin trust networks
 # are `source,target,rating,time` and every Netzschleuder edge list is CSV.
 # Splitting CSV on whitespace can silently yield an empty network, so the
@@ -222,7 +227,9 @@ class Network:
         if self.member is not None or self.edge_file is not None:
             return self.path.open(encoding="utf-8", errors="replace")
         if self.is_archive:
-            raise ValueError(f"{self.file.name} is an archive. Call .extract() and open a member.")
+            raise ArchiveError(
+                f"{self.file.name} is an archive. Call .extract() and open a member."
+            )
         if self.archive_path.name.lower().endswith(".gz"):
             return io.TextIOWrapper(
                 gzip.open(self.archive_path, "rb"), encoding="utf-8", errors="replace"

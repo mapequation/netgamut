@@ -132,23 +132,6 @@ def test_a_layer_column_is_used_where_there_is_one(monkeypatch) -> None:
     assert ml.names == {0: "a", 1: "b", 2: "c"}
 
 
-def test_a_layer_column_needs_no_numpy(monkeypatch) -> None:
-    """numpy is an extra, and the mirror builds without it; only time layers need it."""
-    import sys
-
-    def download(url, target, **kwargs):
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(target, "w") as bundle:
-            bundle.writestr("edges.csv", "# source, target, weight, layer\n0,1,2.5,1\n1,2,1,2\n")
-        return target
-
-    monkeypatch.setattr(nz, "_download_file", download)
-    monkeypatch.setitem(sys.modules, "numpy", None)  # import numpy now fails
-    ml = nz.load_multilayer("london_transport")
-    assert ml.intra == {1: {(0, 1): 2.5}, 2: {(1, 2): 1.0}}
-    assert ml.weighted
-
-
 def test_an_entry_without_layers_says_how_to_name_them(bundles, monkeypatch) -> None:
     monkeypatch.setitem(BUNDLES, "celegansneural", ("# source, target\n0,1\n", "# index\n0\n1\n"))
     with pytest.raises(LookupError, match="subgraphs="):

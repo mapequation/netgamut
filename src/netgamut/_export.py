@@ -34,6 +34,7 @@ import netgamut
 from . import _KINDS, __version__
 from ._core.download import DownloadError
 from ._core.multilayer import MultilayerNetwork
+from ._core.network import ArchiveError
 
 #: The sources whose networks are first-order graphs the Navigator can load.
 MIRRORED_SOURCES = ("netzschleuder", "konect", "snap")
@@ -106,6 +107,9 @@ def export_networks(
     skipped = [
         entry for entry in earlier.get("skipped", []) if _source(entry["key"]) not in sources
     ]
+    # A failure stands until the network is built again.
+    failed_before = {entry["key"]: entry for entry in earlier.get("failed", [])}
+    failed = [entry for key, entry in failed_before.items() if _source(key) not in sources]
     total = sum(entry["bytes"] for entry in entries)
 
     candidates = []
@@ -139,6 +143,8 @@ def export_networks(
             entry = previous
         elif deadline is not None and time.monotonic() >= deadline:
             complete = False
+            if match.key in failed_before:
+                failed.append(failed_before[match.key])
             if previous is None:
                 skipped.append({"key": match.key, "reason": "not built yet"})
                 continue
@@ -148,6 +154,8 @@ def export_networks(
             # timeouts, so the source waits for the next run instead.
             entry = previous
             reason = f"{match.source} unreachable in this run"
+            if match.key in failed_before:
+                failed.append(failed_before[match.key])
         else:
             try:
                 entry = _convert(match, folder, fingerprint, max_file, max_download)
@@ -162,7 +170,13 @@ def export_networks(
                     down.add(match.source)
                     log(f"{match.source} does not answer; its other networks wait for a later run")
                 entry = previous
-                if previous is not None:
+                if not _upstream(error):
+                    failed.append({"key": match.key, "reason": reason})
+                    kept_file = "; kept the previous file" if previous is not None else ""
+                    log(f"{match.key}: failed, {reason}{kept_file}")
+                    if previous is None:
+                        continue
+                elif previous is not None:
                     log(f"{match.key}: {reason}; kept the previous file")
                 elif match.source not in down:
                     skipped.append({"key": match.key, "reason": reason, "fingerprint": fingerprint})
@@ -199,6 +213,7 @@ def export_networks(
         "reserved": reserved,
         "datasets": sorted(entries, key=lambda entry: str(entry["key"])),
         "skipped": sorted(skipped, key=lambda entry: str(entry["key"])),
+        "failed": sorted(failed, key=lambda entry: str(entry["key"])),
     }
     # An idle run must not touch the file, or every one of them would commit.
     if {**earlier, "built": None} == {**document, "built": None}:
@@ -224,6 +239,20 @@ def _unreachable(error: Exception) -> bool:
     if isinstance(cause, urllib.error.HTTPError):
         return cause.code >= 500
     return isinstance(cause, (urllib.error.URLError, TimeoutError, OSError))
+
+
+def _upstream(error: Exception) -> bool:
+    """Whether *error* comes from the source, or a limit the mirror knows about.
+
+    Those skip the network, or keep its previous file, and the build carries
+    on. Anything else is a fault in netgamut, such as a missing module or a
+    reader that cannot parse the file. It is listed under ``failed``, so the
+    mirror's workflow turns red. A plain LookupError is a source saying it has
+    no such file; KeyError and IndexError, its subclasses, are bugs.
+    """
+    if type(error) is LookupError:
+        return True
+    return isinstance(error, (DownloadError, _TooLarge, _Empty, ArchiveError))
 
 
 def _estimate(match: Any) -> int:
