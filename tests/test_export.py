@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
@@ -221,10 +222,14 @@ def test_writes_weight_and_time_as_the_source_declares(
     # Read as Infomap reads a weight: one that is not a number is 1.
     assert links.column("weight").to_pylist() == [0.5, 1.0, 2.0]
     assert str(links.schema.field("time").type) == kind
-    found = links.column("time").to_pylist()
-    assert found == values
+    column = links.column("time")
     if kind.startswith("timestamp"):
-        assert found[0].utcoffset().total_seconds() == 0
+        # The stored milliseconds since 1970 UTC. Turning them into datetimes
+        # needs a time zone database, which Windows has only with tzdata.
+        expected = [None if value is None else round(value.timestamp() * 1000) for value in values]
+        assert column.cast(pa.int64()).to_pylist() == expected
+    else:
+        assert column.to_pylist() == values
 
 
 def test_a_free_text_link_column_is_left_out(tmp_path, monkeypatch) -> None:
