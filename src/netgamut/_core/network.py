@@ -17,7 +17,7 @@ import shutil
 import tarfile
 import zipfile
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cached_property
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Any
@@ -103,6 +103,9 @@ class Network:
     #: follows it, so a timestamp or a sign is never mistaken for a weight.
     #: Replace it with :func:`dataclasses.replace` to read a column differently.
     columns: Columns = Columns()
+    #: The labels of the nodes a :meth:`largest_component` view keeps, as they
+    #: appear in the file; ``None`` for the whole network.
+    component: frozenset[str] | None = None
 
     @property
     def weighted_links(self) -> bool:
@@ -113,6 +116,16 @@ class Network:
     @property
     def name(self) -> str:
         return self.dataset.name
+
+    @property
+    def _stem(self) -> str:
+        """The default name of what this handle writes or builds.
+
+        A :meth:`largest_component` view adds ``-lcc``, so its files never take
+        the whole network's name. :attr:`name` stays the dataset's, which the
+        sources look datasets up by.
+        """
+        return self.name if self.component is None else f"{self.name}-lcc"
 
     @property
     def is_bundle(self) -> bool:
@@ -279,7 +292,21 @@ class Network:
         from the first data lines, since a few SNAP files are CSV rather than
         whitespace-separated. Pass *delimiter* to override that. A header row
         that :attr:`columns` declares is left out.
+
+        In a :meth:`largest_component` view, only the rows whose source node is
+        in the component -- and so their target too.
         """
+        rows = self._file_rows(delimiter)
+        if self.component is None:
+            yield from rows
+            return
+        keep = self.component
+        for fields in rows:
+            if fields[0] in keep:
+                yield fields
+
+    def _file_rows(self, delimiter: str | None) -> Iterator[tuple[str, ...]]:
+        """Every row of the file, as :meth:`rows` describes, whatever the view."""
         sniffed = delimiter if delimiter is not None else self.delimiter
         skip = self.columns.header_row
         with self.open() as stream:
@@ -345,7 +372,16 @@ class Network:
         if reader is None:
             raise LookupError(f"netgamut.{self.source} publishes no per-node metadata.")
         table: NodeTable = reader(self)
-        return table
+        if self.component is None:
+            return table
+        keep = self.component
+        return replace(
+            table,
+            values={
+                column: {node: value for node, value in values.items() if str(node) in keep}
+                for column, values in table.values.items()
+            },
+        )
 
     def communities(self, *, cast: Callable[[str], Any] | None = None) -> Iterator[tuple[Any, ...]]:
         """Stream communities from a SNAP ground-truth file.
@@ -373,6 +409,38 @@ class Network:
             else:
                 yield cast(fields[0]), cast(fields[1])
 
+    def largest_component(self) -> Network:
+        """The largest connected component, as a view on the same cached file.
+
+        One pass over the links finds the components, ignoring direction, so
+        for a directed network this is the largest *weakly* connected component.
+        Memory grows with the number of nodes, never the links. A component's
+        size is its number of nodes; a tie goes to the one met first in the file.
+
+        The view is a :class:`Network` like any other. :meth:`rows`,
+        :meth:`edges`, every export, :meth:`snapshots` and :meth:`to_multilayer`
+        see only the links within the component, and :meth:`nodes` only its
+        nodes. Files it writes are named ``<name>-lcc``. :attr:`component` holds
+        the node labels, to restrict a reference partition from elsewhere::
+
+            lcc = netgamut.load("com-Amazon").largest_component()
+            len(lcc.component)
+            im = lcc.to_infomap()
+
+        :attr:`path`, :meth:`open` and :attr:`header` still give the whole
+        download, since that is what a tool reading the file would see. For a
+        temporal or multilayer network the component is that of all links
+        together, across times and layers.
+
+        There is no strongly connected variant: finding those components needs
+        every link in memory, and in a nearly acyclic network, such as one of
+        citations, the largest is a sliver of the whole.
+
+        Raises:
+            ValueError: The network has no links.
+        """
+        return replace(self, component=_largest_component(self.edges(), self.name))
+
     # -- conversions -----------------------------------------------------
     def to_networkx(
         self, *, directed: bool | None = None, cast: Callable[[str], Any] | None = int
@@ -397,7 +465,7 @@ class Network:
         if directed is None:
             directed = bool(self.dataset.directed)
         graph = networkx.DiGraph() if directed else networkx.Graph()
-        graph.name = self.dataset.name
+        graph.name = self._stem
 
         try:
             graph.add_edges_from(self.edges(cast=cast))
@@ -441,6 +509,8 @@ class Network:
         """
         if self.columns.header_row or self.columns.layer is not None:
             return False
+        if self.component is not None:  # the file holds links outside the view
+            return False
         if self.delimiter is not None:
             return False
         width = 3 if self.columns.weight == 2 else 2
@@ -480,14 +550,14 @@ class Network:
         )
         if names is None:
             names = self._source_names(cast)
-        target = formats.output_path(directory, name or self.name, ".net")
+        target = formats.output_path(directory, name or self._stem, ".net")
         return formats.write_pajek(
             target,
             nodes=(cast(label) for label in labels),
             links=lambda: self._typed_links(cast),
             directed=directed,
             names=names,
-            comments=formats.describe(self.name, None),
+            comments=formats.describe(self._stem, None),
         )
 
     def _source_names(self, cast: Callable[[str], Any]) -> dict[Any, str]:
@@ -504,10 +574,12 @@ class Network:
         if reader is None:
             return {}
         found: dict[Any, str] = reader(self)
+        keep = self.component
         return {
             cast(str(node)): label
             for node, label in found.items()
-            if cast is str or _columns.is_int_label(str(node))
+            if (cast is str or _columns.is_int_label(str(node)))
+            and (keep is None or str(node) in keep)
         }
 
     def to_link_list(
@@ -528,12 +600,12 @@ class Network:
         def cast(label: str) -> Any:
             return int(label) if _columns.is_int_label(label) else label
 
-        target = formats.output_path(directory, name or self.name, ".txt")
+        target = formats.output_path(directory, name or self._stem, ".txt")
         return formats.write_link_list(
             target,
             links=self._typed_links(cast),
             directed=directed,
-            comments=formats.describe(self.name, None),
+            comments=formats.describe(self._stem, None),
         )
 
     def to_infomap(self, *, directed: bool | None = None, **kwargs: Any) -> Any:
@@ -643,7 +715,7 @@ class Network:
         for b, rows in _columns.groups(index, len(edges) - 1):
             links = _aggregate(table, rows, directed)
             yield InMemoryNetwork(
-                name=f"{self.name}-t{b}",
+                name=f"{self._stem}-t{b}",
                 nodes=tuple(dict.fromkeys(node for pair in links for node in pair)),
                 links=links,
                 directed=directed,
@@ -714,7 +786,7 @@ class Network:
         everyone = {node for links in intra.values() for pair in links for node in pair}
         cast: Callable[[str], Any] = int if all(isinstance(node, int) for node in everyone) else str
         return MultilayerNetwork(
-            name=self.name,
+            name=self._stem,
             intra=intra,
             directed=directed,
             weighted=any(w != 1.0 for links in intra.values() for w in links.values()),
@@ -723,7 +795,7 @@ class Network:
         )
 
     def __repr__(self) -> str:
-        return f"<Network {self.dataset.name!r} file={self.file.name!r} at {self.archive_path}>"
+        return f"<Network {self._stem!r} file={self.file.name!r} at {self.archive_path}>"
 
     def __str__(self) -> str:
         return f"{self.dataset} -> {self.path}"
@@ -745,3 +817,43 @@ def _aggregate(
             key = (v, u)
         links[key] = links.get(key, 0.0) + (1.0 if weights is None else float(weights[row]))
     return links
+
+
+def _largest_component(links: Iterable[tuple[str, str]], name: str) -> frozenset[str]:
+    """The node labels of the largest component of *links*, direction ignored.
+
+    Union-find by size with path splitting, so memory holds a parent and a size
+    per node and nothing per link. Of equally large components, the one whose
+    first node comes first in *links* wins, so the answer does not depend on
+    hashing.
+
+    Raises:
+        ValueError: *links* is empty; *name* says which network.
+    """
+    parent: dict[str, str] = {}
+    size: dict[str, int] = {}  # roots only
+
+    def find(node: str) -> str:
+        if node not in parent:
+            parent[node] = node
+            size[node] = 1
+            return node
+        while (up := parent[node]) != node:
+            parent[node] = parent[up]
+            node = up
+        return node
+
+    for u, v in links:
+        a, b = find(u), find(v)
+        if a == b:
+            continue
+        if size[a] < size[b]:
+            a, b = b, a
+        parent[b] = a
+        size[a] += size.pop(b)
+    if not size:
+        raise ValueError(f"{name!r} has no links, so it has no largest component.")
+    largest = max(size.values())
+    # Path splitting only rewrites values, so iterating the keys while finding is safe.
+    root = next(r for r in map(find, parent) if size[r] == largest)
+    return frozenset(node for node in parent if find(node) == root)

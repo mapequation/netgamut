@@ -28,6 +28,27 @@ rather than renumbering them silently. A written file loads the same network
 Infomap gets from `to_infomap()`, weights included. Downloads are streamed, so
 writing one never holds its links in memory.
 
+## The largest component
+
+Many real networks fall apart into pieces: fewer than half of Netzschleuder's
+are connected. `largest_component()` keeps the largest piece, ignoring link
+direction, so a directed network keeps its largest weakly connected component:
+
+```python
+lcc = netgamut.load("com-Amazon").largest_component()
+len(lcc.component)       # how many nodes it keeps
+lcc.to_pajek("out/")     # PosixPath('out/com-Amazon-lcc.net')
+im = lcc.to_infomap()
+```
+
+The result is a view on the same cached file, not a copy. Everything that
+reads links (`edges()`, the exports, `snapshots()`, `to_multilayer()`) sees
+only the component's links, and `nodes()` only its nodes. Finding it is one
+pass over the links that holds the nodes in memory but never the links. Files
+it writes take a `-lcc` suffix. `lcc.component` is the set of node labels as
+they appear in the file, which is what you need to restrict a reference
+partition loaded from elsewhere. `lcc.path` is still the whole download.
+
 ## Weights, times and layers
 
 A third column is a weight in one file, a Unix timestamp in the next and a
