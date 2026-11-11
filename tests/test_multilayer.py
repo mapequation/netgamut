@@ -150,3 +150,33 @@ def test_every_known_layout_names_real_subgraphs_and_columns() -> None:
     for name, column in nz._LAYER_COLUMNS.items():
         properties = [entry[0] for entry in nz.info(name).analyses["edge_properties"]]
         assert column in properties, name
+
+
+def test_the_mirror_writes_a_known_entrys_subgraphs_as_layers(
+    bundles, monkeypatch, tmp_path: Path
+) -> None:
+    pq = pytest.importorskip("pyarrow.parquet")
+    from netgamut import _parquet
+
+    monkeypatch.setitem(nz._SUBGRAPH_LAYERS, "celegansneural", (("calls", "sms"), "id"))
+    layers, key = nz._subgraph_layers("celegansneural")
+    assert (list(layers), key) == (["calls", "sms"], "id")
+    parts, nodes = _parquet.stack(layers, key)
+    written = _parquet.write(parts, nodes, tmp_path, "celegansneural", {})
+    assert (written.nodes, written.links, written.layers) == (3, 4, 2)
+    # Rows as the files hold them, ids through the key, nothing summed.
+    assert pq.read_table(written.files["links"]).to_pydict() == {
+        "source": [7, 8, 7, 8],
+        "target": [8, 9, 8, 7],
+        "time": [10, 20, 30, None],
+        "layer": ["calls", "calls", "calls", "sms"],
+    }
+    assert pq.read_table(written.files["nodes"]).to_pydict() == {
+        "id": [7, 8, 9],
+        "name": ["alice", "bob", "carol"],
+    }
+
+
+def test_an_entry_with_a_layer_column_has_no_subgraph_layers() -> None:
+    with pytest.raises(LookupError, match="knows no subgraphs"):
+        nz._subgraph_layers("london_transport")

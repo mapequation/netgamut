@@ -160,21 +160,25 @@ class NodeTable:
         which never share a node. Nodes without a name are absent, so a writer
         shows their ids instead.
         """
+        return self._named(self.name_columns())
 
-        def named(columns: Iterable[str]) -> dict[Any, str]:
-            found: dict[Any, str] = {}
-            for column in columns:
-                for node, value in self[column].items():
-                    text = "" if value is None else str(value).strip()
-                    if text:
-                        found[node] = text
-            return found
-
+    def name_columns(self) -> tuple[str, ...]:
+        """The columns :meth:`labels` reads the names from; empty when none names a node."""
         by_case = {column.lower(): column for column in self.columns}
         for wanted in _LABEL_COLUMNS:
-            if wanted in by_case and (found := named([by_case[wanted]])):
-                return found
-        return named(column for column in self.columns if column.lower().endswith(".name"))
+            if wanted in by_case and self._named([by_case[wanted]]):
+                return (by_case[wanted],)
+        entities = tuple(column for column in self.columns if column.lower().endswith(".name"))
+        return entities if self._named(entities) else ()
+
+    def _named(self, columns: Iterable[str]) -> dict[Any, str]:
+        found: dict[Any, str] = {}
+        for column in columns:
+            for node, value in self[column].items():
+                text = "" if value is None else str(value).strip()
+                if text:
+                    found[node] = text
+        return found
 
     def rows(self) -> list[dict[str, Any]]:
         """One dict per node, decoded -- the shape a dataframe constructor wants."""

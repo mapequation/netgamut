@@ -24,11 +24,31 @@ from . import formats
 
 if TYPE_CHECKING:
     from .network import Network
+    from .nodes import NodeTable
 
 __all__ = ["MultilayerNetwork"]
 
 #: A state node: ``(physical node, layer)``.
 StateNode = tuple[Hashable, Hashable]
+
+
+def node_identity(table: NodeTable, key: str, layer: Hashable) -> dict[str, str]:
+    """``{node: identity}``: each node of *layer* by its value in the *key* column.
+
+    How :meth:`MultilayerNetwork.from_networks` matches nodes across layers that
+    number them on their own; the web mirror maps a subgraph's ids the same way.
+
+    Raises:
+        ValueError: Two nodes of the layer share a value.
+    """
+    values = {str(node): str(value) for node, value in table[key].items()}
+    shared = [value for value, count in Counter(values.values()).items() if count > 1]
+    if shared:
+        raise ValueError(
+            f"{key!r} does not identify the nodes of layer {layer!r}: "
+            f"{len(shared):,} values, such as {shared[0]!r}, belong to more than one node."
+        )
+    return values
 
 
 @dataclass(frozen=True)
@@ -112,13 +132,7 @@ class MultilayerNetwork:
                 identities[layer] = None
                 continue
             table = network.nodes()
-            values = {str(node): str(value) for node, value in table[key].items()}
-            shared = [value for value, count in Counter(values.values()).items() if count > 1]
-            if shared:
-                raise ValueError(
-                    f"{key!r} does not identify the nodes of layer {layer!r}: "
-                    f"{len(shared):,} values, such as {shared[0]!r}, belong to more than one node."
-                )
+            values = node_identity(table, key, layer)
             identities[layer] = values
             for node, label in table.labels().items():
                 labels.setdefault(values.get(str(node), ""), label)

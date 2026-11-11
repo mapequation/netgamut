@@ -37,6 +37,8 @@ networkx = ["networkx>=3.0"]
 # plain CSV and reads without torch.
 pyg = ["torch-geometric>=2.4", "networkx>=3.0"]
 infomap = ["infomap>=2.8"]
+# Only for `netgamut export-networks`, which writes the web mirror as Parquet.
+export = ["pyarrow>=18"]
 generate = ["networkx>=3.0", "infomap>=2.8", "scipy>=1.10", "numba>=0.59"]
 all = ["networkx>=3.0", "infomap>=2.8", "scipy>=1.10", "numba>=0.59"]
 
@@ -52,7 +54,7 @@ netgamut = "netgamut.__main__:main"
 # pyyaml is here rather than in the extras because only the AHORN catalog
 # *build* needs it -- reading the vendored snapshot and downloading datasets
 # need nothing. See scripts/regenerate_ahorn_catalog.py.
-dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "pyyaml>=6", "types-PyYAML>=6"]
+dev = ["pytest>=8", "mypy>=1.11", "ruff>=0.6", "pyyaml>=6", "types-PyYAML>=6", "pyarrow>=18"]
 # The documentation site; .github/workflows/pages.yml builds it.
 docs = ["sphinx>=8.2", "furo>=2025.12.19", "myst-nb>=1.4", "sphinx-copybutton>=0.5.2"]
 
@@ -96,7 +98,7 @@ strict = true
 # netgamut.generate. numpy's stubs use 3.12+ syntax that python_version 3.11
 # rejects, so its stubs are skipped, not followed.
 [[tool.mypy.overrides]]
-module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*", "numba.*", "torch_geometric.*"]
+module = ["networkx.*", "infomap.*", "scipy.*", "numpy.*", "numba.*", "torch_geometric.*", "pyarrow.*"]
 ignore_missing_imports = true
 follow_imports = "skip"
 follow_imports_for_stubs = true

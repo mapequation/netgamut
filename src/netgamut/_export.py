@@ -2,11 +2,12 @@
 
 The upstream hosts send no CORS headers, so a web app such as the Network
 Navigator cannot fetch their files. :func:`export_networks` converts the graph
-sources' networks to gzipped Pajek, smallest first, until a size budget is
-spent, and writes the ``index.json`` manifest that the catalog explorer and the
-Navigator read. Every file opens with comment lines that say where the network
-came from and how to cite it. A multilayer network is written in Infomap's
-multilayer format, its manifest entry saying how many ``layers`` it has.
+sources' networks to Parquet, smallest first, until a size budget is spent, and
+writes the ``index.json`` manifest that the catalog explorer and the Navigator
+read. Each network is a links file and, where the source names its nodes or has
+node metadata, a nodes file (see :mod:`netgamut._parquet`); their metadata says
+where the network came from and how to cite it. A multilayer network has a
+``layer`` column, its manifest entry saying how many ``layers`` it has.
 
 The mirror is committed to the repository's ``mirror`` branch and served by
 raw.githubusercontent.com, so git's limits apply: GitHub rejects a file of
@@ -15,7 +16,6 @@ raw.githubusercontent.com, so git's limits apply: GitHub rejects a file of
 
 from __future__ import annotations
 
-import gzip
 import hashlib
 import importlib
 import json
@@ -31,9 +31,8 @@ from typing import Any
 
 import netgamut
 
-from . import _KINDS, __version__
+from . import _KINDS, __version__, _parquet
 from ._core.download import DownloadError
-from ._core.multilayer import MultilayerNetwork
 from ._core.network import ArchiveError
 
 #: The sources whose networks are first-order graphs the Navigator can load.
@@ -44,6 +43,9 @@ MAX_FILE = 95_000_000
 MAX_DOWNLOAD = 1_000_000_000
 
 MANIFEST = "index.json"
+#: The mirror's file format, ``format`` in the manifest. 1, which a manifest
+#: without it is, was gzipped Pajek; 2 is Parquet.
+FORMAT = 2
 
 
 def export_networks(
@@ -58,7 +60,7 @@ def export_networks(
     clear_cache: bool = False,
     log: Callable[[str], None] = lambda message: None,
 ) -> dict[str, Any]:
-    """Write ``<output>/<source>/<name>.net.gz`` files and their ``index.json``.
+    """Write ``<output>/<source>/<name>.links.parquet`` files and their ``index.json``.
 
     Networks are taken in order of edge count until their files would exceed
     *budget* bytes. Left out: KONECT's copies of another source's network,
@@ -67,10 +69,10 @@ def export_networks(
     read as having no nodes or no links, which would list a file with nothing
     in it.
 
-    A network its source tags multilayer is written in Infomap's multilayer
-    format (``*Vertices``, ``*Intra``) where its source lays out the layers,
-    with ``layers`` in its manifest entry; one whose layers netgamut cannot
-    find is written as one network, and says so in a comment.
+    A network with a layer column, or one whose source keeps its layers in
+    subgraphs, is written with a ``layer`` column and ``layers`` in its
+    manifest entry; one its source tags multilayer whose layers netgamut
+    cannot find is written as one network, and its entry's ``note`` says so.
 
     Run it again on the same *output* to update it. A network whose catalog
     entry is unchanged keeps its file without a download unless *force* is set;
@@ -84,6 +86,7 @@ def export_networks(
     false until a run gets through every network. A run that changes nothing
     writes the manifest unchanged, timestamp included. Returns the manifest.
     """
+    _parquet.require()  # before any download, rather than failing every network
     deadline = None if stop_after is None else time.monotonic() + stop_after
     complete = True
     folder = Path(output)
@@ -93,8 +96,12 @@ def export_networks(
     kept = {
         entry["key"]: entry
         for entry in earlier.get("datasets", [])
-        # An empty file is never worth keeping: it is built again, or skipped.
-        if (folder / entry["file"]).is_file() and entry["nodes"] and entry["edges"]
+        # An empty file is never worth keeping: it is built again, or skipped. A
+        # format-1 entry, with its one ``file``, is built again too.
+        if "files" in entry
+        and all((folder / path).is_file() for path in entry["files"].values())
+        and entry["nodes"]
+        and entry["links"]
     }
     too_large = {
         entry["key"]: entry["fingerprint"]
@@ -120,8 +127,9 @@ def export_networks(
             fingerprint = _fingerprint(match)
             if match.edges is None:
                 skipped.append({"key": match.key, "reason": "size unknown"})
-            # A gzipped Pajek link takes at least about two bytes.
-            elif match.edges * 2 > max_file:
+            # A link takes at least about 1.25 bytes of Parquet: two of gzipped
+            # Pajek, which Parquet measured 0.63 to 0.88 of.
+            elif match.edges * 5 > max_file * 4:
                 skipped.append(
                     {"key": match.key, "reason": "too large", "fingerprint": fingerprint}
                 )
@@ -202,10 +210,11 @@ def export_networks(
         # From the catalog, not the file, so a kept entry gains them without a
         # download; the Navigator filters on them as the explorer does.
         entries.append({**entry, **{name: getattr(match, name) for name in _KINDS}})
-        log(f"{match.key}: {entry['nodes']:,} nodes, {entry['edges']:,} links")
+        log(f"{match.key}: {entry['nodes']:,} nodes, {entry['links']:,} links")
 
-    _prune(folder, sources, {entry["file"] for entry in entries})
+    _prune(folder, sources, {path for entry in entries for path in entry["files"].values()})
     document = {
+        "format": FORMAT,
         "netgamut": __version__,
         "built": datetime.now(UTC).isoformat(timespec="seconds"),
         "complete": complete,
@@ -224,7 +233,7 @@ def export_networks(
 
 
 class _TooLarge(ValueError):
-    """The gzipped file would be over the per-file limit."""
+    """A file would be over the per-file limit."""
 
 
 class _Empty(ValueError):
@@ -256,8 +265,8 @@ def _upstream(error: Exception) -> bool:
 
 
 def _estimate(match: Any) -> int:
-    """A network's likely file size: gzipped Pajek measured about 3.9 bytes a link."""
-    return int(match.edges) * 4
+    """A network's likely file size: Parquet measured about 2.5 to 3.4 bytes a link."""
+    return int(match.edges) * 3
 
 
 def _source(key: str) -> str:
@@ -289,6 +298,8 @@ def _fingerprint(match: Any) -> str:
         text += f"\nformat {version}"
     if getattr(match, "multilayer", False):
         text += f"\nlayers {_LAYERED_FORMAT}"
+    # Every network is built again in a new mirror format.
+    text += f"\nmirror {FORMAT}"
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
@@ -303,147 +314,98 @@ def _read_manifest(folder: Path) -> dict[str, Any]:
 def _convert(
     match: Any, folder: Path, fingerprint: str, max_file: int, max_download: int
 ) -> dict[str, Any]:
-    """Download one network, write it as gzipped Pajek, and describe the file."""
+    """Download one network, write its Parquet files, and describe them."""
     meta = match.to_dict()
+    parts, nodes, directed, note = _parts(match, max_download)
     with tempfile.TemporaryDirectory() as scratch:
-        layered = _layered(match, max_download)
-        if layered is not None:
-            pajek = layered.to_pajek(scratch, name=match.name)
-            note = _layer_note(layered)
-        else:
-            network = match.load(progress=False, max_bytes=max_download)
-            pajek = network.to_pajek(scratch, name=match.name)
-            note = []
-            if getattr(match, "multilayer", False):
-                note = [
-                    f"{match.source} tags this network multilayer, but netgamut finds no "
-                    "layers in its data, so its links are written as one network."
-                ]
-        packed = Path(scratch) / f"{pajek.name}.gz"
-        header = _attribution(meta) + note + _id_note(pajek)
-        nodes, edges, directed = _compress(pajek, packed, header)
-        if layered is not None:
-            directed = layered.directed  # the multilayer format does not say
-        if not nodes or not edges:
-            raise _Empty(f"empty: {nodes:,} nodes and {edges:,} links read")
-        size = packed.stat().st_size
-        if size > max_file:
-            raise _TooLarge(f"too large: {size:,} bytes gzipped, over {max_file:,}")
-        relative = f"{match.source}/{packed.name}"
-        (folder / relative).parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(packed, folder / relative)
+        written = _parquet.write(
+            parts, nodes, Path(scratch), match.name, _attribution(meta, directed)
+        )
+        if not written.nodes or not written.links:
+            raise _Empty(f"empty: {written.nodes:,} nodes and {written.links:,} links read")
+        sizes = {role: path.stat().st_size for role, path in written.files.items()}
+        for role, size in sizes.items():
+            if size > max_file:
+                raise _TooLarge(
+                    f"too large: {size:,} bytes of {role} in Parquet, over {max_file:,}"
+                )
+        files = {}
+        for role, path in written.files.items():
+            files[role] = f"{match.source}/{path.name}"
+            (folder / files[role]).parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(path, folder / files[role])
     entry = {
         "key": meta["key"],
         "title": meta["title"] or meta["name"],
-        "file": relative,
-        "bytes": size,
-        "nodes": nodes,
-        "edges": edges,
+        "files": files,
+        "bytes": sum(sizes.values()),
+        "nodes": written.nodes,
+        "links": written.links,
         "directed": directed,
         "url": meta["url"],
         "citations": meta["citations"],
         "fingerprint": fingerprint,
     }
-    if layered is not None:
-        entry["layers"] = layered.num_layers
+    if written.layers is not None:
+        entry["layers"] = written.layers
+    if written.dropped:
+        entry["dropped"] = written.dropped
+    if note:
+        entry["note"] = note
     return entry
 
 
-def _layered(match: Any, max_download: int) -> MultilayerNetwork | None:
-    """The network in its layers, if its source tags it multilayer and can lay them out."""
-    if not getattr(match, "multilayer", False):
-        return None
-    module = importlib.import_module(f"netgamut.{match.source}")
-    loader = getattr(module, "load_multilayer", None)
-    if loader is None:
-        return None
+def _parts(
+    match: Any, max_download: int
+) -> tuple[list[_parquet.Part], _parquet.Nodes | None, bool, str]:
+    """The network's links, in parts; its nodes; whether it is directed; and a note.
+
+    A network its source tags multilayer and keeps in one subgraph a layer, as
+    some of Netzschleuder's do, is those subgraphs. Any other network is its
+    own link list, its layer column the layers where it has one.
+    """
+    multilayer = bool(getattr(match, "multilayer", False))
+    if multilayer:
+        module = importlib.import_module(f"netgamut.{match.source}")
+        subgraphs = getattr(module, "_subgraph_layers", None)
+        if subgraphs is not None:
+            try:
+                layers, key = subgraphs(match.name, progress=False, max_bytes=max_download)
+            except LookupError:
+                pass  # its layers are not subgraphs
+            else:
+                parts, nodes = _parquet.stack(layers, key)
+                directed = any(bool(network.dataset.directed) for network in layers.values())
+                return parts, nodes, directed, ""
+    network = match.load(progress=False, max_bytes=max_download)
+    note = ""
+    if multilayer and network.columns.layer is None:
+        note = f"{match.source} tags this network multilayer, but its data has no layers"
     try:
-        layered: MultilayerNetwork = loader(match.name, progress=False, max_bytes=max_download)
-    except LookupError:
-        return None
-    return layered
+        nodes = _parquet.node_rows(network.nodes())
+    except LookupError:  # the source has no node table for it
+        nodes = None
+    return [_parquet.Part(network)], nodes, bool(network.dataset.directed), note
 
 
-def _layer_note(layered: MultilayerNetwork) -> list[str]:
-    """How to read a multilayer file, which neither Pajek nor the format itself says."""
-    direction = "directed" if layered.directed else "undirected"
-    return [
-        f"Multilayer: {layered.num_layers:,} layers in Infomap's multilayer format. "
-        f"*Intra lines are layer, node, node, weight, and the links are {direction}. "
-        "No link joins two layers, so couple them with a relax rate, as Infomap's "
-        "--multilayer-relax-rate does."
-    ]
-
-
-def _attribution(meta: dict[str, Any]) -> list[str]:
-    lines = [f"{meta['key']}: {meta['title'] or meta['name']}", f"From {meta['url']}"]
-    lines += [f"Cite: {citation['text']} {citation['url']}" for citation in meta["citations"]]
-    lines.append(
-        f"Converted by netgamut {__version__}; see github.com/mapequation/netgamut-networks"
-    )
-    # One comment line each: a newline inside a citation would end the comment.
-    return [" ".join(line.split()) for line in lines]
-
-
-def _id_note(pajek: Path) -> list[str]:
-    """Say where the node ids run, since they are the source's own.
-
-    They are kept rather than renumbered ``1..N``, so a node keeps its id across
-    the subgraphs of a dataset -- the snapshots of a temporal network, say --
-    even where it has no links in some of them. A reader keys nodes by id, as
-    Infomap does.
-    """
-    ids = []
-    with pajek.open("rb") as lines:
-        for line in lines:
-            if line.startswith(b"*"):
-                if not line.lower().startswith(b"*vertices"):
-                    break  # the links follow the vertices
-            elif line.strip() and not line.startswith(b"#"):
-                ids.append(int(line.split(maxsplit=1)[0]))
-    if not ids:
-        return []
-    return [
-        "Node ids are the source's own, so they can start at 0 and skip numbers: "
-        f"{len(ids):,} nodes, ids {min(ids)} to {max(ids)}."
-    ]
-
-
-def _compress(source: Path, target: Path, header: list[str]) -> tuple[int, int, bool]:
-    """Gzip *source* behind *header* comments; return its node and link counts.
-
-    The gzip header carries no name or time and every line ends in ``\\n``,
-    whatever the platform wrote, so an unchanged network gives the same bytes
-    on every build. Level 6 rather than 9: on a 1.5M-link network it wrote the
-    same bytes six times faster.
-    """
-    nodes = links = 0
-    directed = in_links = False
-    with (
-        source.open("rb") as lines,
-        target.open("wb") as raw,
-        gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=6, mtime=0) as packed,
-    ):
-        for comment in header:
-            packed.write(f"# {comment}\n".encode())
-        for line in lines:
-            line = line.rstrip(b"\r\n") + b"\n"
-            packed.write(line)
-            if line.startswith(b"*"):
-                keyword, *rest = line.split()
-                heading = keyword.lower()
-                if heading == b"*vertices":
-                    nodes = int(rest[0])
-                in_links = heading in (b"*edges", b"*arcs", b"*intra", b"*inter")
-                directed = directed or heading == b"*arcs"
-            elif in_links and line.strip() and not line.startswith(b"#"):
-                links += 1
-    return nodes, links, directed
+def _attribution(meta: dict[str, Any], directed: bool) -> dict[str, str]:
+    """The files' key-value metadata, so that a downloaded file carries its attribution."""
+    citations = [f"{citation['text']} {citation['url']}" for citation in meta["citations"]]
+    return {
+        "netgamut:key": meta["key"],
+        "netgamut:title": meta["title"] or meta["name"],
+        "netgamut:url": meta["url"],
+        # One line each: a newline inside a citation would read as two.
+        "netgamut:citation": "\n".join(" ".join(citation.split()) for citation in citations),
+        "netgamut:directed": "true" if directed else "false",
+        "netgamut:version": __version__,
+    }
 
 
 def _prune(folder: Path, sources: tuple[str, ...], listed: set[str]) -> None:
-    """Delete the files of networks this build no longer lists."""
+    """Delete the files of networks this build no longer lists, format 1's included."""
     for source in sources:
-        for path in (folder / source).glob("*.net.gz"):
-            if path.relative_to(folder).as_posix() not in listed:
-                path.unlink()
+        for pattern in ("*.net.gz", "*.parquet"):
+            for path in (folder / source).glob(pattern):
+                if path.relative_to(folder).as_posix() not in listed:
+                    path.unlink()
