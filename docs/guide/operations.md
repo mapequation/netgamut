@@ -153,13 +153,13 @@ whose layers netgamut does not find has no `layer` column and says so in
 **`<name>.nodes.parquet`** holds one row per node the source's node table lists,
 nodes without links included; a node that appears only in the links has no row.
 `id` has the same type as `source` and `target`. `name`, the source's node name,
-is cut to 100 characters. A column that only repeats `id` or `name`, such as
+is cut to 100 characters, with any line break turned into a space. A column that only repeats `id` or `name`, such as
 Netzschleuder's `index` or the column the names came from, is not written.
 Every other node column follows in the source's order: int64 if every present value is an integer, float64 if numeric, else
 string, with missing values null and values decoded where the source names its
 codes. A source column called `id` or `name` that is not the name column becomes
 `id_` or `name_`. A string column with any value over 100 characters or a line
-break is free text, such as littlesis's biographies: it is left out and listed
+break is free text (Unicode's line and paragraph separators count as line breaks), such as littlesis's biographies: it is left out and listed
 under `dropped`. So are Netzschleuder's internal properties, whose names start
 with `_`, such as `_pos`, graph-tool's layout, in either file. A subgraph
 stack's nodes file has `id` and `name` only.

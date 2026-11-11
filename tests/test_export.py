@@ -263,12 +263,14 @@ def test_nodes_file_holds_names_and_metadata(tmp_path, monkeypatch) -> None:
     table = NodeTable(
         values={
             "id": {0: "a", 1: "b", 2: "c", 3: "d"},
-            "Name": {0: "Ann", 1: long, 2: "", 3: "Dee"},
+            "Name": {0: "Ann", 1: long, 2: "", 3: "Dee\u2029Doe"},
             "age": {0: "31", 1: "", 2: "40", 3: "7"},
             "score": {0: "1", 1: "2.5", 2: "", 3: "3"},
             "group": {0: "x", 1: "y", 2: "x"},
             "bio": {0: "short", 1: "y" * 101, 2: "", 3: ""},
             "notes": {0: "one\ntwo", 1: "", 2: "", 3: ""},
+            # Unicode's line separator breaks a line as "\n" does.
+            "verse": {0: "one\u2028two", 1: "", 2: "", 3: ""},
         }
     )
     rows = [("0", "1"), ("1", "2"), ("2", "4")]  # 3 is an isolate, 4 has no row
@@ -281,7 +283,7 @@ def test_nodes_file_holds_names_and_metadata(tmp_path, monkeypatch) -> None:
         (tmp_path / path).stat().st_size for path in entry["files"].values()
     )
     assert entry["nodes"] == 5
-    assert entry["dropped"] == {"nodes": ["bio", "notes"], "links": []}
+    assert entry["dropped"] == {"nodes": ["bio", "notes", "verse"], "links": []}
     nodes = _read(tmp_path, entry, "nodes")
     assert [(field.name, str(field.type)) for field in nodes.schema] == [
         ("id", "int32"),
@@ -293,7 +295,7 @@ def test_nodes_file_holds_names_and_metadata(tmp_path, monkeypatch) -> None:
     ]
     assert nodes.to_pydict() == {
         "id": [0, 1, 2, 3],
-        "name": ["Ann", "x" * 99 + "…", None, "Dee"],
+        "name": ["Ann", "x" * 99 + "…", None, "Dee Doe"],
         "id_": ["a", "b", "c", "d"],
         "age": [31, None, 40, 7],
         "score": [1.0, 2.5, None, 3.0],

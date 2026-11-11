@@ -30,6 +30,9 @@ ROW_GROUP = 1_000_000
 #: The longest node name kept whole, and the longest value of a column that is
 #: not free text.
 TEXT_LIMIT = 100
+#: What str.splitlines() breaks a line at: besides "\n" and "\r", Unicode's line
+#: and paragraph separators, which littlesis's biographies hold.
+_LINE_BREAKS = frozenset("\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029")
 
 _INT32 = 2**31 - 1
 _INT64 = 2**63 - 1
@@ -399,7 +402,7 @@ class _Kind:
         if text is None:
             return
         self.present = True
-        if len(text) > TEXT_LIMIT or "\n" in text or "\r" in text:
+        if len(text) > TEXT_LIMIT or not _LINE_BREAKS.isdisjoint(text):
             self.free = True
         try:
             number = int(text)
@@ -490,6 +493,10 @@ def _text(value: Any) -> str | None:
 
 
 def _cap(name: str | None) -> str | None:
-    if name is None or len(name) <= TEXT_LIMIT:
+    if name is None:
+        return None
+    if not _LINE_BREAKS.isdisjoint(name):  # a label is one line
+        name = " ".join(name.splitlines())
+    if len(name) <= TEXT_LIMIT:
         return name
     return name[: TEXT_LIMIT - 1] + "…"
