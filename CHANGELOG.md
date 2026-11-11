@@ -26,6 +26,14 @@
 - Fields longer than csv's 128 KiB default, such as in Netzschleuder's
   `littlesis`, no longer stop a Netzschleuder edge list or `nodes.csv` from
   being read.
+- Netzschleuder's CSV files escape a quote inside a quoted field with a
+  backslash, not by doubling it, and are now read that way. littlesis's
+  `nodes.csv` read as 605,261 rows instead of 402,954, and since nodes were
+  numbered by row, most of its nodes got another node's name; nodes are now
+  keyed by the file's `index` column, and a row that cannot be read is left
+  out with a warning. wiki_rfa reads 198,253 of its 198,275 links, up from
+  198,083; the rest end a field with a bare backslash
+  ([#37](https://github.com/mapequation/netgamut/issues/37)).
 
 ### Changed
 
@@ -38,6 +46,19 @@
   `index.json`, and the summary line counts them. The mirror's workflow turns
   red on any. Download errors, files over the limits, empty networks, archives
   and files a source has withdrawn are still `skipped`.
+- The web mirror is Parquet (`"format": 2` in `index.json`), not gzipped
+  Pajek. Each network is a links file, with `source`, `target` and, where the
+  source has them, `weight`, `time` and `layer`, one row per row of the
+  source. Where the source names its nodes or has node metadata, there is also
+  a nodes file, with `id`, `name` and the source's typed node columns.
+  Free-text columns are left out and listed under `dropped`. A multilayer
+  network keeps its layers as the `layer` column, with their number of
+  `layers` in `index.json`
+  ([#28](https://github.com/mapequation/netgamut/issues/28)). Writing it needs
+  pyarrow, in a new `export` extra. Every network builds once more, and the
+  `.net.gz` files are pruned. Both files carry the network's attribution,
+  direction and traits (`netgamut:weighted` and the rest) as metadata. The
+  operations guide describes the format.
 
 ### Added
 
@@ -53,11 +74,6 @@
   it so), or one subgraph per layer for copenhagen, malaria_genes,
   twitter_higgs, ugandan_village and youtube_interactions
   ([#8](https://github.com/mapequation/netgamut/issues/8)).
-- `export-networks` writes multilayer networks in Infomap's multilayer format
-  (`*Vertices`, `*Intra`), with their number of `layers` in `index.json`. A
-  network tagged multilayer whose layers are not found is written as one
-  network, with a comment saying so
-  ([#28](https://github.com/mapequation/netgamut/issues/28)).
 - A "Multilayer networks" section in the guide.
 - `Network.largest_component()` returns the largest (weakly) connected
   component as a view on the same cached file: every export, `snapshots()`,

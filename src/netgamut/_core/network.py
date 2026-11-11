@@ -324,7 +324,8 @@ class Network:
             # csv.reader honours quoting, so a label containing the delimiter,
             # or a quoted field running over a line break, stays one field.
             _columns.allow_long_fields()
-            for record in csv.reader(stream, delimiter=sniffed):
+            reader = csv.reader(stream, delimiter=sniffed, escapechar=self.columns.escapechar)
+            for record in reader:
                 if not record or record[0].lstrip().startswith(_COMMENT_PREFIXES):
                     continue
                 fields = [field.strip() for field in record]

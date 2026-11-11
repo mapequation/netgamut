@@ -273,6 +273,52 @@ def test_fields_over_csvs_default_limit_are_read(tmp_path, monkeypatch) -> None:
         csv.field_size_limit(previous)
 
 
+def test_backslash_escaped_quotes_stay_in_their_field(tmp_path, monkeypatch) -> None:
+    """Netzschleuder escapes a quote with a backslash, as littlesis's ``extensions``.
+
+    Read as a doubled-quote CSV, the field closed at the first ``\\"`` and ran on
+    into the following rows, so littlesis's nodes file had 605,261 ids for its
+    402,954 nodes, and names on the wrong nodes.
+    """
+    import zipfile
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr(
+                "edges.csv",
+                '# source, target, txt\n0,1,"says \\"yes, and\nno\\""\n1,2,"ok"\n',
+            )
+            bundle.writestr(
+                "nodes.csv",
+                '# index, name, extensions\n0,Walmart,"{\\"Org\\":\\"a,\nb\\"}"\n1,Exxon,"{}"\n',
+            )
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    network = nz.load("celegansneural")
+    assert [row[2] for row in network.rows()] == ['says "yes, and\nno"', "ok"]
+    nodes = network.nodes()
+    assert nodes.labels() == {0: "Walmart", 1: "Exxon"}
+    assert nodes["extensions"][0] == '{"Org":"a,\nb"}'
+
+
+def test_nodes_are_keyed_by_their_index_and_a_bad_row_is_left_out(tmp_path, monkeypatch) -> None:
+    import zipfile
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr("edges.csv", "# source, target\n0,1\n1,2\n")
+            bundle.writestr("nodes.csv", "# index, name\n1,b\n0,a\nx,bad\n2,c,extra\n3,d\n")
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    with pytest.warns(UserWarning, match="2 rows left out .*lines 4, 5"):
+        nodes = nz.load("celegansneural").nodes()
+    assert nodes.labels() == {0: "a", 1: "b", 3: "d"}
+
+
 # -- opt-in network tests -------------------------------------------------
 @pytest.mark.network
 def test_really_loads_a_csv_bundle() -> None:

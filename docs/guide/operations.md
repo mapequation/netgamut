@@ -84,34 +84,93 @@ source carry `duplicate_of`. The {doc}`explorer <../explorer>` reads this file.
 
 `export-networks` builds the web mirror. The upstream hosts don't let a web page
 read their files, so it converts Netzschleuder, KONECT and SNAP networks to
-gzipped Pajek, smallest first, until `--budget` (4,000 MB) is spent. No file
-may be over `--max-file` (95 MB, below GitHub's 100 MiB limit). Each file opens
-with comment lines that name its source and citations. Node ids are the
-source's own, as `to_pajek` writes them, so a node keeps its id across a
-dataset's snapshots. They can start at 0 and skip numbers; a comment line gives
-their range. Nodes carry the source's own names where it has them, as
-`to_pajek` writes them too. A network its source tags multilayer is written in
-Infomap's multilayer format where netgamut finds its layers, as
-`netzschleuder.load_multilayer` lays them out; one whose layers it does not find
-is written as one network, with a comment saying so. Next to the files,
-`index.json` lists every network with its file, size, counts and citations,
-and says why each other one was left out. Run it again on the same directory to
-update it: a network whose catalog entry is unchanged keeps its file without a
-download, and one that fails keeps its previous file. A change to how a source's
-networks are written rebuilds that source's files, and those that come out the
-same stay byte for byte the same. With `--stop-after
-MINUTES`, it starts no new download once that time is up and leaves the rest
-for the next run, which continues where it stopped. The manifest's `complete`
-stays false until a run gets through every network, and a run that changes
-nothing leaves `index.json` as it was. When a source's host stops answering
-(a timeout, a failed connection or a 5xx), the rest of that source waits for a
-later run instead of three timeouts each. Its unbuilt networks keep their
-estimated size reserved in the budget (`reserved` in the manifest), so building
-them later deletes no file already published. The mirror is committed to the `mirror`
+Parquet, smallest first, until `--budget` (4,000 MB) is spent. No file may be
+over `--max-file` (95 MB, below GitHub's 100 MiB limit). Writing Parquet needs
+pyarrow: `pip install "netgamut[export]"`. Each network is a links file and,
+where the source names its nodes or has node metadata, a nodes file; next to
+them, `index.json` lists every network with its files, size, counts and
+citations, and says why each other one was left out.
+
+Run it again on the same directory to update it: a network whose catalog entry
+is unchanged keeps its files without a download. A network that fails through
+its source (a download error, a file over the limits, an empty network, an
+archive, a file the source has withdrawn) keeps its previous files, or is listed
+under `skipped`. One that fails through a fault in netgamut, such as a missing
+module or a file its reader cannot parse, is listed under `failed` and keeps its
+previous files; the mirror's workflow turns red on any. A change to how a
+source's networks are written rebuilds that source's files, and those that come
+out the same stay byte for byte the same. With `--stop-after MINUTES`, it starts
+no new download once that time is up and leaves the rest for the next run,
+which continues where it stopped. The manifest's `complete` stays false until a
+run gets through every network, and a run that changes nothing leaves
+`index.json` as it was. When a source's host stops answering (a timeout, a
+failed connection or a 5xx), the rest of that source waits for a later run
+instead of three timeouts each. Its unbuilt networks keep their estimated size
+reserved in the budget (`reserved` in the manifest), so building them later
+deletes no file already published. The mirror is committed to the `mirror`
 branch of
-[mapequation/netgamut-networks](https://github.com/mapequation/netgamut-networks).
-The explorer links each of its networks to the
+[mapequation/netgamut-networks](https://github.com/mapequation/netgamut-networks)
+and served from raw.githubusercontent.com, which answers range requests, so a
+browser can read a file's footer and only the columns it needs. The explorer
+links each of its networks to the
 [Network Navigator](https://mapequation.org/navigator/).
+
+### The mirror's files
+
+`index.json` says `"format": 2`; a manifest without `format` is the earlier
+gzipped Pajek. Each entry in `datasets` has `key`, `title`, `url`, `citations`,
+`fingerprint`, `directed`, the catalog's traits (`bipartite`, `multigraph`,
+`multilayer`, `signed`, `temporal`, `weighted`) and:
+
+- `files`: `{"links": "<source>/<name>.links.parquet", "nodes":
+  "<source>/<name>.nodes.parquet"}`, `nodes` only where there is a nodes file;
+- `links`, the rows in the links file, and `nodes`, the distinct ids across
+  both files; `bytes`, both files together; `layers`, where it has layers;
+- `dropped`: `{"nodes": [...], "links": [...]}`, the columns left out, and
+  `note`, a sentence such as why a network tagged multilayer has no layers,
+  each only where there is one.
+
+`skipped` and `failed` list `{key, reason}`.
+
+**`<name>.links.parquet`** holds one row per row of the source's link list, in
+its order: a repeated link or a timed event stays its own row.
+
+| column | when | type |
+|---|---|---|
+| `source`, `target` | always | int32 if every id is an integer that fits, else int64 if every id is an integer, else string |
+| `weight` | the source declares a weight | float64 |
+| `time` | the source declares a time | int64 if every value is an integer, float64 if numeric, timestamp (milliseconds, UTC) for dates, else string |
+| `layer` | the network has layers | int32 if every label is an integer, else string |
+
+Ids are the source's own, so a node keeps its id across a dataset's snapshots.
+An undirected link is one row, either way round. Layers come from the source's
+layer column, or, for a Netzschleuder entry whose layers are its subgraphs, are
+the subgraphs' names, with nodes matched across them by the key
+`netzschleuder.load_multilayer` uses. A network its source tags multilayer
+whose layers netgamut does not find has no `layer` column and says so in
+`note`. No link joins two layers: Infomap couples them with its relax rate.
+
+**`<name>.nodes.parquet`** holds one row per node the source's node table lists,
+nodes without links included; a node that appears only in the links has no row.
+`id` has the same type as `source` and `target`. `name`, the source's node name,
+is cut to 100 characters, with any line break turned into a space. A column that only repeats `id` or `name`, such as
+Netzschleuder's `index` or the column the names came from, is not written.
+Every other node column follows in the source's order: int64 if every present value is an integer, float64 if numeric, else
+string, with missing values null and values decoded where the source names its
+codes. A source column called `id` or `name` that is not the name column becomes
+`id_` or `name_`. A string column with any value over 100 characters or a line
+break is free text (Unicode's line and paragraph separators count as line breaks), such as littlesis's biographies: it is left out and listed
+under `dropped`. So are Netzschleuder's internal properties, whose names start
+with `_`, such as `_pos`, graph-tool's layout, in either file. A subgraph
+stack's nodes file has `id` and `name` only.
+
+Both files are zstd-compressed in row groups of at most 1,000,000 rows, and
+carry their attribution as key-value metadata: `netgamut:key`, `netgamut:title`,
+`netgamut:url`, `netgamut:citation` (citations joined by newlines),
+`netgamut:directed` (`true` or `false`), one key for each trait the catalog
+says yes or no to, such as `netgamut:weighted` (`true` or `false`, left out
+where it cannot say), and `netgamut:version`. A change in what the catalog says
+of a network's traits rebuilds its files, so they and its entry agree.
 
 ## Development
 

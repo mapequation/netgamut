@@ -295,7 +295,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     mirror = subparsers.add_parser(
         "export-networks",
-        help="write or update the web mirror: networks as gzipped Pajek, smallest first",
+        help="write or update the web mirror: networks as Parquet, smallest first",
     )
     mirror.add_argument("-o", "--output", required=True, help="directory to write or update")
     mirror.add_argument(
