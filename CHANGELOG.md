@@ -59,6 +59,11 @@
   network, with a comment saying so
   ([#28](https://github.com/mapequation/netgamut/issues/28)).
 - A "Multilayer networks" section in the guide.
+- `Network.largest_component()` returns the largest (weakly) connected
+  component as a view on the same cached file: every export, `snapshots()`,
+  `to_multilayer()` and `nodes()` see only its links and nodes, written files
+  are named `<name>-lcc`, and `component` holds its node labels. Finding it
+  takes one pass over the links and memory for the nodes alone.
 
 ## 0.4.0
 

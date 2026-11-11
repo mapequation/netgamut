@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import dataclasses
+import sys
 import tarfile
+import types
 from pathlib import Path
 
 import pytest
 
+from netgamut._core.columns import Columns
 from netgamut._core.models import DataFile
 from netgamut._core.network import Network
+from netgamut._core.nodes import NodeTable
 from netgamut.snap._models import Dataset
 
 
@@ -228,3 +233,86 @@ def test_to_infomap_loads_the_network(gzipped_edges: Path) -> None:
     result = instance.run()
     assert instance.num_nodes == 4
     assert result.num_top_modules >= 1
+
+
+# -- largest component -------------------------------------------------------
+
+
+def _edge_file(tmp_path: Path, body: str) -> Path:
+    path = tmp_path / "toy.txt"
+    path.write_text(body)
+    return path
+
+
+def test_largest_component_keeps_only_its_links(tmp_path: Path) -> None:
+    network = make_network(_edge_file(tmp_path, "# c\n1 2\n4 5\n2 3\n"))
+    lcc = network.largest_component()
+    assert lcc.component == {"1", "2", "3"}
+    assert list(lcc.edges()) == [("1", "2"), ("2", "3")]
+    # The view reads the same file and keeps the dataset's name.
+    assert lcc.path == network.path
+    assert lcc.name == "toy"
+    assert list(network.edges()) == [("1", "2"), ("4", "5"), ("2", "3")]
+
+
+def test_largest_component_merges_components_met_apart(tmp_path: Path) -> None:
+    lcc = make_network(_edge_file(tmp_path, "1 2\n3 4\n5 6\n2 3\n")).largest_component()
+    assert lcc.component == {"1", "2", "3", "4"}
+
+
+def test_largest_component_ignores_direction(tmp_path: Path) -> None:
+    """For a directed network it is the largest weakly connected component."""
+    path = _edge_file(tmp_path, "1 2\n3 2\n4 5\n")
+    lcc = make_network(path, type_="Directed").largest_component()
+    assert lcc.component == {"1", "2", "3"}
+
+
+def test_largest_component_tie_goes_to_the_first_in_the_file(tmp_path: Path) -> None:
+    lcc = make_network(_edge_file(tmp_path, "7 8\n1 2\n")).largest_component()
+    assert lcc.component == {"7", "8"}
+
+
+def test_largest_component_of_no_links_is_refused(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="no links"):
+        make_network(_edge_file(tmp_path, "# only comments\n")).largest_component()
+
+
+def test_largest_component_files_are_named_lcc(tmp_path: Path) -> None:
+    lcc = make_network(_edge_file(tmp_path, "1 2\n2 3\n4 5\n")).largest_component()
+    links = lcc.to_link_list(tmp_path / "out")
+    assert links.name == "toy-lcc.txt"
+    assert "4 5" not in links.read_text()
+    pajek = lcc.to_pajek(tmp_path / "out").read_text()
+    assert "*Vertices 3" in pajek
+    assert "toy-lcc" in pajek
+
+
+def test_largest_component_reaches_snapshots(tmp_path: Path) -> None:
+    path = _edge_file(tmp_path, "1 2 10\n2 3 20\n4 5 30\n")
+    network = dataclasses.replace(make_network(path), columns=Columns(time=2))
+    (snapshot,) = network.largest_component().snapshots(bins=1)
+    assert snapshot.name == "toy-lcc-t0"
+    assert set(snapshot.nodes) == {1, 2, 3}
+
+
+def test_largest_component_restricts_node_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = types.ModuleType("netgamut.fake")
+    source.node_table = lambda network: NodeTable(  # type: ignore[attr-defined]
+        values={"group": {1: "a", 2: "a", 3: "b", 4: "c", 5: "c"}}
+    )
+    monkeypatch.setitem(sys.modules, "netgamut.fake", source)
+    path = _edge_file(tmp_path, "1 2\n2 3\n4 5\n")
+    network = dataclasses.replace(make_network(path), source="fake")
+    assert network.largest_component().nodes()["group"] == {1: "a", 2: "a", 3: "b"}
+    assert len(network.nodes()["group"]) == 5
+
+
+def test_largest_component_to_infomap_skips_the_rest_of_the_file(tmp_path: Path) -> None:
+    """Infomap would read the whole file itself, so the view feeds it links."""
+    pytest.importorskip("infomap")
+    lcc = make_network(_edge_file(tmp_path, "1 2\n2 3\n4 5\n")).largest_component()
+    instance = lcc.to_infomap(silent=True)
+    instance.run()
+    assert instance.num_nodes == 3
