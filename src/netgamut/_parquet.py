@@ -84,6 +84,8 @@ class Nodes:
     names: dict[str, str] = field(default_factory=dict)
     #: ``{source column: values}``, aligned with :attr:`ids`; ``None`` is missing.
     columns: dict[str, list[str | None]] = field(default_factory=dict)
+    #: Source columns left out before the values are typed: internal properties.
+    dropped: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -98,17 +100,38 @@ class Written:
 
 
 def node_rows(table: NodeTable) -> Nodes:
-    """A source's node table, decoded, its name column apart and capped."""
+    """A source's node table, decoded, its name column apart and capped.
+
+    A column that only repeats the ids (Netzschleuder's ``index``) or the names
+    (london_transport's ``nodeLabel`` beside its ``name``) is not written again.
+    An internal property, one whose name starts with ``_`` such as graph-tool's
+    ``_pos`` layout, is left out and listed in :attr:`Nodes.dropped`.
+    """
     names = {str(node): label for node, label in table.labels().items()}
     from_names = set(table.name_columns())
     nodes = table.nodes
+    ids = [str(node) for node in nodes]
+    named = [names.get(node) for node in ids]
     columns = {}
+    dropped = []
     for column in table.columns:
         if column in from_names:
             continue
+        if column.startswith("_"):
+            dropped.append(column)
+            continue
         decoded = table[column]
-        columns[column] = [_text(decoded.get(node)) for node in nodes]
-    return Nodes(ids=[str(node) for node in nodes], names=names, columns=columns)
+        values = [_text(decoded.get(node)) for node in nodes]
+        if _repeats(values, ids) or (names and _repeats(values, named)):
+            continue
+        columns[column] = values
+    return Nodes(ids=ids, names=names, columns=columns, dropped=dropped)
+
+
+def _repeats(values: Sequence[str | None], other: Sequence[str | None]) -> bool:
+    """Whether *values* has a value and says nothing *other* does not, node by node."""
+    stripped = [None if value is None else value.strip() for value in values]
+    return any(stripped) and stripped == list(other)
 
 
 def stack(layers: Mapping[str, Any], key: str) -> tuple[list[Part], Nodes | None]:
@@ -117,7 +140,12 @@ def stack(layers: Mapping[str, Any], key: str) -> tuple[list[Part], Nodes | None
     Ids are mapped through *key* as :meth:`MultilayerNetwork.from_networks`
     maps them; ``"index"`` keeps them, since the subgraphs number the same
     nodes alike. The nodes file has ids and names only, and none at all when
-    no subgraph names its nodes.
+    no subgraph names its nodes. A node without a *key* value has no row, as
+    it has no name in :meth:`MultilayerNetwork.from_networks`; a link to one
+    raises :class:`ValueError` when the parts are read.
+
+    Raises:
+        LookupError: A subgraph has no node table to take *key* from.
     """
     parts = []
     ids: dict[str, None] = {}
@@ -126,23 +154,36 @@ def stack(layers: Mapping[str, Any], key: str) -> tuple[list[Part], Nodes | None
         identity: dict[str, str] | None = None
         try:
             table = network.nodes()
+        except (KeyError, IndexError):
+            raise
         except LookupError:
             if key != "index":
                 raise
             table = None
         if table is not None:
             if key != "index":
-                identity = node_identity(table, key, layer)
+                identity = _identity(table, key, layer)
             for node in table.nodes:
-                ids.setdefault(_mapped(identity, node), None)
+                mapped = _mapped(identity, node)
+                if mapped is not None:
+                    ids.setdefault(mapped, None)
             for node, label in table.labels().items():
-                names.setdefault(_mapped(identity, node), label)
+                mapped = _mapped(identity, node)
+                if mapped is not None:
+                    names.setdefault(mapped, label)
         parts.append(Part(network, layer=str(layer), ids=identity))
     return parts, Nodes(ids=list(ids), names=names) if names else None
 
 
-def _mapped(identity: Mapping[str, str] | None, node: Any) -> str:
-    return str(node) if identity is None else identity.get(str(node), str(node))
+def _identity(table: NodeTable, key: str, layer: Any) -> dict[str, str]:
+    """:func:`node_identity`, over the nodes with a *key* value: an empty one is missing."""
+    present = {node: text for node, value in table[key].items() if (text := _text(value))}
+    return node_identity(NodeTable(values={key: present}), key, layer)
+
+
+def _mapped(identity: Mapping[str, str] | None, node: Any) -> str | None:
+    """*node*'s written id; ``None`` for one the identity has no key for."""
+    return str(node) if identity is None else identity.get(str(node))
 
 
 def write(
@@ -164,6 +205,11 @@ def write(
     id_type = survey.ids.arrow(pa)
     dropped: dict[str, list[str]] = {"nodes": [], "links": []}
 
+    # Internal properties, such as graph-tool's ``_pos``, are never written.
+    for part in parts:
+        for name_ in part.network.columns.names[2:]:
+            if str(name_).startswith("_") and name_ not in dropped["links"]:
+                dropped["links"].append(str(name_))
     link_columns: dict[str, Any] = {"source": id_type, "target": id_type}
     if survey.weighted:
         link_columns["weight"] = pa.float64()
@@ -237,7 +283,8 @@ def _node_table(
     data: dict[str, Any] = {"id": pa.array([cast(node) for node in nodes.ids], type=id_type)}
     if nodes.names:
         data["name"] = pa.array([_cap(nodes.names.get(node)) for node in nodes.ids], pa.string())
-    dropped = []
+    dropped = list(nodes.dropped)
+    taken = {"id", "name", *nodes.columns}
     for column, values in nodes.columns.items():
         kind = _Kind()
         for value in values:
@@ -248,7 +295,13 @@ def _node_table(
         if final == "str" and kind.free:
             dropped.append(column)
             continue
-        renamed = {"id": "id_", "name": "name_"}.get(column, column)
+        renamed = column
+        if column in ("id", "name"):
+            # Clear of every other column's name, ``id_`` included.
+            renamed += "_"
+            while renamed in taken:
+                renamed += "_"
+            taken.add(renamed)
         data[renamed] = pa.array(
             [_value(value, final) for value in values], type=_arrow_type(pa, final)
         )
@@ -377,13 +430,19 @@ class _Kind:
 
 
 def _is_date(text: str) -> bool:
+    """Whether numpy reads *text* as a date; never its words ``now`` and ``today``."""
     import numpy as np
 
+    if not any(character.isdigit() for character in text):
+        return False
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # numpy deprecates parsing time zones
-            return not np.isnat(np.datetime64(text, "s"))
-    except ValueError:
+            exact = np.datetime64(text, "ms")
+            # A year past int64 milliseconds wraps round rather than failing.
+            year = np.datetime64(text).astype("datetime64[Y]")
+            return not np.isnat(exact) and exact.astype("datetime64[Y]") == year
+    except (ValueError, OverflowError):
         return False
 
 
@@ -392,7 +451,6 @@ def _arrow_type(pa: Any, kind: str) -> Any:
         "int": pa.int64(),
         "int32": pa.int32(),
         "float": pa.float64(),
-        # Parquet has no unit of seconds: whole seconds, stored as milliseconds.
         "date": pa.timestamp("ms", tz="UTC"),
         "str": pa.string(),
     }[kind]
@@ -411,7 +469,7 @@ def _value(text: str | None, kind: str | None) -> Any:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            return int(np.datetime64(text, "s").astype(np.int64)) * 1000
+            return int(np.datetime64(text, "ms").astype(np.int64))
     return text
 
 

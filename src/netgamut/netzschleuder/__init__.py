@@ -113,6 +113,11 @@ _KEY_NAMES = ("id", "name")
 #: presence, and text is not a number.
 _NOT_NUMERIC = ("bool", "string")
 _NODES_MEMBER = "nodes.csv"
+#: Netzschleuder's CSVs escape a quote inside a quoted field with a backslash
+#: (``"{\"Org\": ...}"``) rather than doubling it, as littlesis's ``extensions``
+#: and wiki_rfa's vote texts show; read without it, such a field runs on into
+#: the following rows.
+_ESCAPE = "\\"
 
 
 def catalog(*, reload: bool = False) -> Catalog:
@@ -395,7 +400,7 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
     """
     header = network.header
     if not header:
-        return Columns(delimiter=",")
+        return Columns(delimiter=",", escapechar=_ESCAPE)
     names = tuple(field.strip() for field in header[0].split(","))
     types = {name: kind for name, kind in dataset.analyses.get("edge_properties") or ()}
 
@@ -414,6 +419,7 @@ def _columns(network: Network, dataset: Dataset) -> Columns:
         layer=first((*filter(None, [_LAYER_COLUMNS.get(dataset.name)]), *_LAYER_NAMES)),
         names=names,
         delimiter=",",
+        escapechar=_ESCAPE,
     )
 
 
@@ -428,12 +434,17 @@ def node_table(network: Network) -> NodeTable:
     what a community-detection run gets scored against -- with the usual caveat that
     an attribute is not ground truth for community structure.
 
-    Node ids are the row order the bundle uses, which is what ``edges.csv`` refers to.
+    Node ids are the file's ``index`` column, the 0-based ids ``edges.csv`` refers
+    to; a file without one is numbered in row order. A row that cannot be placed
+    -- an ``index`` that is no integer, or another number of fields than the
+    header names -- is left out with a warning rather than shifting its
+    neighbours.
 
     Raises:
         LookupError: The bundle ships no ``nodes.csv``.
     """
     import csv
+    import warnings
 
     directory = network.extract()
     path = directory / _NODES_MEMBER
@@ -441,18 +452,41 @@ def node_table(network: Network) -> NodeTable:
         raise LookupError(f"{network.name!r} ships no {_NODES_MEMBER} in its bundle.")
 
     allow_long_fields()
+    skipped: list[int] = []
     with path.open(encoding="utf-8", errors="replace") as handle:
-        reader = csv.reader(handle)
+        reader = csv.reader(handle, escapechar=_ESCAPE)
         header = next(reader, [])
         # The site prefixes its header row with "# ".
         columns = [cell.strip().lstrip("# ").strip() for cell in header]
+        keyed = "index" in columns
+        position = columns.index("index") if keyed else 0
         values: dict[str, dict[Any, Any]] = {column: {} for column in columns}
-        for node, record in enumerate(reader):
+        row = -1
+        for record in reader:
             if not record:
                 continue
-            for column, cell in zip(columns, record, strict=False):
+            row += 1
+            if len(record) != len(columns):
+                skipped.append(reader.line_num)
+                continue
+            if keyed:
+                try:
+                    node = int(record[position])
+                except ValueError:
+                    skipped.append(reader.line_num)
+                    continue
+            else:
+                node = row
+            for column, cell in zip(columns, record, strict=True):
                 values[column][node] = cell
 
+    if skipped:
+        lines = ", ".join(map(str, skipped[:5])) + (", ..." if len(skipped) > 5 else "")
+        warnings.warn(
+            f"{network.name}'s {_NODES_MEMBER}: {len(skipped)} rows left out that do not "
+            f"fit its header (lines {lines}).",
+            stacklevel=2,
+        )
     return NodeTable(values=values, origin=f"{SOURCE}/{network.name}/{_NODES_MEMBER}")
 
 

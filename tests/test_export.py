@@ -6,6 +6,7 @@ import json
 import urllib.error
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -198,8 +199,14 @@ def test_ids_are_the_sources_own_in_the_smallest_type(tmp_path, monkeypatch, ids
     [
         (["5", "", "7"], "int64", [5, None, 7]),
         (["5", "1.5", "7"], "double", [5.0, 1.5, 7.0]),
-        (["2020-01-01", "", "2020-01-02T12:00:00"], "timestamp[ms, tz=UTC]", [0, None, 1]),
+        (
+            ["2020-01-01", "", "2020-01-02 12:00:00.250"],
+            "timestamp[ms, tz=UTC]",
+            [datetime(2020, 1, 1, tzinfo=UTC), None, datetime(2020, 1, 2, 12, 0, 0, 250_000, UTC)],
+        ),
         (["early", "late", "2020-01-01"], "string", ["early", "late", "2020-01-01"]),
+        # numpy reads these words as dates, but they are none.
+        (["now", "today", "2020-01-01"], "string", ["now", "today", "2020-01-01"]),
         (["5", "2020-01-01", "7"], "string", ["5", "2020-01-01", "7"]),
     ],
 )
@@ -215,11 +222,9 @@ def test_writes_weight_and_time_as_the_source_declares(
     assert links.column("weight").to_pylist() == [0.5, 1.0, 2.0]
     assert str(links.schema.field("time").type) == kind
     found = links.column("time").to_pylist()
-    if kind.startswith("timestamp"):
-        start = found[0]
-        found = [None if value is None else (value - start).days for value in found]
-        assert start.year == 2020 and start.utcoffset().total_seconds() == 0
     assert found == values
+    if kind.startswith("timestamp"):
+        assert found[0].utcoffset().total_seconds() == 0
 
 
 def test_a_free_text_link_column_is_left_out(tmp_path, monkeypatch) -> None:
@@ -291,6 +296,42 @@ def test_nodes_file_holds_names_and_metadata(tmp_path, monkeypatch) -> None:
     }
     found = pq.read_metadata(tmp_path / entry["files"]["nodes"]).metadata
     assert found[b"netgamut:key"] == b"snap/named"
+
+
+def test_columns_that_repeat_the_ids_or_names_are_not_written(tmp_path, monkeypatch) -> None:
+    # Netzschleuder's index is the id; london_transport's nodeLabel is its name.
+    table = NodeTable(
+        values={
+            "index": {0: "0", 1: "1", 2: "2"},
+            "name": {0: "abbeyroad", 1: "westham", 2: ""},
+            "nodeLabel": {0: "abbeyroad", 1: "westham", 2: ""},
+            "alias": {0: "abbeyroad", 1: "westham", 2: "bank"},
+            "_pos": {0: "array([1.67, 6.85])", 1: "array([1.69, 6.86])", 2: ""},
+        }
+    )
+    rows = [("0", "1", "a"), ("1", "2", "b")]
+    columns = Columns(names=("source", "target", "_pos"))
+    dataset = FakeDataset("london", 3, 2, rows=rows, columns=columns, table=table)
+    entry = _network(tmp_path, monkeypatch, dataset)
+    assert _read(tmp_path, entry, "nodes").column_names == ["id", "name", "alias"]
+    # Graph-tool's internal properties are left out of both files, and listed.
+    assert entry["dropped"] == {"nodes": ["_pos"], "links": ["_pos"]}
+
+
+def test_a_renamed_id_column_clears_every_other_name(tmp_path, monkeypatch) -> None:
+    table = NodeTable(
+        values={
+            "label": {0: "x", 1: "y"},
+            "id": {0: "p", 1: "q"},
+            "id_": {0: "r", 1: "s"},
+            "id__": {0: "t", 1: "u"},
+        }
+    )
+    dataset = FakeDataset("clash", 2, 1, rows=[("0", "1")], table=table)
+    entry = _network(tmp_path, monkeypatch, dataset)
+    nodes = _read(tmp_path, entry, "nodes").to_pydict()
+    assert list(nodes) == ["id", "name", "id___", "id_", "id__"]
+    assert (nodes["id___"], nodes["id_"], nodes["id__"]) == (["p", "q"], ["r", "s"], ["t", "u"])
 
 
 def test_no_nodes_file_without_names_or_metadata(tmp_path, monkeypatch) -> None:
@@ -586,6 +627,75 @@ def test_a_subgraph_stack_is_written_in_its_layers(tmp_path, catalog, monkeypatc
     assert "layers" not in tiny
 
 
+def _stack(monkeypatch, catalog, *layers: FakeDataset) -> None:
+    """Make snap/middle a stack of *layers*, matched by ``id``."""
+    catalog["snap"][1].kinds["multilayer"] = True
+
+    def subgraph_layers(name: str, **kwargs: Any) -> tuple[dict[str, Any], str]:
+        return {layer.name: FakeNetwork(layer) for layer in layers}, "id"
+
+    monkeypatch.setattr(netgamut.snap, "_subgraph_layers", subgraph_layers, raising=False)
+
+
+def test_a_stack_node_without_a_key_has_no_row(tmp_path, catalog, monkeypatch) -> None:
+    # Node 2 of a has no id at all, node 0 of b an empty one: neither keeps its
+    # own id, which could be another node's key (b's node 1 is "2").
+    a = FakeDataset(
+        "a",
+        3,
+        1,
+        rows=[("0", "1")],
+        table=NodeTable(values={"id": {0: "5", 1: "6"}, "name": {0: "A", 1: "B", 2: "Orphan"}}),
+    )
+    b = FakeDataset(
+        "b",
+        3,
+        1,
+        rows=[("1", "2")],
+        table=NodeTable(values={"id": {0: "", 1: "2", 2: "6"}, "name": {0: "Zero", 1: "Two"}}),
+    )
+    _stack(monkeypatch, catalog, a, b)
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    entry = next(entry for entry in document["datasets"] if entry["key"] == "snap/middle")
+    nodes = _read(tmp_path, entry, "nodes").to_pydict()
+    assert nodes == {"id": [5, 6, 2], "name": ["A", "B", "Two"]}
+    assert entry["nodes"] == 3
+
+
+def test_a_stack_link_to_a_node_without_a_key_fails(tmp_path, catalog, monkeypatch) -> None:
+    a = FakeDataset("a", 2, 1, rows=[("0", "1")], table=NodeTable(values={"id": {0: "5", 1: ""}}))
+    _stack(monkeypatch, catalog, a)
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert "snap/middle" not in _keys(document)
+    (failed,) = document["failed"]
+    assert failed["key"] == "snap/middle"
+    assert "node 1 of layer 'a' has no key" in failed["reason"]
+
+
+def test_a_stack_with_a_subgraph_without_nodes_is_written_as_one(
+    tmp_path, catalog, monkeypatch
+) -> None:
+    a = FakeDataset("a", 2, 1, rows=[("0", "1")], table=NodeTable(values={"id": {0: "5"}}))
+    _stack(monkeypatch, catalog, a, FakeDataset("b", 2, 1, rows=[("0", "1")]))
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    entry = next(entry for entry in document["datasets"] if entry["key"] == "snap/middle")
+    assert "layers" not in entry
+    assert len(catalog["snap"][1].loads) == 1
+    assert entry["note"] == "snap tags this network multilayer, but its data has no layers"
+
+
+def test_a_bug_in_a_stack_is_not_taken_for_a_missing_table(tmp_path, catalog, monkeypatch) -> None:
+    catalog["snap"][1].kinds["multilayer"] = True
+
+    def subgraph_layers(name: str, **kwargs: Any) -> None:
+        raise KeyError("a bug")
+
+    monkeypatch.setattr(netgamut.snap, "_subgraph_layers", subgraph_layers, raising=False)
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert [entry["key"] for entry in document["failed"]] == ["snap/middle"]
+    assert catalog["snap"][1].loads == []
+
+
 def test_a_multilayer_network_without_layers_is_written_as_one(
     tmp_path, catalog, monkeypatch
 ) -> None:
@@ -628,13 +738,41 @@ def test_a_format_1_mirror_is_built_again_and_its_files_deleted(tmp_path, catalo
     ]
 
 
+def test_a_one_source_run_over_a_format_1_mirror_lists_format_2_alone(tmp_path, catalog) -> None:
+    document = _export.export_networks(tmp_path)
+    old = {key: value for key, value in document.items() if key != "format"}
+    for entry in old["datasets"]:
+        if entry["key"].startswith("konect/"):
+            old_file = entry["files"]["links"].replace(".links.parquet", ".net.gz")
+            (tmp_path / old_file).write_bytes(b"x" * 1000)
+            (tmp_path / entry.pop("files")["links"]).unlink()
+            entry["file"] = old_file
+            entry["edges"] = entry.pop("links")
+    (tmp_path / "index.json").write_text(json.dumps(old))
+
+    again = _export.export_networks(tmp_path, sources=("snap",))
+    assert all("files" in entry for entry in again["datasets"])
+    assert _keys(again) == ["snap/middle", "snap/tiny"]
+    assert {"key": "konect/large", "reason": "not built yet"} in again["skipped"]
+    assert list((tmp_path / "konect").iterdir()) == []
+    assert again["complete"] is False
+    # It stays incomplete until konect's own run builds it.
+    assert _export.export_networks(tmp_path, sources=("snap",))["complete"] is False
+    built = _export.export_networks(tmp_path, sources=("konect",))
+    assert built["complete"] is True
+    assert "konect/large" in _keys(built)
+
+
 def test_a_new_mirror_format_rebuilds_every_network(tmp_path, catalog, monkeypatch) -> None:
-    before = [_export._fingerprint(match) for match in catalog["snap"]]
+    _export.export_networks(tmp_path, sources=("snap",))
+    _export.export_networks(tmp_path, sources=("snap",))
+    built = catalog["snap"][:2]  # reviews is not a graph
+    assert [len(match.loads) for match in built] == [1, 1]
     monkeypatch.setattr(_export, "FORMAT", _export.FORMAT + 1)
-    assert all(
-        _export._fingerprint(match) != earlier
-        for match, earlier in zip(catalog["snap"], before, strict=True)
-    )
+    rebuilt = _export.export_networks(tmp_path, sources=("snap",))
+    assert [len(match.loads) for match in built] == [2, 2]
+    assert rebuilt["format"] == _export.FORMAT
+    assert _keys(rebuilt) == ["snap/middle", "snap/tiny"]
 
 
 def test_writing_layers_rebuilds_the_multilayer_networks_alone(tmp_path, catalog) -> None:

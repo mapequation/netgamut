@@ -114,6 +114,16 @@ def export_networks(
     skipped = [
         entry for entry in earlier.get("skipped", []) if _source(entry["key"]) not in sources
     ]
+    # A format-1 entry of another run's source waits for that source's run: the
+    # manifest lists format 2 alone, and the mirror is not complete without it.
+    stale = [
+        entry
+        for entry in earlier.get("datasets", [])
+        if "files" not in entry and _source(entry["key"]) not in sources
+    ]
+    skipped.extend({"key": entry["key"], "reason": "not built yet"} for entry in stale)
+    if any(entry["reason"] == "not built yet" for entry in skipped):
+        complete = False
     # A failure stands until the network is built again.
     failed_before = {entry["key"]: entry for entry in earlier.get("failed", [])}
     failed = [entry for key, entry in failed_before.items() if _source(key) not in sources]
@@ -213,6 +223,9 @@ def export_networks(
         log(f"{match.key}: {entry['nodes']:,} nodes, {entry['links']:,} links")
 
     _prune(folder, sources, {path for entry in entries for path in entry["files"].values()})
+    for entry in stale:
+        if "file" in entry:
+            (folder / entry["file"]).unlink(missing_ok=True)
     document = {
         "format": FORMAT,
         "netgamut": __version__,
@@ -371,10 +384,12 @@ def _parts(
         if subgraphs is not None:
             try:
                 layers, key = subgraphs(match.name, progress=False, max_bytes=max_download)
-            except LookupError:
-                pass  # its layers are not subgraphs
-            else:
                 parts, nodes = _parquet.stack(layers, key)
+            except (KeyError, IndexError):
+                raise  # a bug, not a missing table
+            except LookupError:
+                pass  # its layers are not subgraphs, or one has no nodes to match by
+            else:
                 directed = any(bool(network.dataset.directed) for network in layers.values())
                 return parts, nodes, directed, ""
     network = match.load(progress=False, max_bytes=max_download)
@@ -383,6 +398,8 @@ def _parts(
         note = f"{match.source} tags this network multilayer, but its data has no layers"
     try:
         nodes = _parquet.node_rows(network.nodes())
+    except (KeyError, IndexError):
+        raise
     except LookupError:  # the source has no node table for it
         nodes = None
     return [_parquet.Part(network)], nodes, bool(network.dataset.directed), note

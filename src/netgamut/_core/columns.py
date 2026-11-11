@@ -65,6 +65,10 @@ class Columns:
     #: whose quoted fields hold commas or line breaks, ``"\t"`` for a TSV whose
     #: fields hold spaces. ``None`` detects it from the first lines.
     delimiter: str | None = None
+    #: The character that escapes a quote inside a quoted field, where the
+    #: source escapes quotes rather than doubling them: Netzschleuder writes
+    #: ``\"``. Only a declared *delimiter* reads it.
+    escapechar: str | None = None
     #: Whether the first row that is not a comment names the fields rather than
     #: holding a link, as in SNAP's Reddit hyperlink TSVs.
     header_row: bool = False
