@@ -16,6 +16,7 @@ and times outside every bin are left out.
 
 from __future__ import annotations
 
+import csv
 import math
 import re
 from array import array
@@ -23,11 +24,24 @@ from collections.abc import Hashable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-__all__ = ["Columns", "Table", "assign_bins", "read_table"]
+__all__ = ["Columns", "Table", "allow_long_fields", "assign_bins", "read_table"]
 
 # The numeric prefix a C++ stream reads as a double -- what Infomap's own parser
 # makes of a weight field -- so "1_000" is 1 here too, not Python's 1000.
 LEADING_NUMBER = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
+
+# csv stops at fields over 128 KiB, and some Netzschleuder fields are longer:
+# littlesis's. 2**31 - 1 is the most the limit takes on every platform.
+_FIELD_LIMIT = 2**31 - 1
+
+
+def allow_long_fields() -> None:
+    """Lift csv's field size limit, which a few CSV files exceed.
+
+    The limit is process-wide, so this only ever raises it.
+    """
+    if csv.field_size_limit() < _FIELD_LIMIT:
+        csv.field_size_limit(_FIELD_LIMIT)
 
 
 @dataclass(frozen=True)

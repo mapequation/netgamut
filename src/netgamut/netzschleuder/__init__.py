@@ -30,7 +30,7 @@ from typing import Any
 
 from .._core.cache import cache_dir, cache_info, clear_cache, set_cache_dir
 from .._core.cache import dataset_dir as _dataset_dir
-from .._core.columns import Columns
+from .._core.columns import Columns, allow_long_fields
 from .._core.domains import DOMAINS
 from .._core.download import DownloadError
 from .._core.download import download as _download_file
@@ -412,6 +412,7 @@ def node_table(network: Network) -> NodeTable:
     if not path.is_file():
         raise LookupError(f"{network.name!r} ships no {_NODES_MEMBER} in its bundle.")
 
+    allow_long_fields()
     with path.open(encoding="utf-8", errors="replace") as handle:
         reader = csv.reader(handle)
         header = next(reader, [])

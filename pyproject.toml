@@ -29,7 +29,7 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Information Analysis",
   "Typing :: Typed",
 ]
-dependencies = ["platformdirs>=4.0"]
+dependencies = ["platformdirs>=4.0", "numpy>=1.24"]
 
 [project.optional-dependencies]
 networkx = ["networkx>=3.0"]
@@ -37,8 +37,8 @@ networkx = ["networkx>=3.0"]
 # plain CSV and reads without torch.
 pyg = ["torch-geometric>=2.4", "networkx>=3.0"]
 infomap = ["infomap>=2.8"]
-generate = ["numpy>=1.24", "networkx>=3.0", "infomap>=2.8", "scipy>=1.10", "numba>=0.59"]
-all = ["networkx>=3.0", "infomap>=2.8", "numpy>=1.24", "scipy>=1.10", "numba>=0.59"]
+generate = ["networkx>=3.0", "infomap>=2.8", "scipy>=1.10", "numba>=0.59"]
+all = ["networkx>=3.0", "infomap>=2.8", "scipy>=1.10", "numba>=0.59"]
 
 [project.urls]
 Homepage = "https://www.mapequation.org"

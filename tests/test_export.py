@@ -16,6 +16,7 @@ from netgamut import __main__ as cli
 from netgamut import _export
 from netgamut._core import formats
 from netgamut._core.download import DownloadError
+from netgamut._core.network import ArchiveError
 
 
 @dataclass
@@ -47,7 +48,7 @@ class FakeNetwork:
 
     def to_pajek(self, directory: str | Path, *, name: str) -> Path:
         if self.dataset.fails:
-            raise OSError("upstream is down")
+            raise RuntimeError("the reader broke")
         count = 0 if self.dataset.empty else self.dataset.edges or 0
         return formats.write_pajek(
             formats.output_path(directory, name, ".net"),
@@ -211,20 +212,53 @@ def test_a_new_file_format_rebuilds_that_source_alone(tmp_path, catalog, monkeyp
     assert tiny.loads == []
 
 
-def test_a_failed_rebuild_keeps_the_previous_file(tmp_path, catalog) -> None:
+BROKE = [{"key": "snap/middle", "reason": "RuntimeError: the reader broke"}]
+
+
+def test_a_failed_rebuild_keeps_the_previous_file_and_is_listed(tmp_path, catalog) -> None:
     first = _export.export_networks(tmp_path, sources=("snap",))
+    assert first["failed"] == []
     catalog["snap"][1].dataset.fails = True  # also changes its fingerprint
     document = _export.export_networks(tmp_path, sources=("snap",))
     assert document["datasets"] == first["datasets"]
     assert (tmp_path / "snap" / "middle.net.gz").is_file()
+    assert document["failed"] == BROKE
 
 
-def test_a_failed_network_without_a_file_is_skipped(tmp_path, catalog) -> None:
+def test_a_failed_network_without_a_file_is_listed_as_failed(tmp_path, catalog) -> None:
     catalog["snap"][1].dataset.fails = True
     document = _export.export_networks(tmp_path, sources=("snap",))
     assert _keys(document) == ["snap/tiny"]
-    (middle,) = document["skipped"]
-    assert (middle["key"], middle["reason"]) == ("snap/middle", "OSError: upstream is down")
+    assert document["skipped"] == []
+    assert document["failed"] == BROKE
+
+
+def test_a_failure_stands_until_the_network_builds(tmp_path, catalog) -> None:
+    catalog["snap"][1].dataset.fails = True
+    _export.export_networks(tmp_path, sources=("snap",))
+    # A run that stops before reaching it still lists it.
+    stopped = _export.export_networks(tmp_path, sources=("snap",), stop_after=0)
+    assert stopped["failed"] == BROKE
+    # So does a run of another source.
+    assert _export.export_networks(tmp_path, sources=("konect",))["failed"] == BROKE
+    catalog["snap"][1].dataset.fails = False
+    assert _export.export_networks(tmp_path, sources=("snap",))["failed"] == []
+
+
+@pytest.mark.parametrize(
+    ("error", "failed"),
+    [
+        (ArchiveError("bundle.tar.gz is an archive."), False),
+        (LookupError("'x' has no downloadable files."), False),
+        (KeyError("source"), True),
+        (ModuleNotFoundError("No module named 'numpy'"), True),
+    ],
+)
+def test_only_netgamuts_own_errors_count_as_failed(tmp_path, catalog, error, failed) -> None:
+    catalog["snap"][0].dataset.error = error
+    document = _export.export_networks(tmp_path, sources=("snap",))
+    assert bool(document["failed"]) == failed
+    assert bool(document["skipped"]) != failed
 
 
 def test_a_network_that_reads_as_empty_is_skipped(tmp_path, catalog) -> None:
@@ -331,6 +365,7 @@ def test_a_missing_file_does_not_stop_its_source(tmp_path, catalog) -> None:
     document = _export.export_networks(tmp_path, sources=("snap",))
     assert _keys(document) == ["snap/middle"]
     assert document["reserved"] == 0
+    assert document["failed"] == []
 
 
 def test_an_unreachable_source_keeps_its_earlier_files(tmp_path, catalog) -> None:
@@ -423,6 +458,13 @@ def test_cli_export_networks(tmp_path, catalog, capsys) -> None:
     assert cli.main(["export-networks", "--output", str(target), "--source", "snap"]) == 0
     assert "2 networks" in capsys.readouterr().err
     assert len(json.loads((target / "index.json").read_text())["datasets"]) == 2
+
+
+def test_cli_says_how_many_failed(tmp_path, catalog, capsys) -> None:
+    catalog["snap"][1].dataset.fails = True
+    target = tmp_path / "mirror"
+    assert cli.main(["export-networks", "--output", str(target), "--source", "snap"]) == 0
+    assert "0 skipped, 1 failed" in capsys.readouterr().err
 
 
 def test_cli_says_how_many_wait_for_the_next_run(tmp_path, catalog, capsys) -> None:

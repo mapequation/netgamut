@@ -248,6 +248,31 @@ def test_quoted_fields_holding_commas_or_line_breaks_stay_one_field(tmp_path, mo
     assert pajek.rstrip().endswith("0 1\n1 2")
 
 
+def test_fields_over_csvs_default_limit_are_read(tmp_path, monkeypatch) -> None:
+    """littlesis has fields longer than csv's default 128 KiB limit, in either file."""
+    import csv
+    import zipfile
+
+    previous = csv.field_size_limit(131072)  # csv's default, whatever ran before
+    long = "x" * 200_000
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr("edges.csv", f'# source, target, note\n0,1,"{long}"\n')
+            bundle.writestr("nodes.csv", f'# index, name, bio\n0,a,"{long}"\n1,b,\n')
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    try:
+        network = nz.load("celegansneural")
+        assert list(network.edges()) == [("0", "1")]
+        assert network.nodes()["bio"][0] == long
+        assert '0 "a"' in network.to_pajek(tmp_path).read_text()
+    finally:
+        csv.field_size_limit(previous)
+
+
 # -- opt-in network tests -------------------------------------------------
 @pytest.mark.network
 def test_really_loads_a_csv_bundle() -> None:

@@ -23,6 +23,21 @@
   and SNAP networks are converted again on the next build.
 
 - `Network.to_multilayer` keeps the source's node names, as `to_pajek` does.
+- Fields longer than csv's 128 KiB default, such as in Netzschleuder's
+  `littlesis`, no longer stop a Netzschleuder edge list or `nodes.csv` from
+  being read.
+
+### Changed
+
+- numpy is a dependency, not an extra. `Network.times`, `snapshots()` and
+  `to_multilayer()` need it, and the web mirror installs netgamut without
+  extras, so its first layered build left the 28 Netzschleuder networks with a
+  layer column flat.
+- `export-networks` lists networks that fail through a fault in netgamut, such
+  as a missing module or a file its reader cannot parse, under `failed` in
+  `index.json`, and the summary line counts them. The mirror's workflow turns
+  red on any. Download errors, files over the limits, empty networks, archives
+  and files a source has withdrawn are still `skipped`.
 
 ### Added
 
