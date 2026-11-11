@@ -167,9 +167,9 @@ ml = netgamut.MultilayerNetwork.from_networks(layers, name="higgs")
 None of these layerings links one layer to another: Infomap couples them with
 its relax rate. `ml.to_pajek(directory)` writes Infomap's multilayer format
 (`*Vertices`, then `*Intra` lines of layer, node, node and weight), and
-`ml.to_infomap()` builds the same network in Infomap. The web mirror writes
-multilayer networks in this format, with their number of `layers` in
-`index.json`.
+`ml.to_infomap()` builds the same network in Infomap. The web mirror keeps a
+multilayer network's layers as a `layer` column of its links file, with their
+number of `layers` in `index.json`.
 
 ## Node metadata, in one shape
 
