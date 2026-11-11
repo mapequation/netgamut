@@ -31,7 +31,7 @@ from typing import Any
 
 import netgamut
 
-from . import _KINDS, __version__, _parquet
+from . import _TRAITS, __version__, _parquet
 from ._core.download import DownloadError
 from ._core.network import ArchiveError
 
@@ -217,9 +217,9 @@ def export_networks(
             skipped.append({"key": match.key, "reason": reason, "reserved": size})
             log(f"{match.key}: skipped, {reason}")
             continue
-        # From the catalog, not the file, so a kept entry gains them without a
-        # download; the Navigator filters on them as the explorer does.
-        entries.append({**entry, **{name: getattr(match, name) for name in _KINDS}})
+        # From the catalog, as the files say them; the Navigator filters on them
+        # as the explorer does.
+        entries.append({**entry, **_traits(match)})
         log(f"{match.key}: {entry['nodes']:,} nodes, {entry['links']:,} links")
 
     _prune(folder, sources, {path for entry in entries for path in entry["files"].values()})
@@ -311,6 +311,9 @@ def _fingerprint(match: Any) -> str:
         text += f"\nformat {version}"
     if getattr(match, "multilayer", False):
         text += f"\nlayers {_LAYERED_FORMAT}"
+    # The files say the traits, so a change in what the catalog says of them,
+    # its own or netgamut's reading of it, rebuilds them.
+    text += f"\ntraits {_traits(match)}"
     # Every network is built again in a new mirror format.
     text += f"\nmirror {FORMAT}"
     return hashlib.sha256(text.encode()).hexdigest()[:16]
@@ -332,7 +335,7 @@ def _convert(
     parts, nodes, directed, note = _parts(match, max_download)
     with tempfile.TemporaryDirectory() as scratch:
         written = _parquet.write(
-            parts, nodes, Path(scratch), match.name, _attribution(meta, directed)
+            parts, nodes, Path(scratch), match.name, _attribution(meta, directed, _traits(match))
         )
         if not written.nodes or not written.links:
             raise _Empty(f"empty: {written.nodes:,} nodes and {written.links:,} links read")
@@ -405,8 +408,16 @@ def _parts(
     return [_parquet.Part(network)], nodes, bool(network.dataset.directed), note
 
 
-def _attribution(meta: dict[str, Any], directed: bool) -> dict[str, str]:
-    """The files' key-value metadata, so that a downloaded file carries its attribution."""
+def _traits(match: Any) -> dict[str, bool | None]:
+    """What the catalog says of each trait: yes, no, or ``None`` where it cannot say."""
+    return {name: getattr(match, name) for name in _TRAITS}
+
+
+def _attribution(
+    meta: dict[str, Any], directed: bool, traits: dict[str, bool | None]
+) -> dict[str, str]:
+    """The files' key-value metadata, so that a downloaded file carries its attribution
+    and says what its manifest entry says of the network."""
     citations = [f"{citation['text']} {citation['url']}" for citation in meta["citations"]]
     return {
         "netgamut:key": meta["key"],
@@ -415,6 +426,12 @@ def _attribution(meta: dict[str, Any], directed: bool) -> dict[str, str]:
         # One line each: a newline inside a citation would read as two.
         "netgamut:citation": "\n".join(" ".join(citation.split()) for citation in citations),
         "netgamut:directed": "true" if directed else "false",
+        # One key a trait, as for direction, where the catalog says yes or no.
+        **{
+            f"netgamut:{name}": "true" if value else "false"
+            for name, value in traits.items()
+            if value is not None
+        },
         "netgamut:version": __version__,
     }
 

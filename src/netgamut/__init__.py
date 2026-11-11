@@ -119,9 +119,10 @@ _SOURCES: dict[str, Any] = {
     "ahorn": ahorn,
 }
 
-#: The kinds of network :class:`Match` can say yes, no or unknown to, which
-#: :func:`search`, the explorer's index and the web mirror's manifest share.
-_KINDS = ("weighted", "bipartite", "temporal", "multilayer", "signed", "multigraph")
+#: The traits a network has or lacks, which :class:`Match` can say yes, no or
+#: unknown to, and which :func:`search`, the explorer's index and the web
+#: mirror's manifest and files share.
+_TRAITS = ("weighted", "bipartite", "temporal", "multilayer", "signed", "multigraph")
 
 
 def sources() -> tuple[str, ...]:
@@ -311,7 +312,7 @@ class Match:
             "loops": self.loops,
             "node_metadata": self.node_metadata,
             "node_attributes": None if attributes is None else list(attributes),
-            **{name: getattr(self, name) for name in _KINDS},
+            **{name: getattr(self, name) for name in _TRAITS},
             "subgraph_count": getattr(dataset, "subgraph_count", 1),
             "subgraphs": list(getattr(dataset, "subgraphs", ())),
             "description": getattr(dataset, "description", ""),
@@ -411,7 +412,7 @@ def search(
     needle = query.casefold().strip()
     results: list[Match] = []
     wanted = (weighted, bipartite, temporal, multilayer, signed, multigraph)
-    kinds = dict(zip(_KINDS, wanted, strict=True))
+    traits = dict(zip(_TRAITS, wanted, strict=True))
 
     def within(value: int | None, low: int | None, high: int | None) -> bool:
         if low is None and high is None:
@@ -445,7 +446,7 @@ def search(
             match = Match(source=name, dataset=dataset)
             if not says(match.loops, loops) or not says(match.node_metadata, node_metadata):
                 continue
-            if not all(says(getattr(match, name), want) for name, want in kinds.items()):
+            if not all(says(getattr(match, name), want) for name, want in traits.items()):
                 continue
             columns = match.node_attributes
             if node_attribute is not None and not (

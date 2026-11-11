@@ -119,7 +119,7 @@ links each of its networks to the
 
 `index.json` says `"format": 2`; a manifest without `format` is the earlier
 gzipped Pajek. Each entry in `datasets` has `key`, `title`, `url`, `citations`,
-`fingerprint`, `directed`, the catalog's kinds (`bipartite`, `multigraph`,
+`fingerprint`, `directed`, the catalog's traits (`bipartite`, `multigraph`,
 `multilayer`, `signed`, `temporal`, `weighted`) and:
 
 - `files`: `{"links": "<source>/<name>.links.parquet", "nodes":
@@ -167,7 +167,10 @@ stack's nodes file has `id` and `name` only.
 Both files are zstd-compressed in row groups of at most 1,000,000 rows, and
 carry their attribution as key-value metadata: `netgamut:key`, `netgamut:title`,
 `netgamut:url`, `netgamut:citation` (citations joined by newlines),
-`netgamut:directed` (`true` or `false`) and `netgamut:version`.
+`netgamut:directed` (`true` or `false`), one key for each trait the catalog
+says yes or no to, such as `netgamut:weighted` (`true` or `false`, left out
+where it cannot say), and `netgamut:version`. A change in what the catalog says
+of a network's traits rebuilds its files, so they and its entry agree.
 
 ## Development
 

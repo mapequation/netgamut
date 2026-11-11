@@ -56,7 +56,9 @@
   `layers` in `index.json`
   ([#28](https://github.com/mapequation/netgamut/issues/28)). Writing it needs
   pyarrow, in a new `export` extra. Every network builds once more, and the
-  `.net.gz` files are pruned. The operations guide describes the format.
+  `.net.gz` files are pruned. Both files carry the network's attribution,
+  direction and traits (`netgamut:weighted` and the rest) as metadata. The
+  operations guide describes the format.
 
 ### Added
 
