@@ -34,6 +34,10 @@
   out with a warning. wiki_rfa reads 198,253 of its 198,275 links, up from
   198,083; the rest end a field with a bare backslash
   ([#37](https://github.com/mapequation/netgamut/issues/37)).
+- A downloaded network's `to_pajek`, `to_networkx` and `to_infomap` keep the
+  nodes its source's node table lists without links. They took their nodes
+  from the links alone, so those nodes were missing from the file, the graph
+  and the partition, though the web mirror's `nodes.parquet` lists them.
 
 ### Changed
 

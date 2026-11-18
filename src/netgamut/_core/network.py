@@ -454,6 +454,9 @@ class Network:
 
         Be deliberate here: a networkx graph holds every node and edge in
         memory, so check ``dataset.edges`` before calling this on a large one.
+
+        A node the source's node table lists without links is in the graph
+        too, after those of the links.
         """
         try:
             import networkx
@@ -467,12 +470,15 @@ class Network:
         graph = networkx.DiGraph() if directed else networkx.Graph()
         graph.name = self._stem
 
+        listed = self._listed_nodes()
         try:
             graph.add_edges_from(self.edges(cast=cast))
+            graph.add_nodes_from(listed if cast is None else map(cast, listed))
         except ValueError:
             # Node ids are not integers after all; keep them as strings.
             graph.clear()
             graph.add_edges_from(self.edges(cast=None))
+            graph.add_nodes_from(listed)
         return graph
 
     @property
@@ -483,6 +489,21 @@ class Network:
         too. Per-node metadata, which is not ground truth, is :meth:`nodes`.
         """
         return None
+
+    def _listed_nodes(self) -> list[str]:
+        """The nodes the source's node table lists, labelled as the links are.
+
+        A node without links still belongs to the network, so every export
+        with a place for one takes its nodes from the links plus these: the
+        nodes the web mirror writes. Empty where the source publishes no node
+        table for this network. Like :meth:`nodes`, this reads a table that
+        came with the download, except SNAP's, a file of its own fetched once.
+        """
+        try:
+            table = self.nodes()
+        except LookupError:
+            return []
+        return [str(node) for node in table.nodes]
 
     def _links(self) -> Iterator[tuple[str, str, float | None]]:
         """Stream ``(source, target, weight)`` exactly as :meth:`to_infomap` reads them.
@@ -534,7 +555,8 @@ class Network:
         the source reports. Integer node ids are kept; any other labels are
         numbered ``1..N`` and kept as ``*Vertices`` names. The file is
         streamed in two passes -- nodes, then links -- so memory holds the
-        node set but never the links.
+        node set but never the links. The nodes are those of the links, then
+        any the source's node table lists without links.
 
         *names* maps a node id to the name shown on its ``*Vertices`` line. By
         default it is the source's own names, where they come in the download
@@ -545,6 +567,7 @@ class Network:
         if directed is None:
             directed = bool(self.dataset.directed)
         labels = dict.fromkeys(label for u, v, _ in self._links() for label in (u, v))
+        labels.update(dict.fromkeys(self._listed_nodes()))
         cast: Callable[[str], Any] = (
             int if all(_columns.is_int_label(label) for label in labels) else str
         )
@@ -588,7 +611,9 @@ class Network:
         """Write ``<directory>/<name>.txt`` as a link list and return its path.
 
         Streams in one pass. A ``# directed`` or ``# undirected`` comment
-        records *directed*, which defaults to what the source reports.
+        records *directed*, which defaults to what the source reports. A link
+        list has no place for a node without links; :meth:`to_pajek` keeps
+        those the source's node table lists.
 
         Raises:
             ValueError: A node id is not a non-negative integer; use
@@ -615,6 +640,11 @@ class Network:
         passed to the ``Infomap`` constructor. Requires the ``infomap`` extra::
 
             pip install "netgamut[infomap]"
+
+        A node the source's node table lists without links is added too.
+        Where Infomap puts a node without links says nothing about the
+        network, but the partition then covers every node the node table and
+        the web mirror list.
         """
         try:
             from infomap import Infomap
@@ -638,6 +668,8 @@ class Network:
             instance.add_links(
                 (int(u), int(v), 1.0 if w is None else w) for u, v, w in self._links()
             )
+        for node in self._listed_nodes():
+            instance.add_node(int(node))  # a node the links already added stays as it is
         return instance
 
     # -- time and layers ---------------------------------------------------
