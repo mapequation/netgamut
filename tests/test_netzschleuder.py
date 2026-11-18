@@ -219,6 +219,32 @@ def test_to_pajek_names_nodes_from_the_bundle(tmp_path, monkeypatch) -> None:
     assert '0 "0"' in plain
 
 
+def test_exports_keep_the_nodes_the_bundle_lists_without_links(tmp_path, monkeypatch) -> None:
+    import zipfile
+
+    pytest.importorskip("networkx")
+    pytest.importorskip("infomap")
+
+    def download(url, target, **kwargs):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(target, "w") as bundle:
+            bundle.writestr("edges.csv", "# source, target\n0,1\n1,2\n")
+            bundle.writestr("nodes.csv", "# index, name\n0,a\n1,b\n2,c\n3,d\n")
+        return target
+
+    monkeypatch.setattr(nz, "_download_file", download)
+    net = nz.load("celegansneural")
+    lines = net.to_pajek(tmp_path).read_text().splitlines()
+    assert "*Vertices 4" in lines and '3 "d"' in lines
+    graph = net.to_networkx()
+    assert sorted(graph.nodes) == [0, 1, 2, 3] and graph.degree(3) == 0
+    instance = net.to_infomap(silent=True)
+    assert instance.num_nodes == 4
+    # A component holds only nodes with links.
+    component = net.largest_component().to_pajek(tmp_path / "lcc").read_text()
+    assert "*Vertices 3" in component
+
+
 def test_quoted_fields_holding_commas_or_line_breaks_stay_one_field(tmp_path, monkeypatch) -> None:
     """wiki_rfa quotes dates with a comma, product_space colours with a line break.
 

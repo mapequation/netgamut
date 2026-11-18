@@ -136,6 +136,23 @@ def test_network_files_load_the_same_network_as_to_infomap(
     assert infomap_counts(net.to_link_list(tmp_path)) == api_counts(net)
 
 
+def test_infomap_reading_the_file_itself_still_gets_listed_nodes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("infomap")
+    from netgamut._core.nodes import NodeTable
+
+    path = tmp_path / "toy.txt"
+    path.write_text("0 1\n1 2\n")
+    net = make_network(path)
+    assert net._infomap_reads_directly()
+    listed = NodeTable(values={"name": {0: "a", 3: "d"}})
+    monkeypatch.setattr(Network, "nodes", lambda self: listed)
+    instance = net.to_infomap(silent=True)
+    assert instance.num_nodes == 4
+    assert infomap_counts(net.to_pajek(tmp_path)) == api_counts(net)
+
+
 def test_link_list_refuses_names_and_leaves_no_partial_file(tmp_path: Path) -> None:
     edges = tmp_path / "words.txt"
     edges.write_text("1 2\nalpha beta\n")
